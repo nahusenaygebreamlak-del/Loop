@@ -15,6 +15,7 @@ import type { List } from '@/store/types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { goMain } from '../nav';
 import { DateSheet, type DateValue } from './DateSheet';
 import { ListSheet } from './ListSheet';
 import { PrioritySheet } from './PrioritySheet';
@@ -85,7 +86,14 @@ export function QuickAddSheet({ listId: presetList, date: presetDate, initialTex
     if (toInbox) {
       const id = store().addInboxItem(text.trim());
       close();
-      snack({ title: 'Saved to Inbox', sub: text.trim(), actions: [{ label: 'Undo', onPress: () => store().removeInboxItem(id) }] });
+      snack({
+        title: 'Saved to Inbox',
+        sub: text.trim(),
+        actions: [
+          { label: 'Open', onPress: () => goMain('/inbox') },
+          { label: 'Undo', onPress: () => store().removeInboxItem(id) },
+        ],
+      });
       return;
     }
     const allTags = [...new Set([...parsed.tags.map((t) => store().ensureTag(t)), ...tagIds])];

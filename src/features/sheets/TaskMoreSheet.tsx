@@ -10,6 +10,7 @@ import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { goMain } from '../nav';
 import type { TaskActions } from '../useTaskActions';
 
 /** NTaskMore: ⋯ on task details. */
@@ -43,9 +44,18 @@ export function TaskMoreSheet({ taskId, actions }: { taskId: string; actions: Ta
           label="Turn into a note"
           hint="Moves it to Notes, keeps the text"
           onPress={() => {
+            const before = new Set(useStore.getState().notes.map((n) => n.id));
             const undo = taskToNote(taskId);
+            const noteId = useStore.getState().notes.find((n) => !before.has(n.id))?.id;
             leave();
-            snack({ title: 'Moved to Notes', sub: task.title, actions: [{ label: 'Undo', onPress: undo }] });
+            snack({
+              title: 'Moved to Notes',
+              sub: task.title,
+              actions: [
+                ...(noteId ? [{ label: 'Open', onPress: () => router.push({ pathname: '/note/[id]', params: { id: noteId } }) }] : []),
+                { label: 'Undo', onPress: undo },
+              ],
+            });
           }}
         />
         <Row
@@ -55,7 +65,14 @@ export function TaskMoreSheet({ taskId, actions }: { taskId: string; actions: Ta
           onPress={() => {
             const undo = taskBackToInbox(taskId);
             leave();
-            snack({ title: 'Back in Inbox', sub: task.title, actions: [{ label: 'Undo', onPress: undo }] });
+            snack({
+              title: 'Back in Inbox',
+              sub: task.title,
+              actions: [
+                { label: 'Open', onPress: () => goMain('/inbox') },
+                { label: 'Undo', onPress: undo },
+              ],
+            });
           }}
         />
         <Row

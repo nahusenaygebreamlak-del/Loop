@@ -56,7 +56,8 @@ export type InboxItem = {
   updatedAt: string;
 };
 
-export type NoteBlock = { type: 'text'; text: string } | { type: 'checklist'; text: string; done: boolean };
+export type NoteBlockType = 'text' | 'heading' | 'bullet' | 'checklist';
+export type NoteBlock = { id: string; type: NoteBlockType; text: string; done?: boolean; bold?: boolean };
 
 export type Note = {
   id: string;

@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
+import { GrowingInput } from '@/components/GrowingInput';
 import { Check } from '@/components/Check';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
@@ -71,30 +72,28 @@ function TaskDetail({ id }: { id: string }) {
         </View>
 
         <View style={styles.titleRow}>
-          <TextInput
+          <GrowingInput
             value={title}
             onChangeText={setTitle}
             onBlur={saveTitle}
             onSubmitEditing={saveTitle}
-            multiline
             submitBehavior="blurAndSubmit"
             accessibilityLabel="Title"
-            style={[styles.title, { color: task.doneAt ? c.textSecondary : c.text }, task.doneAt && { textDecorationLine: 'line-through' }, webInput]}
+            style={[styles.title, { color: task.doneAt ? c.textSecondary : c.text }, task.doneAt && { textDecorationLine: 'line-through' }]}
           />
           <View style={{ marginTop: -4, marginRight: -8 }}>
             <Check done={!!task.doneAt} priority={task.priority} label={task.title} onToggle={() => actions.toggle(task.id)} />
           </View>
         </View>
 
-        <TextInput
+        <GrowingInput
           value={notes}
           onChangeText={setNotes}
           onBlur={saveNotes}
-          multiline
           placeholder="Add a description"
           placeholderTextColor={c.textSecondary}
           accessibilityLabel="Description"
-          style={[styles.notes, { color: c.textSecondary }, webInput]}
+          style={[styles.notes, { color: c.textSecondary }]}
         />
 
         <Card style={{ marginTop: 22 }}>

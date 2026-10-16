@@ -44,6 +44,25 @@ type Actions = {
   /** "Back to Inbox": the task becomes an Inbox note again. Returns an undo function. */
   taskBackToInbox: (id: string) => () => void;
 
+  updateInboxItem: (id: string, text: string) => void;
+  /**
+   * Sorts an Inbox note (NSortNote): into a task, into Notes, or to Trash.
+   * The item stays with sortedAt so it can be undone until midnight.
+   */
+  sortInbox: (id: string, outcome: 'task' | 'note' | 'deleted', task?: NewTask) => string | null;
+  /** Undo sorting: puts the note back in the Inbox and removes what it became. */
+  unsortInbox: (id: string) => void;
+
+  addNote: (n?: Partial<Note>) => string;
+  updateNote: (id: string, patch: Partial<Note>) => void;
+  /** Moves to Trash. Returns an undo function. */
+  deleteNote: (id: string) => () => void;
+  /** Hard removal (an empty note being left). */
+  discardNote: (id: string) => void;
+  duplicateNote: (id: string) => string | null;
+  /** "Make a task": text becomes the task's notes, checklist items become subtasks. Returns the task id. */
+  noteToTask: (id: string) => string | null;
+
   addList: (name: string, color: ListColor) => string;
   updateList: (id: string, patch: Partial<List>) => void;
   /** Hides the list and its tasks. Returns an undo function. */
@@ -228,8 +247,8 @@ export const useStore = create<Store>()(
             id: randomUUID(),
             title: t.title,
             body: [
-              ...(t.notes ? [{ type: 'text' as const, text: t.notes }] : []),
-              ...t.subtasks.map((st) => ({ type: 'checklist' as const, text: st.title, done: !!st.doneAt })),
+              ...(t.notes ? [{ id: randomUUID(), type: 'text' as const, text: t.notes }] : []),
+              ...t.subtasks.map((st) => ({ id: randomUUID(), type: 'checklist' as const, text: st.title, done: !!st.doneAt })),
             ],
             pinned: false,
             fromInbox: false,
@@ -250,6 +269,75 @@ export const useStore = create<Store>()(
             get().removeInboxItem(inboxId);
             putTask(t);
           };
+        },
+
+        updateInboxItem: (id, text) =>
+          set((s) => ({ inbox: s.inbox.map((i) => (i.id === id ? { ...i, text, updatedAt: now() } : i)) })),
+
+        sortInbox: (id, outcome, task) => {
+          const item = get().inbox.find((i) => i.id === id);
+          if (!item) return null;
+          const ts = now();
+          let ref: string | null = null;
+          if (outcome === 'task') ref = get().addTask({ title: item.text, ...task } as NewTask);
+          if (outcome === 'note') ref = get().addNote({ title: item.text, fromInbox: true });
+          set((s) => ({
+            inbox: s.inbox.map((i) =>
+              i.id === id
+                ? { ...i, sortedAt: ts, sortedOutcome: outcome, sortedRefId: ref, deletedAt: outcome === 'deleted' ? ts : null, updatedAt: ts }
+                : i,
+            ),
+          }));
+          return ref;
+        },
+
+        unsortInbox: (id) => {
+          const item = get().inbox.find((i) => i.id === id);
+          if (!item?.sortedAt) return;
+          const ref = item.sortedRefId;
+          set((s) => ({
+            tasks: item.sortedOutcome === 'task' ? s.tasks.filter((t) => t.id !== ref) : s.tasks,
+            notes: item.sortedOutcome === 'note' ? s.notes.filter((n) => n.id !== ref) : s.notes,
+            inbox: s.inbox.map((i) =>
+              i.id === id ? { ...i, sortedAt: null, sortedOutcome: null, sortedRefId: null, deletedAt: null, updatedAt: now() } : i,
+            ),
+          }));
+        },
+
+        addNote: (n = {}) => {
+          const ts = now();
+          const note: Note = { id: randomUUID(), title: '', body: [], pinned: false, fromInbox: false, deletedAt: null, ...n, createdAt: ts, updatedAt: ts };
+          set((s) => ({ notes: [note, ...s.notes] }));
+          return note.id;
+        },
+
+        updateNote: (id, patch) =>
+          set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: now() } : n)) })),
+
+        deleteNote: (id) => {
+          const before = get().notes.find((n) => n.id === id);
+          get().updateNote(id, { deletedAt: now() });
+          return () => before && set((s) => ({ notes: s.notes.map((n) => (n.id === id ? before : n)) }));
+        },
+
+        discardNote: (id) => set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+
+        duplicateNote: (id) => {
+          const n = get().notes.find((x) => x.id === id);
+          if (!n) return null;
+          return get().addNote({ title: n.title ? `${n.title} (copy)` : '', body: n.body.map((b) => ({ ...b, id: randomUUID() })), fromInbox: n.fromInbox });
+        },
+
+        noteToTask: (id) => {
+          const n = get().notes.find((x) => x.id === id);
+          if (!n) return null;
+          const text = n.body.filter((b) => b.type !== 'checklist').map((b) => (b.type === 'bullet' ? `• ${b.text}` : b.text)).filter(Boolean).join('\n');
+          const subtasks: Subtask[] = n.body
+            .filter((b) => b.type === 'checklist' && b.text.trim())
+            .map((b, i) => ({ id: randomUUID(), title: b.text, doneAt: b.done ? now() : null, sortOrder: i }));
+          const taskId = get().addTask({ title: n.title || text.split('\n')[0] || 'Untitled', notes: n.title ? text : '', subtasks });
+          set((s) => ({ notes: s.notes.filter((x) => x.id !== id) }));
+          return taskId;
         },
 
         addList: (name, color) => {
@@ -329,11 +417,13 @@ export const useStore = create<Store>()(
     },
     {
       name: 'loop.data.v1',
-      version: 2,
-      // v1 lists had no sort/show-done settings.
+      version: 3,
       migrate: (state, version) => {
         const s = state as Data;
+        // v1 lists had no sort/show-done settings.
         if (version < 2) s.lists = s.lists.map((l) => ({ ...l, sortBy: l.sortBy ?? 'date', showDone: l.showDone ?? false }));
+        // v3 note blocks carry ids.
+        if (version < 3) s.notes = s.notes.map((n) => ({ ...n, body: n.body.map((b) => ({ ...b, id: b.id ?? randomUUID() })) }));
         return s;
       },
       storage: createJSONStorage(() => AsyncStorage),

@@ -32,6 +32,10 @@ const ICONS = {
   edit: [<Path key="a" d="M4 20h4L19 9l-4-4L4 16z" />],
   sort: [<Path key="a" d="M7 4v16M4 17l3 3 3-3M17 20V4M14 7l3-3 3 3" />],
   archive: [<Rect key="a" x="4" y="5" width="16" height="4" rx="1.5" />, <Path key="b" d="M6 9v10h12V9M10 13h4" />],
+  pin: [<Path key="a" d="M12 17v4M8 3h8l-1 6 3 3v2H6v-2l3-3z" />],
+  checklist: [<Circle key="a" cx="6" cy="7" r="2.5" />, <Circle key="b" cx="6" cy="17" r="2.5" />, <Path key="c" d="M11 7h9M11 17h9" />],
+  bullets: [<Path key="a" d="M5 7h.01M5 12h.01M5 17h.01" strokeWidth={3.2} />, <Path key="b" d="M10 7h10M10 12h10M10 17h10" />],
+  chevronDown: [<Path key="a" d="M6 9l6 6 6-6" />],
 } as const;
 
 export type IconName = keyof typeof ICONS;

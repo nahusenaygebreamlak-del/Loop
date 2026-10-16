@@ -84,8 +84,8 @@ export function SideMenu() {
         <View style={[styles.card, { backgroundColor: c.card }]}>
           <Item icon="sun" label="Today" count={counts.today} on={path === '/'} onPress={() => go('/')} />
           <Item icon="next7" label="Next 7 Days" count={counts.next7} on={path === '/next7'} onPress={() => go('/next7')} />
-          <Item icon="inboxTray" label="Inbox" count={counts.inbox} onPress={() => later('Inbox', 3)} />
-          <Item icon="note" label="Notes" count={counts.notes} onPress={() => later('Notes', 3)} />
+          <Item icon="inboxTray" label="Inbox" count={counts.inbox} on={path.startsWith('/inbox')} onPress={() => go('/inbox')} />
+          <Item icon="note" label="Notes" count={counts.notes} on={path === '/notes'} onPress={() => go('/notes')} />
           <Item icon="calendar" label="Calendar" onPress={() => later('Calendar', 7)} />
           <Item icon="allTasks" label="All tasks" count={counts.all} on={path === '/all'} onPress={() => go('/all')} />
         </View>

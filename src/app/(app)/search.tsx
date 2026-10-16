@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -5,7 +6,6 @@ import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { TaskRow } from '@/components/rows';
-import { useSnackbar } from '@/components/Snackbar';
 import { Card, EmptyCard, GroupLabel, IconButton, Swatch } from '@/components/ui';
 import { goBack, goMain } from '@/features/nav';
 import { useTaskActions } from '@/features/useTaskActions';
@@ -24,7 +24,6 @@ type Filter = 'all' | 'tasks' | 'notes' | 'lists';
 export default function Search() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
-  const snack = useSnackbar();
   const actions = useTaskActions();
   const { today } = useToday();
   const tasks = useStore((s) => s.tasks);
@@ -141,7 +140,8 @@ export default function Search() {
                     accessibilityRole="button"
                     onPress={() => {
                       remember();
-                      snack({ title: n.kind === 'inbox' ? 'Inbox arrives in Milestone 3' : 'Notes arrive in Milestone 3' });
+                      if (n.kind === 'inbox') goMain('/inbox');
+                      else router.push({ pathname: '/note/[id]', params: { id: n.id } });
                     }}
                     style={{ minHeight: 62, paddingVertical: 12, paddingHorizontal: 20, borderBottomWidth: i < r.notes.length - 1 ? 1 : 0, borderBottomColor: c.ground }}
                   >

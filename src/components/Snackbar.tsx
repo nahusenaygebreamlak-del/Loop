@@ -10,7 +10,8 @@ import { PressScale } from './PressScale';
 // Dark snackbar above the + button with light-blue actions (NDoneUndo, NDeleteUndo, NAdded).
 
 type Action = { label: string; onPress: () => void };
-export type SnackOptions = { title: string; sub?: string; actions?: Action[]; duration?: number };
+/** `bottom` lifts the bar above a screen's own buttons (the sorting screen). */
+export type SnackOptions = { title: string; sub?: string; actions?: Action[]; duration?: number; bottom?: number };
 type Snack = SnackOptions & { id: number };
 
 const SnackContext = createContext<((s: SnackOptions) => void) | null>(null);
@@ -68,7 +69,7 @@ function SnackbarView({ snack, onDone }: { snack: Snack; onDone: () => void }) {
     <Animated.View
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
-      style={[styles.bar, { backgroundColor: c.snackbar, bottom: 112 + insets.bottom, minHeight: snack.sub ? undefined : 60 }, anim]}
+      style={[styles.bar, { backgroundColor: c.snackbar, bottom: (snack.bottom ?? 112) + insets.bottom, minHeight: snack.sub ? undefined : 60 }, anim]}
     >
       <View style={styles.text}>
         <AppText style={[styles.title, { color: c.snackbarText }]}>{snack.title}</AppText>
