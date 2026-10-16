@@ -8,8 +8,7 @@ export function LoopMark({ size = 88 }: { size?: number }) {
   const glyph = size * (46 / 88);
   return (
     <View
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
+      aria-hidden
       style={{
         width: size,
         height: size,

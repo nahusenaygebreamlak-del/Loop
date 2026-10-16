@@ -12,7 +12,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SheetProvider } from '@/components/Sheet';
+import { SnackbarProvider } from '@/components/Snackbar';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { useHydrated } from '@/store/store';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -33,7 +36,11 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <RootStack />
+          <SnackbarProvider>
+            <SheetProvider>
+              <RootStack />
+            </SheetProvider>
+          </SnackbarProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
@@ -42,7 +49,9 @@ export default function RootLayout() {
 
 function RootStack() {
   const { c, scheme } = useTheme();
-  const { signedIn, loading } = useAuth();
+  const { signedIn, loading: authLoading } = useAuth();
+  const hydrated = useHydrated();
+  const loading = authLoading || !hydrated;
 
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync().catch(() => {});

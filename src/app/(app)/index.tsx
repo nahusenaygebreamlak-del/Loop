@@ -1,65 +1,109 @@
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
+import { Check } from '@/components/Check';
+import { ContentIn } from '@/components/ContentIn';
 import { PressScale } from '@/components/PressScale';
-import { useAuth } from '@/lib/auth';
+import { useSheets } from '@/components/Sheet';
+import { useSnackbar } from '@/components/Snackbar';
+import { Card, EmptyCard, Fab, GroupLabel, IconButton } from '@/components/ui';
+import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
+import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
+import { TempMenuSheet } from '@/features/sheets/TempMenuSheet';
+import { Timeline } from '@/features/today/Timeline';
+import { WeekStrip } from '@/features/today/WeekStrip';
+import { useTaskActions } from '@/features/useTaskActions';
+import { longDate, weekOf } from '@/lib/dates';
+import { daysWithItems, todayView } from '@/lib/taskViews';
+import { useToday } from '@/lib/useToday';
+import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { ThemePreference } from '@/theme/tokens';
-import { radius, size } from '@/theme/tokens';
+import { size } from '@/theme/tokens';
+import { font } from '@/theme/typography';
 
-// Temporary Milestone 0 landing screen. Replaced by Today (VToday) in Milestone 1.
-export default function Home() {
-  const { c, preference, setPreference } = useTheme();
-  const { session, preview, signOut } = useAuth();
+/** VToday */
+export default function Today() {
+  const { c } = useTheme();
   const insets = useSafeAreaInsets();
-  const name = session?.user.user_metadata?.full_name ?? session?.user.email ?? '';
+  const sheets = useSheets();
+  const snack = useSnackbar();
+  const actions = useTaskActions();
+  const { today, now } = useToday();
+  const tasks = useStore((s) => s.tasks);
+  const lists = useStore((s) => s.lists);
+
+  const { schedule, anytime, currentId } = todayView(tasks, today, now);
+  const week = weekOf(today, 0);
+  const dots = daysWithItems(tasks, week);
+  const quickActions = (id: string) => sheets.open(() => <QuickActionsSheet taskId={id} actions={actions} />);
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 48 }]}>
-      <AppText variant="display" accessibilityRole="header">
-        You're in
-      </AppText>
-      <AppText tone="secondary" variant="secondary">
-        {preview ? 'Preview mode, no account yet.' : `Signed in as ${name}.`} Today arrives in the next milestone.
-      </AppText>
-
-      <View style={[styles.card, { backgroundColor: c.card }]}>
-        <AppText variant="label" tone="secondary">
-          Theme
-        </AppText>
-        <View style={[styles.segment, { backgroundColor: c.segmentTrack }]} accessibilityRole="radiogroup">
-          {(['light', 'dark', 'system'] as ThemePreference[]).map((p) => {
-            const on = preference === p;
-            return (
-              <PressScale
-                key={p}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: on }}
-                onPress={() => setPreference(p)}
-                style={[styles.segmentItem, on && { backgroundColor: c.card }]}
-              >
-                <AppText variant="caption" tone={on ? 'text' : 'secondary'}>
-                  {p === 'system' ? 'Follow phone' : p === 'light' ? 'Light' : 'Dark'}
-                </AppText>
-              </PressScale>
-            );
-          })}
+    <View style={{ flex: 1, backgroundColor: c.ground }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 140 + insets.bottom }}>
+        <View style={styles.header}>
+          <View style={styles.topRow}>
+            <IconButton icon="menu" label="Open menu" iconSize={24} style={{ marginLeft: -10 }} onPress={() => sheets.open(() => <TempMenuSheet />)} />
+            <IconButton icon="search" label="Search" style={{ marginRight: -10 }} onPress={() => snack({ title: 'Search arrives in the next milestone' })} />
+          </View>
+          <AppText tone="secondary" style={{ fontSize: 15, marginTop: 16 }}>
+            {longDate(today)}
+          </AppText>
+          <ContentIn>
+            <AppText variant="display" accessibilityRole="header" style={{ marginTop: 4 }}>
+              Today
+            </AppText>
+          </ContentIn>
         </View>
-      </View>
 
-      <PressScale accessibilityRole="button" onPress={signOut} style={styles.signOut}>
-        <AppText variant="button" tone="danger">
-          Sign out
-        </AppText>
-      </PressScale>
+        <WeekStrip days={week} today={today} withItems={dots} />
+
+        {schedule.length === 0 && anytime.length === 0 ? (
+          <ContentIn index={1} style={{ paddingTop: 28 }}>
+            <EmptyCard>Nothing planned for today. Tap + to add a task.</EmptyCard>
+          </ContentIn>
+        ) : null}
+
+        {schedule.length ? (
+          <ContentIn index={1}>
+            <GroupLabel style={{ paddingTop: 28, paddingBottom: 12 }}>Schedule</GroupLabel>
+            <Timeline tasks={schedule} currentId={currentId} lists={lists} onOpen={actions.openDetails} onLongPress={quickActions} onToggle={actions.toggle} />
+          </ContentIn>
+        ) : null}
+
+        {anytime.length ? (
+          <ContentIn index={2}>
+            <GroupLabel style={{ paddingTop: schedule.length ? 16 : 28, paddingBottom: 12 }}>{`Anytime today · ${anytime.length}`}</GroupLabel>
+            <Card style={{ paddingVertical: 4, paddingLeft: 20, paddingRight: 12 }}>
+              {anytime.map((t, i) => {
+                const done = !!t.doneAt;
+                return (
+                  <View key={t.id} style={[styles.anyRow, i < anytime.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.ground }]}>
+                    <PressScale
+                      kind="row"
+                      accessibilityRole="button"
+                      accessibilityHint="Opens task details. Long press for quick actions."
+                      onPress={() => actions.openDetails(t.id)}
+                      onLongPress={() => quickActions(t.id)}
+                      style={{ flex: 1, minHeight: 60, justifyContent: 'center' }}
+                    >
+                      <AppText style={[styles.anyTitle, done && { color: c.textSecondary, textDecorationLine: 'line-through' }]}>{t.title}</AppText>
+                    </PressScale>
+                    <Check done={done} priority={t.priority} label={t.title} onToggle={() => actions.toggle(t.id)} />
+                  </View>
+                );
+              })}
+            </Card>
+          </ContentIn>
+        ) : null}
+      </ScrollView>
+      <Fab label="Add task" onPress={() => sheets.open(() => <QuickAddSheet />)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingHorizontal: size.sideMargin, gap: 12 },
-  card: { borderRadius: radius.card, padding: 20, gap: 12, marginTop: 24 },
-  segment: { flexDirection: 'row', borderRadius: radius.buttonSmall, padding: 4 },
-  segmentItem: { flex: 1, minHeight: size.minTapTarget, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  signOut: { minHeight: size.minTapTarget, justifyContent: 'center', alignSelf: 'flex-start' },
+  header: { paddingTop: 18, paddingHorizontal: size.sideMargin },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  anyRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  anyTitle: { ...font(600), fontSize: 16 },
 });

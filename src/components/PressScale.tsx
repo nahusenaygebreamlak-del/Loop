@@ -21,11 +21,11 @@ export function PressScale({ kind = 'button', style, onPressIn, onPressOut, ...r
       {...rest}
       style={[style, animated]}
       onPressIn={(e) => {
-        if (!reduced) scale.value = withTiming(target, { duration: motion.press.duration });
+        if (!reduced) scale.set(withTiming(target, { duration: motion.press.duration }));
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        if (!reduced) scale.value = withTiming(1, { duration: motion.press.duration });
+        if (!reduced) scale.set(withTiming(1, { duration: motion.press.duration }));
         onPressOut?.(e);
       }}
     />
