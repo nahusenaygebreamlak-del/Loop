@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Note editor (dark)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
+<style>
+:where(a.lk){display:inline-flex;align-items:center;justify-content:center;text-align:center;color:inherit;text-decoration:none;cursor:pointer}:where(a.lkb){display:block;color:inherit;text-decoration:none;cursor:pointer}a.lk.row,a.lk.item,a.lk.r,a.lk.b,a.lk.set,a.lk.note{justify-content:flex-start;text-align:left}a.lk.b{align-items:flex-start}
+body{margin:0;color-scheme:dark} *{box-sizing:border-box} button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.scr{width:390px;height:844px;background:#1A2030;color:#E8ECF5;font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:14px;color:#E8ECF5}
+.cl{display:flex;align-items:center;gap:6px;min-height:46px;font-size:16px;line-height:1.4}
+.chk{flex:0 0 40px;width:40px;height:40px;margin-left:-8px;display:flex;align-items:center;justify-content:center}
+.chk i{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;border:2px solid #3A4357;color:#FFFFFF}
+.chk.on i{background:#2F6BE3;border-color:#2F6BE3}
+.tb{width:48px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;color:#E8ECF5}
+.tb.on{background:#1E2D52;color:#7AA2FF}
+.key{flex:1 1 0;height:42px;border-radius:8px;background:#1A2030}
+
+@keyframes lpSheet{from{transform:translateY(100%)}to{transform:none}}@keyframes lpDim{from{background-color:#0F1320}}@keyframes lpPop{0%{opacity:0;transform:scale(.92)}60%{opacity:1;transform:scale(1.02)}100%{transform:none}}@keyframes lpUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes lpDrop{from{opacity:0;transform:translateY(-28px) scale(.98)}to{opacity:1;transform:none}}@keyframes lpLeft{from{transform:translateX(-100%)}to{transform:none}}@keyframes lpFade{from{opacity:0}to{opacity:1}}@keyframes lpTick{0%{transform:scale(.4)}55%{transform:scale(1.18)}100%{transform:none}}@keyframes lpGrow{from{width:20%}}@keyframes lpPulse{0%,100%{box-shadow:0 0 0 0 rgba(199,55,47,.45)}50%{box-shadow:0 0 0 6px rgba(199,55,47,0)}}section[style*="border-radius: 28px 28px 0 0"]{animation:lpSheet .42s cubic-bezier(.2,.9,.25,1) both}div[style*="background: #05070D"]{animation:lpDim .3s ease-out both}section[role="alertdialog"]{animation:lpPop .32s cubic-bezier(.2,.9,.25,1) .05s both}nav[aria-label="Main menu"]{animation:lpLeft .38s cubic-bezier(.2,.9,.25,1) both}article[aria-label="Loop notification"]{animation:lpDrop .5s cubic-bezier(.2,.9,.25,1) .15s both}[role="status"]{animation:lpUp .36s cubic-bezier(.2,.9,.25,1) .25s both}h1{animation:lpUp .4s cubic-bezier(.2,.9,.25,1) both}.grp,.note,.ag,.empty{animation:lpUp .45s cubic-bezier(.2,.9,.25,1) .06s both}.grp+.grp,.lab+.grp{animation-delay:.1s}div[aria-hidden="true"][style*="border-radius: 50%; background: #2F6BE3"]{animation:lpTick .5s cubic-bezier(.2,.9,.25,1) .1s both}.chk.on i{animation:lpTick .4s cubic-bezier(.2,.9,.25,1) both}[role="progressbar"]>div{animation:lpGrow .6s cubic-bezier(.2,.9,.25,1) .1s both}[aria-label="Add task"],[aria-label="New note"]{animation:lpPop .4s cubic-bezier(.2,.9,.25,1) .18s both}[aria-label^="Now,"] span{animation:lpPulse 2s ease-in-out infinite}a.lk,a.lkb,button{transition:transform .14s ease,filter .14s ease,background-color .2s ease}a.lk:active,button:active{transform:scale(.96)}a.lkb:active{transform:scale(.985)}a.lk:hover,button:hover{filter:brightness(1.12)}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div class="scr">
+  <header style="display: flex; align-items: center; gap: 4px; padding: 14px 14px 4px;">
+    <a href="DNNotes.dc.html" class="lk ib" aria-label="Back to Notes"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+    <span style="flex-grow: 1; font-size: 13px; color: #9AA3B8; font-weight: 600;">Saved · just now</span>
+    <a href="DNNoteMenu.dc.html" class="lk ib" aria-label="Note options"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.2"/></svg></a>
+    <a href="DNNotes.dc.html" class="lk" style="min-height: 40px; padding: 0 16px; border-radius: 12px; background: #2F6BE3; color: #FFFFFF; font-size: 14px; font-weight: 800;">Done</a>
+  </header>
+
+  <div style="padding: 10px 24px 0;">
+    <h1 style="margin: 0; font-size: 26px; line-height: 1.25; font-weight: 800; letter-spacing: -0.01em;">Packing list for Lalibela</h1>
+    <p style="margin: 12px 0 6px; font-size: 16px; line-height: 1.55; color: #E8ECF5;">Leaving Thursday morning. Check the weather the night before.</p>
+    <div class="cl"><button class="chk" aria-label="Check"><i></i></button>Charger and power bank</div>
+    <div class="cl"><button class="chk" aria-label="Check"><i></i></button>Warm jacket</div>
+    <div class="cl" style="color: #9AA3B8;"><button class="chk on" aria-label="Uncheck"><i><svg viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></button><span style="text-decoration: line-through;">Tickets printed</span></div>
+    <div class="cl"><button class="chk" aria-label="Check"><i></i></button>Cash for the guide<span aria-hidden="true" style="display: inline-block; width: 2px; height: 20px; background: #2F6BE3; margin-left: 1px;"></span></div>
+  </div>
+
+  <div style="flex-grow: 1;"></div>
+  <div role="toolbar" aria-label="Formatting" style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-top: 1px solid #232B3D; background: #1A2030;">
+    <button class="tb on" aria-label="Checklist" aria-pressed="true"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M11 7h9M11 17h9"/></svg></button>
+    <button class="tb" aria-label="Bulleted list"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h.01M5 12h.01M5 17h.01" stroke-width="3.2"/><path d="M10 7h10M10 12h10M10 17h10"/></svg></button>
+    <button class="tb" aria-label="Heading" style="font-size: 17px; font-weight: 800;">H</button>
+    <button class="tb" aria-label="Bold" style="font-size: 17px; font-weight: 800;">B</button>
+    <div style="flex-grow: 1;"></div>
+    <button class="tb" aria-label="Hide keyboard"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+  </div>
+  <div aria-label="Keyboard area" role="img" style="background: #131824; padding: 10px 6px 26px; display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; gap: 6px;"><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div></div>
+    <div style="display: flex; gap: 6px; padding: 0 16px;"><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div></div>
+    <div style="display: flex; gap: 6px;"><div class="key" style="flex-grow: 1.5;"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key"></div><div class="key" style="flex-grow: 1.5;"></div></div>
+    <div style="display: flex; gap: 6px;"><div class="key" style="flex-grow: 1.5;"></div><div class="key" style="flex-grow: 6;"></div><div class="key" style="flex-grow: 1.5;"></div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

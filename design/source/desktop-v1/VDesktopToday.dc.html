@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PC Today</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input{font:inherit;color:inherit}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rb{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:14px;color:#636B80}
+.rb.on{background:#DCE6FB;color:#2F6BE3}
+.item{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:0 12px;border-radius:12px;font-size:14.5px;font-weight:600;text-align:left;color:#141A2E}
+.item .n{margin-left:auto;font-size:13px;color:#636B80;font-variant-numeric:tabular-nums}
+.item.on{background:#DCE6FB;color:#2F6BE3}
+.item.on .n{color:#2F6BE3}
+.lab{padding:18px 12px 6px;font-size:12.5px;font-weight:700;color:#636B80}
+.sw{width:10px;height:10px;border-radius:3px;margin:0 4px}
+.chk{flex:0 0 40px;width:40px;height:40px;display:flex;align-items:center;justify-content:center}
+.chk i{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;border:2px solid #C9D2E3;color:#FFFFFF}
+.chk.on i{background:#2F6BE3;border-color:#2F6BE3}
+.chk.hi i{border-color:#C7372F}
+.sec{font-size:13.5px;font-weight:700;color:#636B80;padding:22px 0 10px}
+.sub{display:flex;align-items:center;gap:8px;min-height:50px;padding:0 6px 0 16px;border-bottom:1px solid #F2F4F9;font-size:14.5px;font-weight:600}
+.row{display:flex;align-items:center;gap:14px;min-height:50px;padding:0 14px 0 16px;border-bottom:1px solid #F2F4F9;font-size:14px}
+.row:last-child,.sub:last-child{border-bottom:0}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 900px; display: flex; flex-wrap: wrap; background: #F2F4F9; color: #141A2E; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;">
+  <nav aria-label="App sections" style="flex: 0 0 72px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 0;">
+    <div aria-hidden="true" style="width: 40px; height: 40px; border-radius: 14px; background: #2F6BE3; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-bottom: 14px;">L</div>
+    <button class="rb on" aria-label="Tasks"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></button>
+    <button class="rb" aria-label="Calendar"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></button>
+    <button class="rb" aria-label="Search"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></button>
+    <div style="flex-grow: 1;"></div>
+    <button class="rb" aria-label="Settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg></button>
+  </nav>
+
+  <nav aria-label="Lists" style="flex: 0 0 248px; padding: 20px 14px; display: flex; flex-direction: column; gap: 2px;">
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 6px; display: flex; flex-direction: column; gap: 2px;">
+      <button class="item on">Today<span class="n">6</span></button>
+      <button class="item">Next 7 Days<span class="n">9</span></button>
+      <button class="item">Inbox<span class="n">7</span></button>
+      <button class="item">Calendar</button>
+      <button class="item">All tasks<span class="n">11</span></button>
+    </div>
+    <div class="lab">Lists</div>
+    <button class="item"><span class="sw" style="background: #2F6BE3;"></span>Work<span class="n">5</span></button>
+    <button class="item"><span class="sw" style="background: #E0913A;"></span>Personal<span class="n">3</span></button>
+    <button class="item"><span class="sw" style="background: #3A9E7A;"></span>Learning<span class="n">1</span></button>
+    <div class="lab">Tags</div>
+    <button class="item"><span style="width: 18px; color: #636B80; text-align: center;">#</span>design<span class="n">2</span></button>
+    <button class="item"><span style="width: 18px; color: #636B80; text-align: center;">#</span>waiting<span class="n">1</span></button>
+    <div style="flex-grow: 1;"></div>
+    <button class="item" style="color: #636B80;">Completed</button>
+    <button class="item" style="color: #636B80;">Trash</button>
+  </nav>
+
+  <div style="flex: 999 1 600px; min-width: 0; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px 20px 4px;">
+    <main style="flex: 1 1 440px; min-width: 0; padding: 12px 8px 0;">
+      <div style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;">
+        <div style="flex-grow: 1;">
+          <div style="font-size: 14px; color: #636B80;">Friday, October 16</div>
+          <h1 style="margin: 2px 0 0; font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em;">Today</h1>
+        </div>
+        <button style="min-height: 44px; padding: 0 18px; border-radius: 14px; background: #2F6BE3; color: #FFFFFF; font-size: 14.5px; font-weight: 700; display: flex; align-items: center; gap: 8px;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px; stroke-width: 2.4;"><path d="M12 5v14M5 12h14"/></svg>Add task</button>
+      </div>
+
+      <div role="group" aria-label="This week" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: 18px; background: #FFFFFF; border-radius: 18px; padding: 8px;">
+        <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+          <button style="padding: 8px 0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; background: {{d.bg}}; color: {{d.color}};">
+            <span style="font-size: 12.5px; font-weight: 600; color: {{d.labelColor}};">{{d.wd}}</span>
+            <span style="font-size: 16px; font-weight: 700;">{{d.n}}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div class="sec">Schedule</div>
+      <sc-for list="{{items}}" as="it" hint-placeholder-count="4">
+        <div style="display: flex; gap: 12px; align-items: stretch;">
+          <div aria-hidden="true" style="flex: 0 0 22px; width: 22px; display: flex; flex-direction: column; align-items: center;">
+            <span style="width: 2px; height: {{it.lineTopH}}; background: {{it.lineTop}};"></span>
+            <span style="flex: 0 0 auto; width: {{it.dotSize}}; height: {{it.dotSize}}; box-sizing: border-box; border-radius: 50%; border: {{it.dotBorder}}; background: #F2F4F9;"></span>
+            <span style="flex-grow: 1; width: 2px; background: {{it.lineBottom}};"></span>
+          </div>
+          <div style="flex-grow: 1; min-width: 0; padding-bottom: 10px;">
+            <div style="background: {{it.bg}}; color: {{it.fg}}; border-radius: 18px; padding: 14px 10px 14px 20px; display: flex; align-items: center; gap: 12px; outline: {{it.outline}};">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="font-size: 15.5px; font-weight: 700;">{{it.title}}</div>
+                <div style="font-size: 13.5px; color: {{it.subColor}}; margin-top: 4px;">{{it.sub}}</div>
+              </div>
+              <button class="chk" aria-label="Mark done"><i style="border-color: {{it.ring}};"></i></button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+
+      <div class="sec" style="padding-top: 12px;">Anytime today · 2</div>
+      <div style="background: #FFFFFF; border-radius: 18px;">
+        <div class="sub" style="color: #636B80;"><span style="flex-grow: 1; text-decoration: line-through;">Call bank about card</span><button class="chk on" aria-label="Mark not done"><i><svg viewBox="0 0 24 24" aria-hidden="true" style="width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></button></div>
+        <div class="sub"><span style="flex-grow: 1;">Read chapter 4</span><button class="chk" aria-label="Mark done"><i></i></button></div>
+      </div>
+    </main>
+
+    <aside aria-label="Task details" style="flex: 1 1 360px; min-width: 0; background: #FFFFFF; border-radius: 26px; padding: 24px 24px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: flex-start; gap: 8px;">
+        <h2 style="margin: 0; flex-grow: 1; font-size: 22px; line-height: 1.3; font-weight: 800;">Review onboarding flow wireframes</h2>
+        <button class="chk hi" aria-label="Mark done" style="margin-top: -6px;"><i></i></button>
+      </div>
+      <p style="margin: 0; font-size: 14.5px; line-height: 1.55; color: #636B80;">Check the 5 screens against the research notes. Flag anything that needs a second test.</p>
+      <div style="background: #F2F4F9; border-radius: 18px;">
+        <div class="row"><span style="flex-grow: 1; color: #636B80; font-weight: 600;">Date</span><span style="font-weight: 700; color: #2F6BE3;">Today, 10:00 – 11:00</span></div>
+        <div class="row" style="border-color: #FFFFFF;"><span style="flex-grow: 1; color: #636B80; font-weight: 600;">List</span><span style="font-weight: 700;">Work</span></div>
+        <div class="row" style="border-color: #FFFFFF;"><span style="flex-grow: 1; color: #636B80; font-weight: 600;">Priority</span><span style="font-weight: 700; color: #C7372F;">High</span></div>
+        <div class="row" style="border-color: #FFFFFF;"><span style="flex-grow: 1; color: #636B80; font-weight: 600;">Tags</span><span style="font-weight: 700;">#design</span></div>
+      </div>
+      <div style="font-size: 13.5px; font-weight: 700; color: #636B80; padding-top: 4px;">Subtasks · 1 of 3</div>
+      <div style="border: 1px solid #F2F4F9; border-radius: 18px;">
+        <div class="sub" style="color: #636B80;"><span style="flex-grow: 1; text-decoration: line-through;">Collect research notes</span><button class="chk on" aria-label="Mark not done"><i><svg viewBox="0 0 24 24" aria-hidden="true" style="width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></button></div>
+        <div class="sub"><span style="flex-grow: 1;">Compare screens 1–3</span><button class="chk" aria-label="Mark done"><i></i></button></div>
+        <div class="sub"><span style="flex-grow: 1;">Compare screens 4–5</span><button class="chk" aria-label="Mark done"><i></i></button></div>
+        <button class="sub" style="width: 100%; color: #2F6BE3;">+ Add subtask</button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const A = '#2F6BE3';
+    const days = [['Sun', 11], ['Mon', 12], ['Tue', 13], ['Wed', 14], ['Thu', 15], ['Fri', 16], ['Sat', 17]];
+    const week = days.map(([wd, n]) => {
+      const sel = n === 16;
+      return { wd, n, bg: sel ? A : 'transparent', color: sel ? '#FFFFFF' : '#141A2E', labelColor: sel ? '#DDE7FC' : '#636B80' };
+    });
+    const raw = [
+      { title: 'Review onboarding flow wireframes', sub: '10:00 – 11:00 · Work', now: true },
+      { title: 'Team sync', sub: '11:00 – 11:30 · Google Calendar' },
+      { title: 'Send invoice to client', sub: '14:00 · Work' },
+      { title: 'Dentist', sub: '17:00 – 17:45 · Google Calendar' }
+    ];
+    const items = raw.map((it, i) => ({
+      ...it,
+      bg: it.now ? A : '#FFFFFF',
+      fg: it.now ? '#FFFFFF' : '#141A2E',
+      subColor: it.now ? '#DDE7FC' : '#636B80',
+      ring: it.now ? '#FFFFFF' : '#C9D2E3',
+      outline: 'none',
+      dotSize: it.now ? '20px' : '14px',
+      dotBorder: it.now ? '5px solid ' + A : '2px solid ' + A,
+      lineTopH: it.now ? '25px' : '28px',
+      lineTop: i === 0 ? 'transparent' : A,
+      lineBottom: i === raw.length - 1 ? 'transparent' : A
+    }));
+    return { week, items };
+  }
+}
+</script>
+</body>
+</html>

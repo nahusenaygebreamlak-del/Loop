@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PC Inbox sorting</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,select{font:inherit;color:inherit}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rb{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:14px;color:#636B80}
+.rb.on{background:#DCE6FB;color:#2F6BE3}
+.item{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:0 12px;border-radius:12px;font-size:14.5px;font-weight:600;text-align:left;color:#141A2E}
+.item .n{margin-left:auto;font-size:13px;color:#636B80;font-variant-numeric:tabular-nums}
+.item.on{background:#DCE6FB;color:#2F6BE3}
+.item.on .n{color:#2F6BE3}
+.lab{padding:18px 12px 6px;font-size:12.5px;font-weight:700;color:#636B80}
+.sw{width:10px;height:10px;border-radius:3px;margin:0 4px}
+.note{display:flex;align-items:center;gap:12px;padding:14px 16px 14px 20px;border-bottom:1px solid #F2F4F9}
+.note:last-child{border-bottom:0}
+.note.sel{background:#DCE6FB}
+.note .t{flex-grow:1;font-size:15px;font-weight:600;min-width:0}
+.note .w{font-size:13px;color:#636B80;white-space:nowrap}
+.fl{font-size:13px;font-weight:700;color:#636B80}
+.c{min-height:38px;padding:0 14px;border-radius:12px;background:#F2F4F9;font-size:13.5px;font-weight:600;color:#636B80}
+.c.on{background:#2F6BE3;color:#FFFFFF;font-weight:700}
+.fld{height:48px;border:0;border-radius:14px;padding:0 14px;background:#F2F4F9;width:100%;font-size:15px;font-weight:600;color:#141A2E}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 900px; display: flex; flex-wrap: wrap; background: #F2F4F9; color: #141A2E; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;">
+  <nav aria-label="App sections" style="flex: 0 0 72px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 0;">
+    <div aria-hidden="true" style="width: 40px; height: 40px; border-radius: 14px; background: #2F6BE3; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-bottom: 14px;">L</div>
+    <button class="rb on" aria-label="Tasks"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></button>
+    <button class="rb" aria-label="Calendar"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></button>
+    <button class="rb" aria-label="Search"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></button>
+    <div style="flex-grow: 1;"></div>
+    <button class="rb" aria-label="Settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg></button>
+  </nav>
+
+  <nav aria-label="Lists" style="flex: 0 0 248px; padding: 20px 14px; display: flex; flex-direction: column; gap: 2px;">
+    <div style="background: #FFFFFF; border-radius: 18px; padding: 6px; display: flex; flex-direction: column; gap: 2px;">
+      <button class="item">Today<span class="n">6</span></button>
+      <button class="item">Next 7 Days<span class="n">9</span></button>
+      <button class="item on">Inbox<span class="n">7</span></button>
+      <button class="item">Calendar</button>
+      <button class="item">All tasks<span class="n">11</span></button>
+    </div>
+    <div class="lab">Lists</div>
+    <button class="item"><span class="sw" style="background: #2F6BE3;"></span>Work<span class="n">5</span></button>
+    <button class="item"><span class="sw" style="background: #E0913A;"></span>Personal<span class="n">3</span></button>
+    <button class="item"><span class="sw" style="background: #3A9E7A;"></span>Learning<span class="n">1</span></button>
+    <div style="flex-grow: 1;"></div>
+    <button class="item" style="color: #636B80;">Completed</button>
+    <button class="item" style="color: #636B80;">Trash</button>
+  </nav>
+
+  <div style="flex: 999 1 600px; min-width: 0; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px 20px 4px;">
+    <main style="flex: 1 1 440px; min-width: 0; padding: 12px 8px 0;">
+      <div style="font-size: 14px; color: #636B80;">7 notes to sort</div>
+      <h1 style="margin: 2px 0 0; font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em;">Inbox</h1>
+      <label for="vpc-dump" style="margin-top: 20px; display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 0 18px; background: #FFFFFF; border-radius: 18px; color: #636B80;">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color: #2F6BE3;"><path d="M12 5v14M5 12h14"/></svg>
+        <input id="vpc-dump" placeholder="Dump a thought" style="border: 0; background: none; outline: none; flex-grow: 1; font-size: 15px;">
+      </label>
+      <div style="margin-top: 14px; background: #FFFFFF; border-radius: 20px; overflow: hidden;">
+        <div class="note"><span class="t">Ask Sara for the interview recordings</span><span class="w">Today, 09:12</span></div>
+        <div class="note sel"><span class="t">Idea: weekly review every Friday afternoon</span><span class="w">Today, 08:40</span></div>
+        <div class="note"><span class="t">Buy printer ink</span><span class="w">Yesterday</span></div>
+        <div class="note"><span class="t">Look into Expo notifications with buttons</span><span class="w">Yesterday</span></div>
+        <div class="note"><span class="t">Gift for mom's birthday, Nov 2</span><span class="w">Wed</span></div>
+        <div class="note"><span class="t">Article on card sorting methods</span><span class="w">Tue</span></div>
+        <div class="note"><span class="t">Follow up with design lead</span><span class="w">Tue</span></div>
+      </div>
+    </main>
+
+    <aside aria-label="Sort note" style="flex: 1 1 360px; min-width: 0; background: #FFFFFF; border-radius: 26px; padding: 26px 24px; display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Turn into a task</h2>
+        <span style="font-size: 13px; font-weight: 700; color: #2F6BE3; background: #DCE6FB; border-radius: 10px; padding: 6px 10px;">2 of 7</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label class="fl" for="vnt-title">Title</label>
+        <input id="vnt-title" class="fld" value="Set up weekly review every Friday afternoon">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span class="fl">When</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;"><button class="c">Today</button><button class="c">Tomorrow</button><button class="c on">Fri, Oct 23</button><button class="c">Pick date</button><button class="c">No date</button></div>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <div style="flex: 1 1 0; display: flex; flex-direction: column; gap: 8px;">
+          <label class="fl" for="vnt-list">List</label>
+          <select id="vnt-list" class="fld"><option>Work</option><option>Personal</option><option>Learning</option></select>
+        </div>
+        <div style="flex: 1 1 0; display: flex; flex-direction: column; gap: 8px;">
+          <label class="fl" for="vnt-repeat">Repeat</label>
+          <select id="vnt-repeat" class="fld"><option>Weekly</option><option>None</option></select>
+        </div>
+      </div>
+      <div style="flex-grow: 1;"></div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button style="flex: 1 1 180px; min-height: 52px; border-radius: 16px; background: #2F6BE3; color: #FFFFFF; font-weight: 800; font-size: 15px;">Create task, next note</button>
+        <button style="flex: 0 1 auto; min-height: 52px; padding: 0 18px; border-radius: 16px; background: #F2F4F9; font-weight: 700; font-size: 15px;">Keep as note</button>
+        <button style="flex: 0 1 auto; min-height: 52px; padding: 0 14px; border-radius: 16px; font-weight: 700; font-size: 15px; color: #636B80;">Delete</button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

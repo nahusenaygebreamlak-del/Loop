@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Added, with a date</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
+<style>
+:where(a.lk){display:inline-flex;align-items:center;justify-content:center;text-align:center;color:inherit;text-decoration:none;cursor:pointer}:where(a.lkb){display:block;color:inherit;text-decoration:none;cursor:pointer}a.lk.row,a.lk.item,a.lk.r,a.lk.b,a.lk.set,a.lk.note{justify-content:flex-start;text-align:left}a.lk.b{align-items:flex-start}
+body{margin:0} *{box-sizing:border-box} button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.scr{width:390px;height:844px;background:#F2F4F9;color:#141A2E;font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:14px;color:#141A2E}
+.chk{flex:0 0 44px;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.chk i{display:block;width:28px;height:28px;border-radius:50%;border:2px solid #C9D2E3}
+.lab{padding:22px 24px 10px;font-size:14px;font-weight:700;color:#636B80}
+.r{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 12px 10px 20px;border-bottom:1px solid #F2F4F9}
+.r:last-child{border-bottom:0}
+.t{font-size:16px;font-weight:700;line-height:1.3}
+.s{font-size:14px;color:#636B80;margin-top:4px}
+.wk{padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.wk span:first-child{font-size:13px;color:#636B80}
+.wk span:nth-child(2){font-size:17px;font-weight:700}
+.wk i{width:5px;height:5px;border-radius:50%;background:#C9D2E3}
+.wk.on{color:#2F6BE3}
+.wk.on span:first-child{color:#2F6BE3}
+.wk.on i{background:#2F6BE3}
+
+@keyframes lpSheet{from{transform:translateY(100%)}to{transform:none}}@keyframes lpDim{from{background-color:#F2F4F9}}@keyframes lpPop{0%{opacity:0;transform:scale(.92)}60%{opacity:1;transform:scale(1.02)}100%{transform:none}}@keyframes lpUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes lpDrop{from{opacity:0;transform:translateY(-28px) scale(.98)}to{opacity:1;transform:none}}@keyframes lpLeft{from{transform:translateX(-100%)}to{transform:none}}@keyframes lpFade{from{opacity:0}to{opacity:1}}@keyframes lpTick{0%{transform:scale(.4)}55%{transform:scale(1.18)}100%{transform:none}}@keyframes lpGrow{from{width:20%}}@keyframes lpPulse{0%,100%{box-shadow:0 0 0 0 rgba(199,55,47,.45)}50%{box-shadow:0 0 0 6px rgba(199,55,47,0)}}section[style*="border-radius: 28px 28px 0 0"]{animation:lpSheet .42s cubic-bezier(.2,.9,.25,1) both}div[style*="background: #8E95A6"]{animation:lpDim .3s ease-out both}section[role="alertdialog"]{animation:lpPop .32s cubic-bezier(.2,.9,.25,1) .05s both}nav[aria-label="Main menu"]{animation:lpLeft .38s cubic-bezier(.2,.9,.25,1) both}article[aria-label="Loop notification"]{animation:lpDrop .5s cubic-bezier(.2,.9,.25,1) .15s both}[role="status"]{animation:lpUp .36s cubic-bezier(.2,.9,.25,1) .25s both}h1{animation:lpUp .4s cubic-bezier(.2,.9,.25,1) both}.grp,.note,.ag,.empty{animation:lpUp .45s cubic-bezier(.2,.9,.25,1) .06s both}.grp+.grp,.lab+.grp{animation-delay:.1s}div[aria-hidden="true"][style*="border-radius: 50%; background: #2F6BE3"]{animation:lpTick .5s cubic-bezier(.2,.9,.25,1) .1s both}.chk.on i{animation:lpTick .4s cubic-bezier(.2,.9,.25,1) both}[role="progressbar"]>div{animation:lpGrow .6s cubic-bezier(.2,.9,.25,1) .1s both}[aria-label="Add task"],[aria-label="New note"]{animation:lpPop .4s cubic-bezier(.2,.9,.25,1) .18s both}[aria-label^="Now,"] span{animation:lpPulse 2s ease-in-out infinite}a.lk,a.lkb,button{transition:transform .14s ease,filter .14s ease,background-color .2s ease}a.lk:active,button:active{transform:scale(.96)}a.lkb:active{transform:scale(.985)}a.lk:hover,button:hover{filter:brightness(.97)}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div class="scr">
+  <header style="padding: 18px 24px 0;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <a href="NSideMenu2.dc.html" class="lk ib" aria-label="Open menu" style="margin-left: -10px;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 24px; height: 24px;"><path d="M4 8h16M4 16h10"/></svg></a>
+      <a href="VSearch.dc.html" class="lk ib" aria-label="Search" style="margin-right: -10px;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></a>
+    </div>
+    <div style="font-size: 15px; color: #636B80; margin-top: 16px;">Friday, October 16</div>
+    <h1 style="margin: 4px 0 0; font-size: 36px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em;">Today</h1>
+  </header>
+  <div role="group" aria-label="This week" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 20px 16px 0;">
+    <button class="wk"><span>Sun</span><span>11</span><i style="background: transparent;"></i></button><button class="wk"><span>Mon</span><span>12</span><i></i></button><button class="wk"><span>Tue</span><span>13</span><i></i></button><button class="wk"><span>Wed</span><span>14</span><i></i></button><button class="wk"><span>Thu</span><span>15</span><i></i></button><button class="wk on"><span>Fri</span><span>16</span><i></i></button><button class="wk"><span>Sat</span><span>17</span><i></i></button>
+  </div>
+  <div class="lab" style="padding-top: 28px;">Today · 3</div>
+  <div style="margin: 0 24px; background: #FFFFFF; border-radius: 20px;">
+    <div class="r"><div style="flex-grow: 1;"><div class="t">Review onboarding wireframes</div><div class="s">10:00 – 11:00 · Work</div></div><a href="NDoneUndo.dc.html" class="lk chk" aria-label="Mark done"><i style="border-color: #C7372F;"></i></a></div>
+    <div class="r"><div style="flex-grow: 1;"><div class="t">Send invoice to client</div><div class="s">14:00 · Work</div></div><a href="NDoneUndo.dc.html" class="lk chk" aria-label="Mark done"><i></i></a></div>
+    <div class="r"><div style="flex-grow: 1;"><div class="t">Read chapter 4</div><div class="s">Anytime · Learning</div></div><a href="NDoneUndo.dc.html" class="lk chk" aria-label="Mark done"><i></i></a></div>
+  </div>
+  <div role="status" style="position: absolute; left: 24px; right: 24px; bottom: 112px; border-radius: 18px; background: #141A2E; color: #FFFFFF; display: flex; align-items: center; gap: 12px; padding: 10px 8px 10px 20px;">
+    <span style="flex-grow: 1; min-width: 0;"><span style="display: block; font-size: 15px; font-weight: 600;">Added for tomorrow, 15:00</span><span style="display: block; font-size: 13px; color: #A9B3C9; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Call bank · Personal</span></span>
+    <a href="VTaskDetail.dc.html" class="lk" style="min-height: 44px; padding: 0 12px; border-radius: 12px; font-size: 15px; font-weight: 800; color: #8FB0FF;">View</a>
+    <a href="VToday.dc.html" class="lk" style="min-height: 44px; padding: 0 12px; border-radius: 12px; font-size: 15px; font-weight: 800; color: #8FB0FF;">Undo</a>
+  </div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 104px; display: flex; align-items: center; justify-content: center;">
+    <a href="NQuickAddInbox.dc.html" class="lk" aria-label="Add task" style="width: 64px; height: 64px; border-radius: 22px; background: #2F6BE3; color: #FFFFFF; display: flex; align-items: center; justify-content: center;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 28px; height: 28px; stroke-width: 2.4;"><path d="M12 5v14M5 12h14"/></svg></a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

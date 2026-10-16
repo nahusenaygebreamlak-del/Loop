@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PC Calendar week</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rb{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:14px;color:#636B80}
+.rb.on{background:#DCE6FB;color:#2F6BE3}
+.seg{min-height:40px;padding:0 16px;border-radius:12px;font-size:14px;font-weight:600;color:#636B80}
+.seg.on{background:#FFFFFF;color:#141A2E;font-weight:700}
+.dh{padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.dh .w{font-size:12.5px;font-weight:600;color:#636B80}
+.dh .n{font-size:18px;font-weight:700;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.dh.today .w{color:#2F6BE3}
+.dh.today .n{background:#2F6BE3;color:#FFFFFF}
+.col{position:relative;border-left:1px solid #F2F4F9;height:660px;background:repeating-linear-gradient(#FFFFFF 0 59px,#F2F4F9 59px 60px)}
+.blk{position:absolute;left:5px;right:5px;border-radius:12px;padding:7px 8px 7px 10px;font-size:12.5px;line-height:1.3;overflow:hidden;display:flex;gap:6px;align-items:flex-start}
+.blk .tx{flex-grow:1;min-width:0;font-weight:700}
+.blk small{display:block;font-weight:500;margin-top:2px}
+.blk.t{background:#DCE6FB;color:#1C3E8A}
+.blk.t small{color:#3D5BA8}
+.blk.now{background:#2F6BE3;color:#FFFFFF}
+.blk.now small{color:#DDE7FC}
+.blk.g{background:#EEF0F5;color:#141A2E}
+.blk.g small{color:#636B80}
+.blk i{flex:0 0 16px;width:16px;height:16px;border-radius:50%;border:2px solid currentColor;opacity:.55;margin-top:1px}
+.hr{height:60px;font-size:12px;font-weight:600;color:#636B80;text-align:right;padding-right:10px;margin-top:-8px;font-variant-numeric:tabular-nums}
+.ad{border-left:1px solid #F2F4F9;padding:6px 5px;display:flex;flex-direction:column;gap:4px;min-height:40px}
+.adi{font-size:12px;font-weight:700;background:#DCE6FB;color:#1C3E8A;border-radius:9px;padding:5px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 900px; display: flex; flex-wrap: wrap; background: #F2F4F9; color: #141A2E; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;">
+  <nav aria-label="App sections" style="flex: 0 0 72px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 0;">
+    <div aria-hidden="true" style="width: 40px; height: 40px; border-radius: 14px; background: #2F6BE3; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-bottom: 14px;">L</div>
+    <button class="rb" aria-label="Tasks"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></button>
+    <button class="rb on" aria-label="Calendar"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></button>
+    <button class="rb" aria-label="Search"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></button>
+    <div style="flex-grow: 1;"></div>
+    <button class="rb" aria-label="Settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg></button>
+  </nav>
+
+  <main style="flex: 999 1 640px; min-width: 0; padding: 28px 28px 24px 8px; display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap;">
+      <div style="flex-grow: 1;">
+        <div style="font-size: 14px; color: #636B80;">Week 42</div>
+        <h1 style="margin: 2px 0 0; font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em;">October 2026</h1>
+      </div>
+      <div role="group" aria-label="View" style="display: flex; gap: 4px; padding: 4px; background: #E4E8F1; border-radius: 15px;">
+        <button class="seg">Day</button><button class="seg on">Week</button><button class="seg">Month</button>
+      </div>
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <button class="rb" aria-label="Previous week" style="background: #FFFFFF; color: #141A2E;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <button style="min-height: 44px; padding: 0 16px; border-radius: 14px; background: #FFFFFF; font-size: 14px; font-weight: 700; color: #2F6BE3;">Today</button>
+        <button class="rb" aria-label="Next week" style="background: #FFFFFF; color: #141A2E;"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+      <button style="min-height: 44px; padding: 0 18px; border-radius: 14px; background: #2F6BE3; color: #FFFFFF; font-size: 14.5px; font-weight: 700;">+ Add task</button>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 26px; padding: 8px 12px 16px; overflow-x: auto;">
+      <div style="min-width: 760px;">
+        <div style="display: grid; grid-template-columns: 60px repeat(7, minmax(0, 1fr));">
+          <div></div>
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="7"><div class="{{d.hcls}}"><span class="w">{{d.wd}}</span><span class="n">{{d.n}}</span></div></sc-for>
+        </div>
+        <div style="display: grid; grid-template-columns: 60px repeat(7, minmax(0, 1fr)); border-top: 1px solid #F2F4F9; border-bottom: 1px solid #F2F4F9;">
+          <div style="font-size: 11.5px; font-weight: 600; color: #636B80; text-align: right; padding: 12px 10px 0 0;">All day</div>
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="7"><div class="ad"><sc-for list="{{d.allday}}" as="a" hint-placeholder-count="1"><div class="adi">{{a}}</div></sc-for></div></sc-for>
+        </div>
+        <div style="display: grid; grid-template-columns: 60px repeat(7, minmax(0, 1fr)); padding-top: 10px;">
+          <div><sc-for list="{{hours}}" as="h" hint-placeholder-count="11"><div class="hr">{{h}}</div></sc-for></div>
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+            <div class="col"><sc-for list="{{d.blocks}}" as="b" hint-placeholder-count="1"><div class="{{b.cls}}" style="{{b.pos}}"><span class="tx">{{b.title}}<small>{{b.time}}</small></span><i></i></div></sc-for></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const H = 60, start = 8;
+    const blk = (kind, title, s, e, time) => ({
+      cls: 'blk ' + kind, title, time,
+      pos: 'top:' + ((s - start) * H + 2) + 'px;height:' + Math.max((e - s) * H - 4, 30) + 'px'
+    });
+    const days = [
+      { wd: 'Sun', n: 11, blocks: [], allday: [] },
+      { wd: 'Mon', n: 12, blocks: [blk('t', 'Plan the sprint', 9, 10, '09:00 – 10:00')], allday: [] },
+      { wd: 'Tue', n: 13, blocks: [blk('g', 'Design review', 13, 14, '13:00 · Google Calendar')], allday: [] },
+      { wd: 'Wed', n: 14, blocks: [blk('t', 'Renew website domain', 10, 10.75, '10:00')], allday: [] },
+      { wd: 'Thu', n: 15, blocks: [blk('t', 'Draft Q4 project plan', 9, 11, '09:00 – 11:00'), blk('g', 'Client call', 15, 16, '15:00 · Google Calendar')], allday: [] },
+      { wd: 'Fri', n: 16, today: true, blocks: [blk('now', 'Review onboarding wireframes', 10, 11, '10:00 – 11:00'), blk('g', 'Team sync', 11, 11.6, '11:00 · Google'), blk('t', 'Send invoice to client', 14, 14.75, '14:00'), blk('g', 'Dentist', 17, 17.75, '17:00 · Google')], allday: ['Call bank', 'Read chapter 4'] },
+      { wd: 'Sat', n: 17, blocks: [blk('t', 'Grocery run', 10, 11, '10:00 – 11:00')], allday: [] }
+    ].map((d) => ({ ...d, hcls: d.today ? 'dh today' : 'dh' }));
+    const hours = [];
+    for (let h = start; h <= 18; h++) hours.push((h < 10 ? '0' : '') + h + ':00');
+    return { days, hours };
+  }
+}
+</script>
+</body>
+</html>
