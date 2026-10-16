@@ -9,6 +9,10 @@ WebBrowser.maybeCompleteAuthSession();
 
 type AuthState = {
   session: Session | null;
+  /** Signed in for real, or in preview mode (no Supabase keys yet). */
+  signedIn: boolean;
+  /** Temporary: true when sign-in skipped Google because Supabase isn't set up. */
+  preview: boolean;
   /** True until the stored session has been read. */
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
@@ -20,6 +24,7 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [preview, setPreview] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -46,9 +51,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthState = {
     session,
+    signedIn: !!session || preview,
+    preview,
     loading,
-    signInWithGoogle,
+    signInWithGoogle: async () => {
+      // Temporary until docs/setup.md is done: go straight to home without an account.
+      if (!isSupabaseConfigured) {
+        setPreview(true);
+        return;
+      }
+      await signInWithGoogle();
+    },
     signOut: async () => {
+      if (preview) {
+        setPreview(false);
+        return;
+      }
       await supabase.auth.signOut();
     },
   };

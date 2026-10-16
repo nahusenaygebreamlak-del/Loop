@@ -24,8 +24,7 @@ export default function SignIn() {
       await signInWithGoogle();
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';
-      if (msg === 'not-configured') setError("Sign-in isn't set up yet. Add the Supabase keys to .env.");
-      else if (msg !== 'cancelled') setError("Couldn't sign in. Check your connection and try again.");
+      if (msg !== 'cancelled') setError("Couldn't sign in. Check your connection and try again.");
     } finally {
       setBusy(false);
     }

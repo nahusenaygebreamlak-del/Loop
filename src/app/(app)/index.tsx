@@ -10,7 +10,7 @@ import { radius, size } from '@/theme/tokens';
 // Temporary Milestone 0 landing screen. Replaced by Today (VToday) in Milestone 1.
 export default function Home() {
   const { c, preference, setPreference } = useTheme();
-  const { session, signOut } = useAuth();
+  const { session, preview, signOut } = useAuth();
   const insets = useSafeAreaInsets();
   const name = session?.user.user_metadata?.full_name ?? session?.user.email ?? '';
 
@@ -20,7 +20,7 @@ export default function Home() {
         You're in
       </AppText>
       <AppText tone="secondary" variant="secondary">
-        Signed in as {name}. Today arrives in the next milestone.
+        {preview ? 'Preview mode, no account yet.' : `Signed in as ${name}.`} Today arrives in the next milestone.
       </AppText>
 
       <View style={[styles.card, { backgroundColor: c.card }]}>

@@ -42,8 +42,7 @@ export default function RootLayout() {
 
 function RootStack() {
   const { c, scheme } = useTheme();
-  const { session, loading } = useAuth();
-  const signedIn = !!session;
+  const { signedIn, loading } = useAuth();
 
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync().catch(() => {});
