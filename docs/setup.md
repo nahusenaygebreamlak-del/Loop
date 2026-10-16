@@ -27,3 +27,9 @@ Loop needs two accounts connected before "Continue with Google" works: a **Supab
 ## 4. Try it
 
 Tell Claude it's done. Claude restarts the app, and "Continue with Google" will take you through Google and land you on the "You're in" screen.
+
+## Current setup (done 16 Oct 2026)
+
+- Supabase project: `loop` (West EU, Ireland), `https://hjyfivfgasdpkpgctmcd.supabase.co`. Schema applied; Google provider on; Site URL `http://localhost:8081`; redirect URLs `http://localhost:8081/**` and `loop://**`.
+- Google Cloud project: `Loop` (`loop-511820`), app in Testing with the owner as a test user; web OAuth client "Loop (Supabase)".
+- Keys live in `.env` (not committed).
