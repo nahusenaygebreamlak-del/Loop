@@ -10,11 +10,15 @@ export type List = {
   name: string;
   color: ListColor;
   sortOrder: number;
+  sortBy: ListSort;
+  showDone: boolean;
   archivedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
+
+export type ListSort = 'date' | 'priority' | 'title';
 
 export type Subtask = { id: string; title: string; doneAt: string | null; sortOrder: number };
 

@@ -7,13 +7,13 @@ import { Check } from '@/components/Check';
 import { ContentIn } from '@/components/ContentIn';
 import { PressScale } from '@/components/PressScale';
 import { useSheets } from '@/components/Sheet';
-import { useSnackbar } from '@/components/Snackbar';
 import { Card, EmptyCard, Fab, GroupLabel, IconButton, Swatch } from '@/components/ui';
 import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
-import { TempMenuSheet } from '@/features/sheets/TempMenuSheet';
+import { ListMenuSheet } from '@/features/sheets/ListMenuSheet';
+import { useMenu } from '@/features/useMenu';
 import { useTaskActions } from '@/features/useTaskActions';
-import { listGroups, listRowSub, openCount } from '@/lib/taskViews';
+import { listGroups, listRowSub, openCount, sortTasks, type Group } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
 import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -26,7 +26,7 @@ export default function ListScreen() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const sheets = useSheets();
-  const snack = useSnackbar();
+  const openMenu = useMenu();
   const actions = useTaskActions();
   const { today } = useToday();
   const list = useStore((s) => s.lists.find((l) => l.id === id));
@@ -35,9 +35,14 @@ export default function ListScreen() {
   // Ticked here stays visible (tinted, "Done just now") until you leave, as in NDoneUndo.
   const [justDone, setJustDone] = useState<Set<string>>(new Set());
 
-  if (!list) return <View style={{ flex: 1, backgroundColor: c.ground }} />;
+  if (!list || list.deletedAt) return <View style={{ flex: 1, backgroundColor: c.ground }} />;
 
-  const groups = listGroups(tasks, list.id, today, justDone);
+  const base = listGroups(tasks, list.id, today, justDone).map((g) => (list.sortBy === 'date' ? g : { ...g, tasks: sortTasks(g.tasks, list.sortBy) }));
+  // "Show done tasks" (NListMenu) adds the rest of the done tasks at the end.
+  const doneRest = list.showDone ? tasks.filter((t) => t.listId === list.id && t.doneAt && !t.deletedAt && !justDone.has(t.id)) : [];
+  const groups: (Omit<Group, 'key'> & { key: Group['key'] | 'done' })[] = doneRest.length
+    ? [...base, { key: 'done', label: 'Done', tasks: [...doneRest].sort((a, b) => b.doneAt!.localeCompare(a.doneAt!)) }]
+    : base;
   const open = openCount(tasks, list.id);
   const toggle = (taskId: string) => {
     const wasDone = !!tasks.find((t) => t.id === taskId)?.doneAt;
@@ -51,8 +56,8 @@ export default function ListScreen() {
       <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 140 + insets.bottom }}>
         <View style={styles.header}>
           <View style={styles.topRow}>
-            <IconButton icon="menu" label="Open menu" iconSize={24} style={{ marginLeft: -10 }} onPress={() => sheets.open(() => <TempMenuSheet />)} />
-            <IconButton icon="more" label="List options" style={{ marginRight: -10 }} onPress={() => snack({ title: 'List options arrive in the next milestone' })} />
+            <IconButton icon="menu" label="Open menu" iconSize={24} style={{ marginLeft: -10 }} onPress={openMenu} />
+            <IconButton icon="more" label="List options" style={{ marginRight: -10 }} onPress={() => sheets.open(() => <ListMenuSheet listId={list.id} />)} />
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 }}>
             <Swatch color={listColors[list.color]} />
@@ -81,7 +86,7 @@ export default function ListScreen() {
             <Card>
               {g.tasks.map((t, i) => {
                 const done = !!t.doneAt;
-                const sub = done ? 'Done just now' : listRowSub(t, tags, today);
+                const sub = done ? (justDone.has(t.id) ? 'Done just now' : listRowSub(t, tags, today)) : listRowSub(t, tags, today);
                 return (
                   <View
                     key={t.id}

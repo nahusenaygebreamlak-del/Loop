@@ -33,8 +33,11 @@ function findList(lists: List[], name: string | null): List | undefined {
   return live.find((l) => l.name.toLowerCase() === n) ?? live.find((l) => l.name.toLowerCase().startsWith(n));
 }
 
-/** VQuickAdd / NQuickAddInbox. `listId` presets the list when opened from a list screen. */
-export function QuickAddSheet({ listId: presetList }: { listId?: string | null }) {
+/**
+ * VQuickAdd / NQuickAddInbox. Presets: `listId` from a list screen, `date` from a day in Next 7 Days,
+ * `initialText` from a tag view ("#design ").
+ */
+export function QuickAddSheet({ listId: presetList, date: presetDate, initialText = '' }: { listId?: string | null; date?: string; initialText?: string }) {
   const { c } = useTheme();
   const close = useCloseSheet();
   const sheets = useSheets();
@@ -44,9 +47,12 @@ export function QuickAddSheet({ listId: presetList }: { listId?: string | null }
   const store = useStore.getState;
   const inputRef = useRef<TextInputInstance>(null);
 
-  const [text, setText] = useState('');
+  const [text, setText] = useState(initialText);
   const [notes, setNotes] = useState('');
-  const [o, setO] = useState<Overrides>(presetList ? { listId: presetList } : {});
+  const [o, setO] = useState<Overrides>(() => ({
+    ...(presetList ? { listId: presetList } : {}),
+    ...(presetDate ? { date: { dueDate: presetDate, startTime: null, endTime: null, reminderMinutes: null, repeatRule: null } } : {}),
+  }));
 
   const today = todayKey();
   const parsed = useMemo(() => parseQuickAdd(text), [text]);

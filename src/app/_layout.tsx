@@ -15,6 +15,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SheetProvider } from '@/components/Sheet';
 import { SnackbarProvider } from '@/components/Snackbar';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { setTimeFormat } from '@/lib/dates';
+import { useSettings } from '@/store/settings';
 import { useHydrated } from '@/store/store';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 
@@ -51,6 +53,9 @@ function RootStack() {
   const { c, scheme } = useTheme();
   const { signedIn, loading: authLoading } = useAuth();
   const hydrated = useHydrated();
+  const timeFormat = useSettings((s) => s.timeFormat);
+  // Times are formatted outside React, so re-render everything when the clock setting changes.
+  setTimeFormat(timeFormat);
   const loading = authLoading || !hydrated;
 
   useEffect(() => {
@@ -62,7 +67,7 @@ function RootStack() {
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.ground } }}>
+      <Stack key={timeFormat} screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.ground } }}>
         <Stack.Protected guard={signedIn}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>

@@ -47,6 +47,7 @@ They come from a design canvas. Each file is one screen: plain HTML with **inlin
 - Desktop/web layout: early drafts only (`desktop-v1`). Design it properly after the phone app is built.
 - Build: **Milestone 0 (setup) done**: Expo app, light/dark theme from tokens, font, Supabase schema, Google sign-in screen.
 - Build: **Milestone 1 (tasks core) done**: Today, quick add with natural language, task details, list screen, all pickers, tick/delete with Undo. Data is stored on the device; sync comes in Milestone 4.
+- Build: **Milestone 2 (navigation) done**: side menu, Next 7 Days, All tasks, Tag view, Completed, Trash (restore, delete for good, empty, 30-day purge), lists add/edit/archive/delete, Search, Settings with check-in times, theme, week and time, Account and sign out.
 
 ## Running the app
 

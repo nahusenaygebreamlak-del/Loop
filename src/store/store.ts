@@ -6,6 +6,9 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { nextOccurrence } from '@/lib/repeat';
 import type { InboxItem, List, ListColor, Note, Subtask, Tag, Task } from './types';
 
+export type TrashKind = 'task' | 'inbox' | 'note';
+const TRASH_DAYS = 30;
+
 // Local, offline-first data. Everything lives on the device; Supabase sync arrives in Milestone 4.
 
 type Data = {
@@ -40,6 +43,21 @@ type Actions = {
   taskToNote: (id: string) => () => void;
   /** "Back to Inbox": the task becomes an Inbox note again. Returns an undo function. */
   taskBackToInbox: (id: string) => () => void;
+
+  addList: (name: string, color: ListColor) => string;
+  updateList: (id: string, patch: Partial<List>) => void;
+  /** Hides the list and its tasks. Returns an undo function. */
+  archiveList: (id: string) => () => void;
+  /** Sends the list's tasks to Trash. Returns an undo function. */
+  deleteList: (id: string) => () => void;
+
+  /** Restores a Trash item (a task also brings back its deleted list). */
+  restore: (kind: TrashKind, id: string) => void;
+  /** Deletes a Trash item for good. */
+  purge: (kind: TrashKind, id: string) => void;
+  emptyTrash: () => void;
+  /** Deletes anything that has been in Trash for 30 days. */
+  purgeExpired: (now?: Date) => void;
 };
 
 export type Store = Data & Actions;
@@ -77,6 +95,8 @@ export const useStore = create<Store>()(
               name,
               color,
               sortOrder: i,
+              sortBy: 'date' as const,
+              showDone: false,
               archivedAt: null,
               deletedAt: null,
               createdAt: ts,
@@ -231,13 +251,97 @@ export const useStore = create<Store>()(
             putTask(t);
           };
         },
+
+        addList: (name, color) => {
+          const ts = now();
+          const list: List = {
+            id: randomUUID(),
+            name: name.trim(),
+            color,
+            sortOrder: Math.max(-1, ...get().lists.map((l) => l.sortOrder)) + 1,
+            sortBy: 'date',
+            showDone: false,
+            archivedAt: null,
+            deletedAt: null,
+            createdAt: ts,
+            updatedAt: ts,
+          };
+          set((s) => ({ lists: [...s.lists, list] }));
+          return list.id;
+        },
+
+        updateList: (id, patch) =>
+          set((s) => ({ lists: s.lists.map((l) => (l.id === id ? { ...l, ...patch, updatedAt: now() } : l)) })),
+
+        archiveList: (id) => {
+          const before = get().lists.find((l) => l.id === id);
+          get().updateList(id, { archivedAt: now() });
+          return () => before && get().updateList(id, { archivedAt: before.archivedAt });
+        },
+
+        deleteList: (id) => {
+          const ts = now();
+          const prevTasks = get().tasks;
+          const prevLists = get().lists;
+          set((s) => ({
+            lists: s.lists.map((l) => (l.id === id ? { ...l, deletedAt: ts, updatedAt: ts } : l)),
+            // Same timestamp, so restoring the list's tasks together is possible later.
+            tasks: s.tasks.map((t) => (t.listId === id && !t.deletedAt ? { ...t, deletedAt: ts, updatedAt: ts } : t)),
+          }));
+          return () => set({ tasks: prevTasks, lists: prevLists });
+        },
+
+        restore: (kind, id) => {
+          const ts = now();
+          if (kind === 'task') {
+            const t = get().tasks.find((x) => x.id === id);
+            set((s) => ({
+              tasks: s.tasks.map((x) => (x.id === id ? { ...x, deletedAt: null, updatedAt: ts } : x)),
+              lists: s.lists.map((l) => (l.id === t?.listId && l.deletedAt ? { ...l, deletedAt: null, updatedAt: ts } : l)),
+            }));
+          } else if (kind === 'inbox') {
+            set((s) => ({ inbox: s.inbox.map((x) => (x.id === id ? { ...x, deletedAt: null, updatedAt: ts } : x)) }));
+          } else {
+            set((s) => ({ notes: s.notes.map((x) => (x.id === id ? { ...x, deletedAt: null, updatedAt: ts } : x)) }));
+          }
+        },
+
+        purge: (kind, id) => {
+          if (kind === 'task') set((s) => ({ tasks: s.tasks.filter((x) => x.id !== id) }));
+          else if (kind === 'inbox') set((s) => ({ inbox: s.inbox.filter((x) => x.id !== id) }));
+          else set((s) => ({ notes: s.notes.filter((x) => x.id !== id) }));
+        },
+
+        emptyTrash: () =>
+          set((s) => ({
+            tasks: s.tasks.filter((x) => !x.deletedAt),
+            inbox: s.inbox.filter((x) => !x.deletedAt),
+            notes: s.notes.filter((x) => !x.deletedAt),
+            lists: s.lists.filter((l) => !l.deletedAt || s.tasks.some((t) => t.listId === l.id && !t.deletedAt)),
+          })),
+
+        purgeExpired: (at = new Date()) => {
+          const cutoff = at.getTime() - TRASH_DAYS * 86_400_000;
+          const keep = (x: { deletedAt: string | null }) => !x.deletedAt || new Date(x.deletedAt).getTime() > cutoff;
+          set((s) => ({ tasks: s.tasks.filter(keep), inbox: s.inbox.filter(keep), notes: s.notes.filter(keep), lists: s.lists.filter(keep) }));
+        },
       };
     },
     {
       name: 'loop.data.v1',
+      version: 2,
+      // v1 lists had no sort/show-done settings.
+      migrate: (state, version) => {
+        const s = state as Data;
+        if (version < 2) s.lists = s.lists.map((l) => ({ ...l, sortBy: l.sortBy ?? 'date', showDone: l.showDone ?? false }));
+        return s;
+      },
       storage: createJSONStorage(() => AsyncStorage),
       partialize: ({ lists, tasks, tags, inbox, notes }) => ({ lists, tasks, tags, inbox, notes }),
-      onRehydrateStorage: () => (state) => state?.seedDefaults(),
+      onRehydrateStorage: () => (state) => {
+        state?.seedDefaults();
+        state?.purgeExpired();
+      },
     },
   ),
 );

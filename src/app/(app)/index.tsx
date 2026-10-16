@@ -5,17 +5,18 @@ import { Check } from '@/components/Check';
 import { ContentIn } from '@/components/ContentIn';
 import { PressScale } from '@/components/PressScale';
 import { useSheets } from '@/components/Sheet';
-import { useSnackbar } from '@/components/Snackbar';
 import { Card, EmptyCard, Fab, GroupLabel, IconButton } from '@/components/ui';
 import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
-import { TempMenuSheet } from '@/features/sheets/TempMenuSheet';
 import { Timeline } from '@/features/today/Timeline';
 import { WeekStrip } from '@/features/today/WeekStrip';
+import { goMain } from '@/features/nav';
+import { useMenu } from '@/features/useMenu';
 import { useTaskActions } from '@/features/useTaskActions';
 import { longDate, weekOf } from '@/lib/dates';
-import { daysWithItems, todayView } from '@/lib/taskViews';
+import { daysWithItems, todayView, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
+import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { size } from '@/theme/tokens';
@@ -26,14 +27,16 @@ export default function Today() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const sheets = useSheets();
-  const snack = useSnackbar();
+  const openMenu = useMenu();
+  const weekStart = useSettings((st) => st.weekStart);
   const actions = useTaskActions();
   const { today, now } = useToday();
-  const tasks = useStore((s) => s.tasks);
+  const allTasks = useStore((s) => s.tasks);
   const lists = useStore((s) => s.lists);
+  const tasks = visibleTasks(allTasks, lists);
 
   const { schedule, anytime, currentId } = todayView(tasks, today, now);
-  const week = weekOf(today, 0);
+  const week = weekOf(today, weekStart);
   const dots = daysWithItems(tasks, week);
   const quickActions = (id: string) => sheets.open(() => <QuickActionsSheet taskId={id} actions={actions} />);
 
@@ -42,8 +45,8 @@ export default function Today() {
       <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 140 + insets.bottom }}>
         <View style={styles.header}>
           <View style={styles.topRow}>
-            <IconButton icon="menu" label="Open menu" iconSize={24} style={{ marginLeft: -10 }} onPress={() => sheets.open(() => <TempMenuSheet />)} />
-            <IconButton icon="search" label="Search" style={{ marginRight: -10 }} onPress={() => snack({ title: 'Search arrives in the next milestone' })} />
+            <IconButton icon="menu" label="Open menu" iconSize={24} style={{ marginLeft: -10 }} onPress={openMenu} />
+            <IconButton icon="search" label="Search" style={{ marginRight: -10 }} onPress={() => goMain('/search')} />
           </View>
           <AppText tone="secondary" style={{ fontSize: 15, marginTop: 16 }}>
             {longDate(today)}

@@ -78,9 +78,26 @@ export function relativeDayInSentence(key: DateKey, today: DateKey): string {
   return r === 'Today' || r === 'Tomorrow' || r === 'Yesterday' ? r.toLowerCase() : r;
 }
 
+// 12- or 24-hour display, set from Settings › Week and time (the app re-renders when it changes).
+let use12h = false;
+export function setTimeFormat(format: '12h' | '24h') {
+  use12h = format === '12h';
+}
+
+/** "15:00", or "3:00 PM" in 12-hour mode. */
+export function formatTime(t: TimeKey): string {
+  if (!use12h) return t;
+  const [h, m] = t.split(':').map(Number);
+  return `${((h + 11) % 12) + 1}:${pad(m)} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
 export function timeRange(start: TimeKey | null, end: TimeKey | null): string {
   if (!start) return '';
-  return end ? `${start} – ${end}` : start;
+  return end ? `${formatTime(start)} – ${formatTime(end)}` : formatTime(start);
+}
+
+export function weekdayLong(key: DateKey): string {
+  return WEEKDAYS[fromKey(key).getDay()];
 }
 
 /** The 7 days of the week containing `key`, starting on `weekStart` (0 = Sunday). */

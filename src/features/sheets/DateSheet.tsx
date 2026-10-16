@@ -8,6 +8,7 @@ import { SheetButton } from '@/components/ui';
 import { addDays, fromKey, monthGrid, monthName, nextMonday, shortDate, timeRange, todayKey, type DateKey, type TimeKey } from '@/lib/dates';
 import { shortRuleLabel } from '@/lib/repeat';
 import { reminderLabel } from '@/lib/taskViews';
+import { useSettings } from '@/store/settings';
 import { useTheme } from '@/theme/ThemeProvider';
 import { font } from '@/theme/typography';
 import { PickChip } from './parts';
@@ -26,7 +27,8 @@ export type DateValue = {
 const WEEK_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 /** NDatePicker: quick chips, month calendar, Time, Reminder, Repeat. Done saves. */
-export function DateSheet({ value, onChange, weekStart = 0 }: { value: DateValue; onChange: (v: DateValue) => void; weekStart?: number }) {
+export function DateSheet({ value, onChange }: { value: DateValue; onChange: (v: DateValue) => void }) {
+  const weekStart = useSettings((s) => s.weekStart);
   const { c } = useTheme();
   const close = useCloseSheet();
   const sheets = useSheets();
