@@ -16,10 +16,12 @@ type Props = {
   /** On the filled "current" timeline card the ring is white. */
   onAccent?: boolean;
   label: string;
+  /** Smaller circle (24 px in the note editor's checklist, NNoteFormats). */
+  circle?: number;
 };
 
 /** Round check: 28 px circle with a 2 px ring inside a 44 px tap area. Ring colour = priority. */
-export function Check({ done, onToggle, priority = 0, onAccent, label }: Props) {
+export function Check({ done, onToggle, priority = 0, onAccent, label, circle = size.check.circle }: Props) {
   const { c } = useTheme();
   const reduced = useReducedMotion();
   const scale = useSharedValue(1);
@@ -51,9 +53,9 @@ export function Check({ done, onToggle, priority = 0, onAccent, label }: Props) 
         <Animated.View
           style={[
             {
-              width: size.check.circle,
-              height: size.check.circle,
-              borderRadius: size.check.circle / 2,
+              width: circle,
+              height: circle,
+              borderRadius: circle / 2,
               backgroundColor: c.accent,
               alignItems: 'center',
               justifyContent: 'center',
@@ -61,14 +63,14 @@ export function Check({ done, onToggle, priority = 0, onAccent, label }: Props) 
             pop,
           ]}
         >
-          <Icon name="check" size={16} strokeWidth={3} color={c.onAccent} />
+          <Icon name="check" size={circle < 28 ? 14 : 16} strokeWidth={3} color={c.onAccent} />
         </Animated.View>
       ) : (
         <View
           style={{
-            width: size.check.circle,
-            height: size.check.circle,
-            borderRadius: size.check.circle / 2,
+            width: circle,
+            height: circle,
+            borderRadius: circle / 2,
             borderWidth: size.check.border,
             borderColor: ring,
           }}

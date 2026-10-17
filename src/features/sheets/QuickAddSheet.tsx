@@ -100,7 +100,12 @@ export function QuickAddSheet({ listId: presetList, date: presetDate, initialTex
     const allTags = [...new Set([...parsed.tags.map((t) => store().ensureTag(t)), ...tagIds])];
     const id = store().addTask({ title, notes: notes.trim(), listId, priority, tagIds: allTags, ...date });
     close();
-    const when = date.dueDate ? `Added for ${relativeDayInSentence(date.dueDate, today)}${date.startTime ? `, ${timeRange(date.startTime, date.endTime)}` : ''}` : `Added to ${list?.name}`;
+    if (!date.dueDate && list) {
+      // NSnackbars: a dated-less task lands in its list.
+      snack({ title: `Added to ${list.name}`, sub: `No date, shows in the ${list.name} list`, actions: [{ label: 'View', onPress: () => goMain({ pathname: '/list/[id]', params: { id: list.id } }) }] });
+      return;
+    }
+    const when = `Added for ${relativeDayInSentence(date.dueDate!, today)}${date.startTime ? `, ${timeRange(date.startTime, date.endTime)}` : ''}`;
     snack({
       title: when,
       sub: [title, list?.name].filter(Boolean).join(' · '),
@@ -219,7 +224,7 @@ export function QuickAddSheet({ listId: presetList, date: presetDate, initialTex
           </View>
         ) : (
           <AppText tone="secondary" style={{ fontSize: 13.5, flex: 1 }}>
-            Type dates, #tags, !priority, ~list
+            {canSave ? 'Type dates, #tags, !priority, ~list' : 'Try "call mom tomorrow 6pm #personal"'}
           </AppText>
         )}
         <PressScale
@@ -228,7 +233,7 @@ export function QuickAddSheet({ listId: presetList, date: presetDate, initialTex
           accessibilityState={{ disabled: !canSave }}
           disabled={!canSave}
           onPress={save}
-          style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center', opacity: canSave ? 1 : 0.5 }}
+          style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: canSave ? c.accent : c.line, alignItems: 'center', justifyContent: 'center' }}
         >
           <Icon name="arrowRight" strokeWidth={2.4} color={c.onAccent} />
         </PressScale>

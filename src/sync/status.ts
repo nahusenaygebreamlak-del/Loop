@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth';
 import { useSyncStatus } from './engine';
 
 /** One line for the side menu and Account: "Synced just now", "Offline · changes will sync later"… */
-export function useSyncLine(): { line: string; tone: 'secondary' | 'danger' } {
+export function useSyncLine(): { line: string; tone: 'secondary' | 'syncing' | 'warn' } {
   const { session } = useAuth();
   const { state, lastSyncedAt, pending } = useSyncStatus();
   const [, tick] = useState(0);
@@ -14,9 +14,9 @@ export function useSyncLine(): { line: string; tone: 'secondary' | 'danger' } {
 
   if (!session || state === 'off') return { line: 'Saved on this phone', tone: 'secondary' };
   if (state === 'offline') return { line: 'Offline · changes will sync later', tone: 'secondary' };
-  if (state === 'error') return { line: "Can't sync right now · your tasks are fine", tone: 'danger' };
-  if (state === 'syncing' && !lastSyncedAt) return { line: 'Syncing…', tone: 'secondary' };
-  if (pending && state !== 'synced') return { line: 'Syncing…', tone: 'secondary' };
+  if (state === 'error') return { line: "Can't sync right now · your tasks are fine", tone: 'warn' };
+  if (state === 'syncing' && !lastSyncedAt) return { line: 'Syncing…', tone: 'syncing' };
+  if (pending && state !== 'synced') return { line: 'Syncing…', tone: 'syncing' };
   return { line: `Synced ${ago(lastSyncedAt)}`, tone: 'secondary' };
 }
 

@@ -11,7 +11,7 @@ export type CheckinSettings = {
 };
 
 export type Kind = 'morning' | 'afternoon' | 'sort';
-export type Category = 'leftovers' | 'plain' | 'afternoon' | 'sort';
+export type Category = 'leftovers' | 'plain' | 'empty' | 'afternoon' | 'sort';
 
 export type PlannedNotification = {
   id: string; // stable per kind and day, so rescheduling replaces it
@@ -68,7 +68,7 @@ export function morningContent(tasks: Task[], lists: List[], day: DateKey): { ti
   const today = openTasks(tasks, lists)
     .filter((t) => t.dueDate === day)
     .sort((a, b) => (a.startTime ?? '99').localeCompare(b.startTime ?? '99'));
-  if (!today.length) return { title: 'Today: nothing planned yet', body: 'Add a few things when you are ready.', category: 'plain' };
+  if (!today.length) return { title: 'Today: nothing planned yet', body: 'A clear day. Add something, or enjoy it.', category: 'empty' };
   const lines = today.slice(0, 3).map((t) => (t.startTime ? `${formatTime(t.startTime)}  ${t.title}` : t.title));
   if (today.length > 3) lines.push(`and ${today.length - 3} more`);
   return { title: `Today: ${plural(today.length, 'task')}`, body: lines.join('\n'), category: 'plain' };

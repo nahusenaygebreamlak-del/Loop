@@ -1,3 +1,4 @@
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -62,6 +63,14 @@ export default function Today() {
     }, 900);
     return () => clearTimeout(t);
   }, [carriedPending, sheets]);
+
+  // "Add a task" on the 08:30 nothing-planned notification.
+  const { add } = useLocalSearchParams<{ add?: string }>();
+  useEffect(() => {
+    if (add !== '1') return;
+    router.setParams({ add: undefined });
+    sheets.open(() => <QuickAddSheet />);
+  }, [add, sheets]);
 
   const hasItems = (d: DateKey) => tasks.some((t) => isLive(t) && t.dueDate === d);
   const quickActions = (id: string) => sheets.open(() => <QuickActionsSheet taskId={id} actions={actions} />);

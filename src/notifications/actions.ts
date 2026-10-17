@@ -7,7 +7,7 @@ import { useStore } from '@/store/store';
 import { A, CHANNEL, CHANNEL_QUIET } from './constants';
 import { cancelMorningReminders, rescheduleCheckins } from './schedule';
 
-export type Route = '/' | '/checkin' | '/inbox/sort' | null;
+export type Route = '/' | '/?add=1' | '/checkin' | '/inbox/sort' | null;
 
 const HANDLED = 'loop.notification-responses';
 const seen = new Set<string>();
@@ -83,10 +83,24 @@ export async function handleNotificationResponse(response: Notifications.Notific
     }
     case A.undo: {
       if (data.undo) store.applyCheckin(JSON.parse(data.undo) as Change[]);
-      await Notifications.dismissNotificationAsync(id);
       await rescheduleCheckins();
+      // NNotifTexts: say what Undo did, then close on its own.
+      const after = useStore.getState();
+      const back = visibleTasks(after.tasks, after.lists).filter((t) => isOpen(t) && t.dueDate === today).length;
+      await Notifications.scheduleNotificationAsync({
+        identifier: id,
+        content: { title: `Undone. ${plural(back)} ${back === 1 ? 'is' : 'are'} back on today`, body: 'This closes in a few seconds.', data: { category: 'undone' } },
+        trigger: { channelId: CHANNEL_QUIET },
+      });
+      setTimeout(() => void Notifications.dismissNotificationAsync(id).catch(() => {}), 5000);
       return null;
     }
+    case A.notToday:
+      await Notifications.dismissNotificationAsync(id);
+      return null;
+    case A.addTask:
+      await Notifications.dismissNotificationAsync(id);
+      return '/?add=1';
     case A.laterTonight: {
       // Ask again two hours later, same text.
       await Notifications.dismissNotificationAsync(id);

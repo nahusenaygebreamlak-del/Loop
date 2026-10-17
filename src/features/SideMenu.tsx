@@ -17,6 +17,7 @@ import { listColors, radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 import { LoopMarkTile } from '@/components/LoopMark';
 import { useSyncLine } from '@/sync/status';
+import { Spinner } from '@/components/Spinner';
 import { goMain } from './nav';
 import { ListEditSheet } from './sheets/ListEditSheet';
 
@@ -67,9 +68,16 @@ export function SideMenu() {
         <LoopMarkTile />
         <View style={{ flex: 1 }}>
           <AppText style={{ ...font(800), fontSize: 17 }}>Loop</AppText>
-          <AppText tone={sync.tone} style={{ fontSize: 13 }} numberOfLines={2} accessibilityLiveRegion="polite">
-            {sync.line}
-          </AppText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {sync.tone === 'syncing' ? <Spinner size={10} /> : null}
+            <AppText
+              style={{ fontSize: 13, flexShrink: 1, color: sync.tone === 'syncing' ? c.accentText : sync.tone === 'warn' ? c.warnText : c.textSecondary }}
+              numberOfLines={2}
+              accessibilityLiveRegion="polite"
+            >
+              {sync.line}
+            </AppText>
+          </View>
         </View>
         <IconButton
           icon="gear"

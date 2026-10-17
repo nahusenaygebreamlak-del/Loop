@@ -9,6 +9,8 @@ export const A = {
   allDone: 'all-done',
   review: 'review',
   openToday: 'open-today',
+  addTask: 'add-task',
+  notToday: 'not-today',
   moveTomorrow: 'move-tomorrow',
   laterTonight: 'later-tonight',
   sortNow: 'sort-now',
@@ -24,6 +26,11 @@ export const CATEGORIES = {
   ],
   // NMorningPlain
   plain: [{ identifier: A.openToday, buttonTitle: 'Open Today', options: { opensAppToForeground: true } }],
+  // NNotifTexts: 08:30 with nothing planned
+  empty: [
+    { identifier: A.addTask, buttonTitle: 'Add a task', options: { opensAppToForeground: true } },
+    { identifier: A.openToday, buttonTitle: 'Open Today', options: { opensAppToForeground: true } },
+  ],
   // NAfternoon
   afternoon: [
     { identifier: A.moveTomorrow, buttonTitle: 'Move to tomorrow', options: { opensAppToForeground: false } },
@@ -31,7 +38,8 @@ export const CATEGORIES = {
   ],
   // NSortNotif
   sort: [
-    // Owner decision (open question 9): "Later tonight" instead of "Not today"; swiping away still means not today.
+    // NNotifTexts: Not today / Later tonight (asks again 2 hours later) / Sort now.
+    { identifier: A.notToday, buttonTitle: 'Not today', options: { opensAppToForeground: false } },
     { identifier: A.laterTonight, buttonTitle: 'Later tonight', options: { opensAppToForeground: false } },
     { identifier: A.sortNow, buttonTitle: 'Sort now', options: { opensAppToForeground: true } },
   ],

@@ -5,6 +5,7 @@ import { Keyboard, ScrollView, View, type TextInputInstance } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { Check } from '@/components/Check';
+import { Spinner } from '@/components/Spinner';
 import { GrowingInput } from '@/components/GrowingInput';
 import { KeyboardLift } from '@/components/KeyboardLift';
 import { Icon, type IconName } from '@/components/Icon';
@@ -137,9 +138,12 @@ function NoteEditor({ id }: { id: string }) {
             goBack();
           }}
         />
-        <AppText tone="secondary" style={{ flex: 1, ...font(600), fontSize: 13 }} accessibilityLiveRegion="polite">
-          {saved === 'saving' ? 'Saving…' : saved === 'saved' ? 'Saved · just now' : note.fromInbox ? 'From Inbox' : ''}
-        </AppText>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {saved === 'saving' ? <Spinner size={10} /> : null}
+          <AppText tone="secondary" style={{ ...font(600), fontSize: 13 }} accessibilityLiveRegion="polite">
+            {saved === 'saving' ? 'Saving…' : saved === 'saved' ? 'Saved · just now' : note.fromInbox ? 'From Inbox' : ''}
+          </AppText>
+        </View>
         <IconButton icon="more" label="Note options" onPress={() => sheets.open(() => <NoteMenuSheet noteId={id} flush={flush} />)} />
         <PressScale
           accessibilityRole="button"
@@ -230,20 +234,21 @@ function BlockRow({
   const style = {
     flex: 1,
     padding: 0,
-    paddingVertical: heading ? 6 : 4,
+    paddingTop: heading ? 14 : 4,
+    paddingBottom: heading ? 2 : 4,
     color: done ? c.textSecondary : c.text,
     textDecorationLine: done ? ('line-through' as const) : ('none' as const),
-    ...(heading ? { ...font(800), fontSize: 20, lineHeight: 27 } : { ...font(b.bold ? 800 : 500), fontSize: 16, lineHeight: 25 }),
+    ...(heading ? { ...font(800), fontSize: 18, lineHeight: 24 } : { ...font(b.bold ? 800 : 400), fontSize: 16, lineHeight: 25.6 }),
   };
   return (
     <View style={{ flexDirection: 'row', alignItems: b.type === 'checklist' ? 'center' : 'flex-start', gap: 6, minHeight: b.type === 'checklist' ? 46 : undefined }}>
       {b.type === 'checklist' ? (
-        <View style={{ marginLeft: -10, marginRight: -4 }}>
-          <Check done={done} label={b.text || 'Checklist item'} onToggle={onToggle} />
+        <View style={{ marginLeft: -8, marginRight: -2, width: 40, alignItems: 'center' }}>
+          <Check circle={24} done={done} label={b.text || 'Checklist item'} onToggle={onToggle} />
         </View>
       ) : null}
       {b.type === 'bullet' ? (
-        <AppText aria-hidden style={{ ...font(800), fontSize: 16, lineHeight: 25, paddingVertical: 4, width: 14 }}>
+        <AppText aria-hidden style={{ ...font(800), fontSize: 16, lineHeight: 25.6, paddingVertical: 4, width: 16, marginLeft: 6 }}>
           •
         </AppText>
       ) : null}

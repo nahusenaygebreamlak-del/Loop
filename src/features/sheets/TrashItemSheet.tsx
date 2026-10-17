@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { SheetCard, useCloseSheet } from '@/components/Sheet';
@@ -5,6 +6,7 @@ import { useSnackbar } from '@/components/Snackbar';
 import { SheetButton } from '@/components/ui';
 import { monthDay, toKey } from '@/lib/dates';
 import { daysLeft, type TrashEntry } from '@/lib/taskViews';
+import { goMain } from '@/features/nav';
 import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors } from '@/theme/tokens';
@@ -73,7 +75,10 @@ export function TrashItemSheet({ entry }: { entry: TrashEntry }) {
         onPress={() => {
           restore(entry.kind, entry.id);
           close();
-          snack({ title: `Restored to ${where}` });
+          snack({
+            title: `Restored to ${where}`,
+            actions: entry.kind === 'inbox' ? [{ label: 'View', onPress: () => goMain('/inbox') }] : [{ label: 'View', onPress: () => router.push(entry.kind === 'task' ? { pathname: '/task/[id]', params: { id: entry.id } } : { pathname: '/note/[id]', params: { id: entry.id } }) }],
+          });
         }}
       />
       <PressScale

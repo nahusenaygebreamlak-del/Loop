@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -11,6 +12,7 @@ import { Card } from '@/components/ui';
 import { TrashItemSheet } from '@/features/sheets/TrashItemSheet';
 import { useMenu } from '@/features/useMenu';
 import { daysLeft, trashEntries } from '@/lib/taskViews';
+import { goMain } from '@/features/nav';
 import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { size } from '@/theme/tokens';
@@ -81,7 +83,10 @@ export default function Trash() {
                     accessibilityLabel={`Restore ${e.title}`}
                     onPress={() => {
                       restore(e.kind, e.id);
-                      snack({ title: `Restored to ${where}` });
+                      snack({
+            title: `Restored to ${where}`,
+            actions: e.kind === 'inbox' ? [{ label: 'View', onPress: () => goMain('/inbox') }] : [{ label: 'View', onPress: () => router.push(e.kind === 'task' ? { pathname: '/task/[id]', params: { id: e.id } } : { pathname: '/note/[id]', params: { id: e.id } }) }],
+          });
                     }}
                     style={{ minHeight: 44, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.ground, justifyContent: 'center' }}
                   >
