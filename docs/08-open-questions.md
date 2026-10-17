@@ -18,3 +18,10 @@ Ask the owner before building these. Defaults in brackets are what the designs c
 
 - **"Archive all" in the morning check-in** (17 Oct): keeps the leftover tasks in their lists and clears their date ("Someday"). Confirmed by the owner.
 - **Remind until I act** (17 Oct): added as a Settings toggle under Daily check-ins; repeats an unanswered morning check-in every 15 minutes, up to an hour.
+- **Owner's answers to questions 1–11** (17 Oct):
+  1. Medium priority changed to amber #D4A017 (word "Medium" #8A6700 on light, #E3B83A on dark).
+  2. Duplicate stays. 3. Afternoon buttons as designed. 4. Task ⋯ menu as designed. 5. Settings additions as designed.
+  6. Default theme: follow the phone.
+  7–8. Every undesigned element is listed in `docs/09-needs-design.md`; the owner will send designs.
+  9. The 18:00 reminder has "Later tonight" (asks again 2 hours later) instead of "Not today"; swiping it away still means not today.
+  10. Delete / Skip in sorting go to the next note (as built). 11. Desktop layout later.

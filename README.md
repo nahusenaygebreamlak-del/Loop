@@ -13,7 +13,8 @@ This folder contains everything needed to build it: the product brief, behaviour
 5. `docs/04-screens-and-interactions.md`: all 69 phone screens with screenshots and what every tap does.
 6. `docs/05-user-flows.md`: the six flows.
 7. `docs/06-technical-plan.md` and `docs/07-build-plan.md`: how and in what order to build.
-8. `docs/08-open-questions.md`: decisions still open.
+8. `docs/08-open-questions.md`: decisions still open (and the owner's answers).
+9. `docs/09-needs-design.md`: everything built or needed without a design.
 
 ## Folder map
 

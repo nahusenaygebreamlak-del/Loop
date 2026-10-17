@@ -5,7 +5,7 @@ export type ColorScheme = 'light' | 'dark';
 export type ThemePreference = 'system' | ColorScheme;
 
 type LightColors = typeof raw.color.light;
-export type ThemeColors = LightColors & { dangerRing: string; priority: Record<'high' | 'medium' | 'low' | 'none', string> };
+export type ThemeColors = LightColors & { dangerRing: string; priorityMediumText: string; priority: Record<'high' | 'medium' | 'low' | 'none', string> };
 
 function buildColors(scheme: ColorScheme): ThemeColors {
   const base = raw.color[scheme] as LightColors & { dangerRing?: string };
@@ -13,6 +13,7 @@ function buildColors(scheme: ColorScheme): ThemeColors {
   return {
     ...base,
     dangerRing,
+    priorityMediumText: scheme === 'dark' ? raw.color.priority.mediumTextDark : raw.color.priority.mediumText,
     // Tokens note: in dark mode, high uses dangerRing and none uses line.
     priority: {
       high: scheme === 'dark' ? dangerRing : raw.color.priority.high,

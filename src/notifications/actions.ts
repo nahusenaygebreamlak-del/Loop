@@ -4,7 +4,7 @@ import { applyChoices, leftovers, type Change, type Choice } from '@/lib/checkin
 import { addDays, todayKey } from '@/lib/dates';
 import { isOpen, visibleTasks } from '@/lib/taskViews';
 import { useStore } from '@/store/store';
-import { A, CHANNEL_QUIET } from './constants';
+import { A, CHANNEL, CHANNEL_QUIET } from './constants';
 import { cancelMorningReminders, rescheduleCheckins } from './schedule';
 
 export type Route = '/' | '/checkin' | '/inbox/sort' | null;
@@ -87,9 +87,17 @@ export async function handleNotificationResponse(response: Notifications.Notific
       await rescheduleCheckins();
       return null;
     }
-    case A.notToday:
+    case A.laterTonight: {
+      // Ask again two hours later, same text.
       await Notifications.dismissNotificationAsync(id);
+      const { title, body, categoryIdentifier } = notification.request.content;
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${id.replace(/-later$/, '')}-later`,
+        content: { title: title ?? '', body: body ?? '', categoryIdentifier: categoryIdentifier ?? 'sort', data },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: Date.now() + 2 * 60 * 60_000, channelId: CHANNEL },
+      });
       return null;
+    }
     case A.review:
       await Notifications.dismissNotificationAsync(id);
       return '/checkin';

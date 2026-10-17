@@ -8,7 +8,8 @@ import { useStore } from '@/store/store';
 import { CHANNEL } from './constants';
 import { ensureNotificationSetup, notificationsAllowed } from './setup';
 
-const OURS = /^(morning|afternoon|sort)-\d{4}-\d{2}-\d{2}/;
+// Planned check-ins; "-later" ones come from the Later tonight button and are left alone.
+const OURS = /^(morning|afternoon|sort)-\d{4}-\d{2}-\d{2}(-r\d)?$/;
 let lastFullScreen = new Set<string>();
 
 /**

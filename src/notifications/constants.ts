@@ -10,7 +10,7 @@ export const A = {
   review: 'review',
   openToday: 'open-today',
   moveTomorrow: 'move-tomorrow',
-  notToday: 'not-today',
+  laterTonight: 'later-tonight',
   sortNow: 'sort-now',
   undo: 'undo',
 } as const;
@@ -31,7 +31,8 @@ export const CATEGORIES = {
   ],
   // NSortNotif
   sort: [
-    { identifier: A.notToday, buttonTitle: 'Not today', options: { opensAppToForeground: false } },
+    // Owner decision (open question 9): "Later tonight" instead of "Not today"; swiping away still means not today.
+    { identifier: A.laterTonight, buttonTitle: 'Later tonight', options: { opensAppToForeground: false } },
     { identifier: A.sortNow, buttonTitle: 'Sort now', options: { opensAppToForeground: true } },
   ],
   // NNotifActed

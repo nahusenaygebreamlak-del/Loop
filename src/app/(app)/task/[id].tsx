@@ -54,7 +54,7 @@ function TaskDetail({ id }: { id: string }) {
   const saveTitle = () => (title.trim() ? updateTask(task.id, { title: title.trim() }) : setTitle(task.title));
   const saveNotes = () => notes !== task.notes && updateTask(task.id, { notes });
   const date = dateValue(task, today);
-  const priorityColor = [c.textSecondary, c.priority.low, c.priority.medium, c.dangerText][task.priority];
+  const priorityColor = [c.textSecondary, c.accentText, c.priorityMediumText, c.dangerText][task.priority];
   const tagText = task.tagIds.map((tid) => tags.find((t) => t.id === tid)?.name).filter(Boolean).map((n) => `#${n}`).join(' ');
   const doneSubs = task.subtasks.filter((s) => s.doneAt).length;
 

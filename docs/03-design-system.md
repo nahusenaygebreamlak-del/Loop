@@ -30,7 +30,7 @@ Approved 16 Oct 2026: **Style A · Clear blue.** Blue, calm and roomy. All value
 
 Lists: Work #2F6BE3, Personal #E0913A, Learning #3A9E7A; extra list colours purple #7A4FD6, pink #D2467E, slate #5B6478. Shown as a small rounded square (12–14 px, 4 px radius).
 
-Priority ring: high #C7372F, medium #D9822B, low #2F6BE3, none = the empty-check grey.
+Priority ring: high #C7372F, medium #D4A017 (amber, changed 17 Oct; the word "Medium" uses #8A6700 on light, #E3B83A on dark), low #2F6BE3, none = the empty-check grey.
 
 Calendar: tasks are light blue blocks, Google events light grey, the current task solid blue, the "now" line red with a pulsing dot.
 
