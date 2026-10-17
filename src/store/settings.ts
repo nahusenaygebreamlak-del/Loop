@@ -32,9 +32,10 @@ export const useSettings = create<Settings & Actions>()(
   persist(
     (set) => ({
       theme: 'system',
-      morningTime: '08:30',
-      afternoonTime: '14:00',
-      sortTime: '18:00',
+      // Off until "Meet the check-ins" / "Want a nudge to sort these?" turn them on (spec §8).
+      morningTime: null,
+      afternoonTime: null,
+      sortTime: null,
       fullScreen: false,
       weekends: false,
       remindUntilAct: false,

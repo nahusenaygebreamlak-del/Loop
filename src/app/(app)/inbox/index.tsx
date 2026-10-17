@@ -14,6 +14,9 @@ import { UndoSortingSheet } from '@/features/sheets/UndoSortingSheet';
 import { useMenu } from '@/features/useMenu';
 import { inboxOpen, sortedToday, sortEstimate, sortSummary, stampShort } from '@/lib/inboxViews';
 import { useToday } from '@/lib/useToday';
+import { formatTime, type TimeKey } from '@/lib/dates';
+import { useLocal } from '@/store/local';
+import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, size } from '@/theme/tokens';
@@ -39,8 +42,12 @@ export default function Inbox() {
   const addInboxItem = useStore((s) => s.addInboxItem);
   const removeInboxItem = useStore((s) => s.removeInboxItem);
   const [dump, setDump] = useState('');
+  const sortTime = useSettings((st) => st.sortTime);
+  const sortOffered = useLocal((l) => l.sortOffered);
 
   const open = inboxOpen(inbox);
+  // NSetupSort: offered once, when the Inbox reaches 5 notes and no sort reminder is set.
+  const offerSort = open.length >= 5 && !sortTime && !sortOffered;
   const doneToday = sortedToday(inbox, today);
   const summary = sortSummary(doneToday);
 
@@ -71,6 +78,8 @@ export default function Inbox() {
         />
       </View>
 
+      {offerSort ? <SortOffer /> : null}
+
       {open.length ? (
         <>
           <View style={{ marginTop: 14, marginHorizontal: size.sideMargin, paddingVertical: 18, paddingLeft: 20, paddingRight: 16, borderRadius: radius.card, backgroundColor: c.accent, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -78,7 +87,7 @@ export default function Inbox() {
               <AppText style={{ ...font(700), fontSize: 16, color: c.onAccent }}>
                 {open.length} note{open.length === 1 ? '' : 's'} to sort
               </AppText>
-              <AppText style={{ fontSize: 14, marginTop: 4, color: c.onAccentSecondary }}>{sortEstimate(open.length)}</AppText>
+              <AppText style={{ fontSize: 14, marginTop: 4, color: c.onAccentSecondary }}>{sortTime ? `Reminder at ${formatTime(sortTime)} daily` : sortEstimate(open.length)}</AppText>
             </View>
             <PressScale accessibilityRole="button" onPress={() => startSort()} style={{ minHeight: 44, paddingHorizontal: 18, borderRadius: 14, backgroundColor: '#FFFFFF', justifyContent: 'center' }}>
               <AppText style={{ ...font(700), fontSize: 14.5, color: '#2F6BE3' }}>Sort now</AppText>
@@ -157,6 +166,74 @@ function SummaryRow({ icon, bg, fg, label, n, last }: { icon: IconName; bg: stri
       </View>
       <AppText style={{ ...font(600), fontSize: 15 }}>{label}</AppText>
       <AppText style={{ marginLeft: 'auto', ...font(800), fontSize: 15, fontVariant: ['tabular-nums'] }}>{n}</AppText>
+    </View>
+  );
+}
+
+const SORT_PICKS: TimeKey[] = ['12:00', '18:00', '21:00'];
+
+/** NSetupSort: "Want a nudge to sort these?" → NSortReminderOn snackbar with Undo. */
+function SortOffer() {
+  const { c } = useTheme();
+  const snack = useSnackbar();
+  const [pick, setPick] = useState<TimeKey>('18:00');
+  return (
+    <View accessibilityLabel="Sort reminder" style={{ marginTop: 22, marginHorizontal: size.sideMargin, backgroundColor: c.card, borderRadius: 22, padding: 20, gap: 16, borderWidth: 2, borderColor: c.tint }}>
+      <View>
+        <AppText style={{ ...font(800), fontSize: 17, lineHeight: 22 }}>Want a nudge to sort these?</AppText>
+        <AppText tone="secondary" style={{ fontSize: 14, lineHeight: 21, marginTop: 6 }}>
+          Once a day, only when something is waiting. Takes about a minute.
+        </AppText>
+      </View>
+      <View accessibilityRole="radiogroup" accessibilityLabel="Reminder time" style={{ flexDirection: 'row', gap: 8 }}>
+        {SORT_PICKS.map((t) => {
+          const on = t === pick;
+          return (
+            <PressScale
+              key={t}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
+              onPress={() => setPick(t)}
+              style={{ flex: 1, minHeight: 44, borderRadius: 13, backgroundColor: on ? c.accent : c.ground, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <AppText style={{ ...font(700), fontSize: 15, color: on ? c.onAccent : c.textSecondary, fontVariant: ['tabular-nums'] }}>{formatTime(t)}</AppText>
+            </PressScale>
+          );
+        })}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <PressScale
+          accessibilityRole="button"
+          onPress={() => {
+            useSettings.getState().set({ sortTime: pick });
+            useLocal.setState({ sortOffered: true });
+            snack({
+              title: `Reminder set for ${formatTime(pick)}`,
+              actions: [
+                {
+                  label: 'Undo',
+                  onPress: () => {
+                    useSettings.getState().set({ sortTime: null });
+                    useLocal.setState({ sortOffered: false });
+                  },
+                },
+              ],
+            });
+          }}
+          style={{ flex: 1, minHeight: 50, borderRadius: 16, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <AppText style={{ ...font(800), fontSize: 15, color: c.onAccent }}>{`Remind me at ${formatTime(pick)}`}</AppText>
+        </PressScale>
+        <PressScale
+          accessibilityRole="button"
+          onPress={() => useLocal.setState({ sortOffered: true })}
+          style={{ minHeight: 50, paddingHorizontal: 16, borderRadius: 16, backgroundColor: c.ground, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <AppText tone="secondary" style={{ ...font(700), fontSize: 15 }}>
+            No thanks
+          </AppText>
+        </PressScale>
+      </View>
     </View>
   );
 }

@@ -8,13 +8,24 @@ type Local = {
   carriedShown: string[];
   /** A task waiting to show that sheet when Today opens. */
   carriedPending: string | null;
+  /** First launch (NAllowNotif and the tutorial) is finished or skipped on this device. */
+  onboarded: boolean;
+  /** Show the "You're set" card on Today (NTutDone). */
+  tutDoneCard: boolean;
+  /** "Meet the check-ins" and "Want a nudge to sort these?" are each offered once. */
+  checkinsOffered: boolean;
+  sortOffered: boolean;
 };
 
 export const useLocal = create<Local>()(
-  persist(() => ({ carriedShown: [], carriedPending: null }) as Local, {
-    name: 'loop.local.v1',
-    storage: createJSONStorage(() => AsyncStorage),
-  }),
+  persist(
+    () =>
+      ({ carriedShown: [], carriedPending: null, onboarded: false, tutDoneCard: false, checkinsOffered: false, sortOffered: false }) as Local,
+    {
+      name: 'loop.local.v1',
+      storage: createJSONStorage(() => AsyncStorage),
+    },
+  ),
 );
 
 export function markCarriedShown(id: string) {

@@ -24,10 +24,11 @@ const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
 const MINUTES = ['00', '15', '30', '45'];
 
 /** NTimePicker: quick picks, wheel, Turn off / Save. */
-export function CheckinTimeSheet({ kind }: { kind: CheckinKind }) {
+export function CheckinTimeSheet({ kind, initial, onSave }: { kind: CheckinKind; initial?: TimeKey; onSave?: (t: TimeKey) => void }) {
   const { c } = useTheme();
   const close = useCloseSheet();
-  const current = useSettings((s) => s[kind]);
+  const saved = useSettings((s) => s[kind]);
+  const current = initial ?? saved;
   const set = useSettings((s) => s.set);
   const cfg = CHECKIN[kind];
   const start = current ?? cfg.fallback;
@@ -58,6 +59,7 @@ export function CheckinTimeSheet({ kind }: { kind: CheckinKind }) {
         <WheelColumn label="Minute" values={MINUTES} index={m} onChange={setM} />
       </WheelWell>
       <View style={{ flexDirection: 'row', gap: 10 }}>
+        {onSave ? null : (
         <PressScale
           accessibilityRole="button"
           onPress={() => {
@@ -70,10 +72,12 @@ export function CheckinTimeSheet({ kind }: { kind: CheckinKind }) {
             Turn off
           </AppText>
         </PressScale>
+        )}
         <PressScale
           accessibilityRole="button"
           onPress={() => {
-            set({ [kind]: value });
+            if (onSave) onSave(value);
+            else set({ [kind]: value });
             close();
           }}
           style={{ flex: 1, minHeight: 56, borderRadius: radius.button, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}

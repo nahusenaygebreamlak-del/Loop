@@ -6,7 +6,7 @@ import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import { handleNotificationResponse, type Route } from './actions';
 import { rescheduleCheckins } from './schedule';
-import { askForNotifications, ensureNotificationSetup, setForegroundHandler } from './setup';
+import { ensureNotificationSetup, setForegroundHandler } from './setup';
 
 const go = (r: Route) => {
   if (r) router.navigate(r);
@@ -25,8 +25,6 @@ export function useNotifications() {
 
     void (async () => {
       await ensureNotificationSetup();
-      // Temporary until Milestone 6's explained "Allow notifications" step.
-      await askForNotifications();
       const last = await Notifications.getLastNotificationResponseAsync();
       if (last) go(await handleNotificationResponse(last));
       soon();

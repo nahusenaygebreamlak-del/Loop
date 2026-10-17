@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { nextOccurrence } from '@/lib/repeat';
+import { useLocal } from './local';
 import type { InboxItem, List, ListColor, Note, Subtask, Tag, Task } from './types';
 
 export type TrashKind = 'task' | 'inbox' | 'note';
@@ -479,8 +480,15 @@ export const useStore = create<Store>()(
   ),
 );
 
-const subscribeHydration = (cb: () => void) => useStore.persist.onFinishHydration(cb);
-const getHydrated = () => useStore.persist.hasHydrated();
+const subscribeHydration = (cb: () => void) => {
+  const a = useStore.persist.onFinishHydration(cb);
+  const b = useLocal.persist.onFinishHydration(cb);
+  return () => {
+    a();
+    b();
+  };
+};
+const getHydrated = () => useStore.persist.hasHydrated() && useLocal.persist.hasHydrated();
 
 /** True once saved data has been read from the device. */
 /** Resolves once saved data has been read (for code running outside React, e.g. notification buttons). */

@@ -6,7 +6,6 @@ import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { SetRow } from '@/components/settingsRows';
 import { useSheets } from '@/components/Sheet';
-import { useSnackbar } from '@/components/Snackbar';
 import { Card, GroupLabel, IconButton } from '@/components/ui';
 import { goBack } from '@/features/nav';
 import { CheckinTimeSheet, THEME_LABEL, ThemeSheet, WeekTimeSheet } from '@/features/sheets/SettingsSheets';
@@ -25,7 +24,6 @@ export default function Settings() {
   const { c, preference } = useTheme();
   const insets = useSafeAreaInsets();
   const sheets = useSheets();
-  const snack = useSnackbar();
   const { session, preview } = useAuth();
   const s = useSettings();
   const timeFormat = useTimeFormat();
@@ -161,7 +159,7 @@ export default function Settings() {
             name="Replay the tutorial"
             trailing={<Icon name="forward" size={18} color={c.line} />}
             last
-            onPress={() => snack({ title: 'The tutorial arrives in Milestone 6' })}
+            onPress={() => router.push('/welcome/tutorial')}
           />
         </Card>
       </ScrollView>
