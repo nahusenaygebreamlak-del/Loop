@@ -5,7 +5,7 @@ import { PressScale } from '@/components/PressScale';
 import { SheetCard, useCloseSheet } from '@/components/Sheet';
 import { CapLabel, OptionGroup, SheetButton, SheetTitle } from '@/components/ui';
 import type { TimeKey } from '@/lib/dates';
-import { useSettings } from '@/store/settings';
+import { useSettings, useTimeFormat } from '@/store/settings';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { ThemePreference } from '@/theme/tokens';
 import { colors, radius } from '@/theme/tokens';
@@ -163,7 +163,7 @@ export function WeekTimeSheet() {
   const close = useCloseSheet();
   const s = useSettings();
   const [weekStart, setWeekStart] = useState(s.weekStart);
-  const [timeFormat, setTimeFormat] = useState(s.timeFormat);
+  const [timeFormat, setTimeFormat] = useState(useTimeFormat());
   return (
     <SheetCard label="Week and time" style={{ paddingBottom: 28 }}>
       <AppText variant="sheetTitle" accessibilityRole="header">
@@ -189,7 +189,7 @@ export function WeekTimeSheet() {
       <SheetButton
         label="Done"
         onPress={() => {
-          s.set({ weekStart, timeFormat });
+          s.set({ weekStart, timeFormat, timeFormatChosen: true });
           close();
         }}
       />

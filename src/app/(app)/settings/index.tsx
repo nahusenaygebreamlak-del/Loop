@@ -14,7 +14,7 @@ import { formatTime } from '@/lib/dates';
 import { useAuth } from '@/lib/auth';
 import { useNotificationsAllowed } from '@/notifications/useAllowed';
 import LoopAlarm from '../../../../modules/loop-alarm';
-import { useSettings } from '@/store/settings';
+import { useSettings, useTimeFormat } from '@/store/settings';
 import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, radius, size } from '@/theme/tokens';
@@ -28,6 +28,7 @@ export default function Settings() {
   const snack = useSnackbar();
   const { session, preview } = useAuth();
   const s = useSettings();
+  const timeFormat = useTimeFormat();
   const lists = useStore((st) => st.lists);
   const live = lists.filter((l) => !l.deletedAt && !l.archivedAt).length;
   const archived = lists.filter((l) => !l.deletedAt && l.archivedAt).length;
@@ -148,7 +149,7 @@ export default function Settings() {
           <SetRow name="Theme" hint="Light, dark or follow the phone" value={preference === 'system' ? 'Phone' : THEME_LABEL[preference]} onPress={() => sheets.open(() => <ThemeSheet />)} />
           <SetRow
             name="Week and time"
-            value={`${s.weekStart === 0 ? 'Sunday' : 'Monday'} · ${s.timeFormat === '24h' ? '24-hour' : '12-hour'}`}
+            value={`${s.weekStart === 0 ? 'Sunday' : 'Monday'} · ${timeFormat === '24h' ? '24-hour' : '12-hour'}`}
             last
             onPress={() => sheets.open(() => <WeekTimeSheet />)}
           />

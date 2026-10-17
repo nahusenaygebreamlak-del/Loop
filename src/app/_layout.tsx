@@ -17,7 +17,7 @@ import { SnackbarProvider } from '@/components/Snackbar';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { setTimeFormat } from '@/lib/dates';
 import { useNotifications } from '@/notifications/useNotifications';
-import { useSettings } from '@/store/settings';
+import { useTimeFormat } from '@/store/settings';
 import { useHydrated } from '@/store/store';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 
@@ -54,7 +54,7 @@ function RootStack() {
   const { c, scheme } = useTheme();
   const { signedIn, loading: authLoading } = useAuth();
   const hydrated = useHydrated();
-  const timeFormat = useSettings((s) => s.timeFormat);
+  const timeFormat = useTimeFormat();
   // Times are formatted outside React, so re-render everything when the clock setting changes.
   setTimeFormat(timeFormat);
   const loading = authLoading || !hydrated;

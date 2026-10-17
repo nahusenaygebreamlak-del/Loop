@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { getCalendars } from 'expo-localization';
 import type { TimeKey } from '@/lib/dates';
 
 // Device settings (NSettings2). Mirrors the profile columns; synced to Supabase in Milestone 4.
@@ -17,6 +18,8 @@ export type Settings = {
   remindUntilAct: boolean;
   weekStart: 0 | 1; // Sunday or Monday
   timeFormat: '24h' | '12h';
+  /** False until the clock is picked in Week and time; until then Loop follows the phone's 12/24-hour setting. */
+  timeFormatChosen?: boolean;
   recentSearches: string[];
 };
 
@@ -53,3 +56,17 @@ export const useSettings = create<Settings & Actions>()(
     },
   ),
 );
+
+/** The phone's own clock setting (12- or 24-hour). */
+export function phoneTimeFormat(): '24h' | '12h' {
+  try {
+    const uses24 = getCalendars()[0]?.uses24hourClock;
+    if (uses24 != null) return uses24 ? '24h' : '12h';
+    return new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hour12 ? '12h' : '24h';
+  } catch {
+    return '24h';
+  }
+}
+
+/** The clock Loop shows: the picked one, or the phone's. */
+export const useTimeFormat = () => useSettings((s) => (s.timeFormatChosen ? s.timeFormat : phoneTimeFormat()));

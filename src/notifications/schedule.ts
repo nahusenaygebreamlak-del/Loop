@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import LoopAlarm from '../../modules/loop-alarm';
 import { planCheckins, type PlannedNotification } from '@/lib/checkins';
 import { todayKey } from '@/lib/dates';
+import { planTaskReminders } from '@/lib/reminders';
 import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import { CHANNEL } from './constants';
@@ -10,6 +11,7 @@ import { ensureNotificationSetup, notificationsAllowed } from './setup';
 
 // Planned check-ins; "-later" ones come from the Later tonight button and are left alone.
 const OURS = /^(morning|afternoon|sort)-\d{4}-\d{2}-\d{2}(-r\d)?$/;
+const TASK_REMINDER = /^task-/;
 let lastFullScreen = new Set<string>();
 
 /**
@@ -28,11 +30,23 @@ export async function rescheduleCheckins(): Promise<void> {
   const fullScreen = s.fullScreen && !!LoopAlarm?.canUseFullScreenIntent();
   const isFull = (p: PlannedNotification) => fullScreen && p.kind === 'morning' && p.category === 'leftovers' && !/-r\d$/.test(p.id);
 
+  const reminders = planTaskReminders(tasks, lists, now, todayKey(now));
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-  const wanted = new Set(plan.filter((p) => !isFull(p)).map((p) => p.id));
+  const wanted = new Set([...plan.filter((p) => !isFull(p)).map((p) => p.id), ...reminders.map((r) => r.id)]);
   await Promise.all(
-    scheduled.filter((n) => OURS.test(n.identifier) && !wanted.has(n.identifier)).map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+    scheduled
+      .filter((n) => (OURS.test(n.identifier) || TASK_REMINDER.test(n.identifier)) && !wanted.has(n.identifier))
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
   );
+
+  // Task reminders (same id per task, so rescheduling replaces it).
+  for (const r of reminders) {
+    await Notifications.scheduleNotificationAsync({
+      identifier: r.id,
+      content: { title: r.title, body: r.body, data: { kind: 'task', taskId: r.taskId } },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: r.at, channelId: CHANNEL },
+    });
+  }
 
   for (const p of plan) {
     if (isFull(p)) continue;

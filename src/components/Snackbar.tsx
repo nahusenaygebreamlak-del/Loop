@@ -36,7 +36,8 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
     (s: SnackOptions) => {
       if (timer.current) clearTimeout(timer.current);
       setSnack({ ...s, id: nextId.current++ });
-      timer.current = setTimeout(dismiss, s.duration ?? 6000);
+      // NSnackbars: 4 s, or 8 s when the snackbar offers Undo.
+      timer.current = setTimeout(dismiss, s.duration ?? (s.actions?.some((a) => a.label === 'Undo') ? 8000 : 4000));
     },
     [dismiss],
   );

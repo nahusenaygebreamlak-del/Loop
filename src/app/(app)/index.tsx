@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
@@ -11,6 +11,7 @@ import { ShowMoreRow, TaskRow } from '@/components/rows';
 import { useSheets } from '@/components/Sheet';
 import { Card, Fab, GroupLabel, IconButton } from '@/components/ui';
 import { goMain } from '@/features/nav';
+import { CarriedOverSheet } from '@/features/sheets/CarriedOverSheet';
 import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
 import { Timeline } from '@/features/today/Timeline';
@@ -23,6 +24,7 @@ import { shortRuleLabel } from '@/lib/repeat';
 import { isLive, isOpen, movedLabel, timelineSub, todayView, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
 import { usePendingTaskIds, useSyncStatus } from '@/sync/engine';
+import { markCarriedShown, useLocal } from '@/store/local';
 import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import type { Task } from '@/store/types';
@@ -48,6 +50,18 @@ export default function Today() {
   const [picked, setPicked] = useState<DateKey | null>(null);
   const day = picked && picked !== today ? picked : today;
   const isToday = day === today;
+
+  // NCarriedOver after the check-in moved a task for the 3rd time. Wait for the summary snackbar to settle first.
+  const carriedPending = useLocal((l) => l.carriedPending);
+  useEffect(() => {
+    if (!carriedPending) return;
+    const id = carriedPending;
+    const t = setTimeout(() => {
+      markCarriedShown(id);
+      sheets.open(() => <CarriedOverSheet taskId={id} />);
+    }, 900);
+    return () => clearTimeout(t);
+  }, [carriedPending, sheets]);
 
   const hasItems = (d: DateKey) => tasks.some((t) => isLive(t) && t.dueDate === d);
   const quickActions = (id: string) => sheets.open(() => <QuickActionsSheet taskId={id} actions={actions} />);

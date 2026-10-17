@@ -47,7 +47,8 @@
           "defaultChannel": "checkins",
           "icon": "./assets/notification-icon.png"
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "scheme": "loop",
     "experiments": {

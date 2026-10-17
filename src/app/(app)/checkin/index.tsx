@@ -7,10 +7,13 @@ import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { goMain } from '@/features/nav';
+import { useSheets } from '@/components/Sheet';
+import { CarriedOverSheet } from '@/features/sheets/CarriedOverSheet';
 import { finishCheckin } from '@/features/checkin';
 import { applyChoices, leftovers, type Choice } from '@/lib/checkins';
 import { daysBetween, shortDate, todayKey } from '@/lib/dates';
-import { isOpen, visibleTasks } from '@/lib/taskViews';
+import { isOpen, movedLabel, visibleTasks } from '@/lib/taskViews';
+import type { Task } from '@/store/types';
 import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, size } from '@/theme/tokens';
@@ -20,6 +23,9 @@ import { font } from '@/theme/typography';
 export default function CheckIn() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
+  const sheets = useSheets();
+  // A task moved twice already: this move would be its 3rd, so it can open NCarriedOver.
+  const moved = (t: Task) => t.carriedOverCount >= 2;
   const tasks = useStore((s) => s.tasks);
   const lists = useStore((s) => s.lists);
   const today = todayKey();
@@ -50,13 +56,17 @@ export default function CheckIn() {
 
       {left.length === 0 ? (
         <>
-          <AppText variant="title" accessibilityRole="header" style={{ marginTop: 18 }}>
-            Nothing left over
-          </AppText>
-          <AppText tone="secondary" style={{ marginTop: 10, fontSize: 16 }}>
-            Everything from before today is done or has a new date.
-          </AppText>
-          <View style={{ flex: 1 }} />
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start', gap: 14, paddingBottom: 40 }}>
+            <View aria-hidden style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="check" size={34} strokeWidth={2.6} color={c.onAccent} />
+            </View>
+            <AppText accessibilityRole="header" style={{ marginTop: 10, ...font(800), fontSize: 32, lineHeight: 38, letterSpacing: -0.64 }}>
+              Nothing left over
+            </AppText>
+            <AppText tone="secondary" style={{ fontSize: 16, lineHeight: 25 }}>
+              {`Yesterday is wrapped up. Today you have ${todayCount} task${todayCount === 1 ? '' : 's'}.`}
+            </AppText>
+          </View>
           <Primary label="Go to Today" onPress={() => goMain('/')} />
         </>
       ) : (
@@ -72,12 +82,24 @@ export default function CheckIn() {
               const late = daysBetween(t.dueDate!, today);
               const list = lists.find((l) => l.id === t.listId)?.name;
               return (
-                <View key={t.id} style={{ paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: i < left.length - 1 ? 1 : 0, borderBottomColor: c.ground }}>
-                  <AppText style={{ ...font(700), fontSize: 15.5 }}>{t.title}</AppText>
-                  <AppText tone="secondary" style={{ fontSize: 13.5, marginTop: 4 }}>
-                    {[list, late === 1 ? 'was due yesterday' : `${late} days late`].filter(Boolean).join(' · ')}
-                  </AppText>
-                </View>
+                <PressScale
+                  key={t.id}
+                  kind="row"
+                  disabled={!moved(t)}
+                  accessibilityRole={moved(t) ? 'button' : undefined}
+                  accessibilityHint={moved(t) ? 'Asks where this task should live' : undefined}
+                  onPress={() => sheets.open(() => <CarriedOverSheet taskId={t.id} />)}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: i < left.length - 1 ? 1 : 0, borderBottomColor: c.ground }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <AppText style={{ ...font(700), fontSize: 15.5 }}>{t.title}</AppText>
+                    <AppText tone="secondary" style={{ fontSize: 13.5, marginTop: 4 }}>
+                      {[list, late === 1 ? 'was due yesterday' : `${late} days late`].filter(Boolean).join(' · ')}
+                      {moved(t) ? <AppText style={{ fontSize: 13.5, color: c.warnText }}>{` · ${movedLabel(t.carriedOverCount)}`}</AppText> : null}
+                    </AppText>
+                  </View>
+                  {moved(t) ? <Icon name="forward" size={18} color={c.line} /> : null}
+                </PressScale>
               );
             })}
           </ScrollView>
