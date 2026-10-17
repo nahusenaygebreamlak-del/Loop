@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
+import { Pop } from '@/components/Motion';
 import { Check } from '@/components/Check';
 import { ContentIn } from '@/components/ContentIn';
 import { Chip, EmptyState } from '@/components/EmptyState';
@@ -289,9 +290,9 @@ function TodayBody({
     return (
       <>
         <View accessibilityRole="summary" style={[styles.doneCard, { backgroundColor: c.card }]}>
-          <View aria-hidden style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+          <Pop><View aria-hidden style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
             <Icon name="check" size={30} strokeWidth={2.6} color={c.onAccent} />
-          </View>
+          </View></Pop>
           <AppText style={{ ...font(800), fontSize: 22 }}>All {all.length} done</AppText>
           <AppText tone="secondary" style={{ fontSize: 14.5, textAlign: 'center' }}>
             Nothing left for today.{tomorrow ? ` Tomorrow has ${tomorrow} task${tomorrow === 1 ? '' : 's'}.` : ''}

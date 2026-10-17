@@ -34,3 +34,14 @@ Tell Claude it's done. Claude restarts the app, and "Continue with Google" will 
 - Google Cloud project: `Loop` (`loop-511820`), app in Testing with the owner as a test user; web OAuth client "Loop (Supabase)".
 - Keys live in `.env` (not committed).
 - Migrations applied: `20261016000000_init.sql` (16 Oct), `20261017000000_sync.sql` (17 Oct). New ones are pasted into the SQL editor the same way.
+
+## 5. Google Calendar (Milestone 7, one time)
+
+Loop reads your calendar through a small Supabase server function, because Google's access expires every hour and renewing it needs the client secret, which must never live in the app.
+
+1. **Supabase → SQL Editor:** run `supabase/migrations/20261018000000_checkins_off_by_default.sql` and `supabase/migrations/20261018010000_google_tokens.sql`.
+2. **Google Cloud → APIs & Services → Library:** search "Google Calendar API" → **Enable**.
+3. **Google Cloud → OAuth consent screen → Data access → Add or remove scopes:** add `.../auth/calendar.readonly` → Save. (The app stays in Testing; you're already a test user.)
+4. **Supabase → Edge Functions → Secrets:** add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (the same values as in Authentication → Providers → Google). You type the secret; Claude never does.
+5. **Deploy the function:** Claude runs `npx supabase login` (you click Allow in the browser), then `npx supabase functions deploy google-calendar --project-ref hjyfivfgasdpkpgctmcd`.
+6. In Loop: **Calendar → Connect Google**.

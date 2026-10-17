@@ -4,6 +4,7 @@ import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LoopAlarm from '../../../../modules/loop-alarm';
 import { AppText } from '@/components/AppText';
+import { Pop } from '@/components/Motion';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { goMain } from '@/features/nav';
@@ -57,9 +58,9 @@ export default function CheckIn() {
       {left.length === 0 ? (
         <>
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start', gap: 14, paddingBottom: 40 }}>
-            <View aria-hidden style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
+            <Pop><View aria-hidden style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="check" size={34} strokeWidth={2.6} color={c.onAccent} />
-            </View>
+            </View></Pop>
             <AppText accessibilityRole="header" style={{ marginTop: 10, ...font(800), fontSize: 32, lineHeight: 38, letterSpacing: -0.64 }}>
               Nothing left over
             </AppText>

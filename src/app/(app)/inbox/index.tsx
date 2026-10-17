@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Platform, TextInput, View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { Pop } from '@/components/Motion';
 import { EmptyState } from '@/components/EmptyState';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
@@ -120,9 +121,9 @@ export default function Inbox() {
       ) : doneToday.length ? (
         <>
           <View style={{ alignItems: 'center', paddingTop: 40, paddingHorizontal: size.sideMargin }}>
-            <View aria-hidden style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
+            <Pop><View aria-hidden style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="check" size={32} strokeWidth={2.6} color={c.onAccent} />
-            </View>
+            </View></Pop>
             <AppText accessibilityRole="header" style={{ ...font(800), fontSize: 24, marginTop: 18 }}>
               All sorted
             </AppText>

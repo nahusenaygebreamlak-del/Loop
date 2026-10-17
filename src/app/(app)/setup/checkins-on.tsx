@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LoopAlarm from '../../../../modules/loop-alarm';
 import { AppText } from '@/components/AppText';
+import { Pop } from '@/components/Motion';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -37,9 +38,9 @@ export default function CheckinsOn() {
           <Icon name="close" color={c.text} />
         </PressScale>
       </View>
-      <View aria-hidden style={{ marginTop: 36, width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
+      <Pop><View aria-hidden style={{ marginTop: 36, width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
         <Icon name="check" size={34} strokeWidth={2.6} color={c.onAccent} />
-      </View>
+      </View></Pop>
       <AppText accessibilityRole="header" style={{ marginTop: 24, ...font(800), fontSize: 32, lineHeight: 38, letterSpacing: -0.64 }}>
         Check-ins are on
       </AppText>

@@ -48,7 +48,52 @@
           "icon": "./assets/notification-icon.png"
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "react-native-android-widget",
+        {
+          "fonts": [
+            "./assets/fonts/PlusJakartaSans_600SemiBold.ttf",
+            "./assets/fonts/PlusJakartaSans_700Bold.ttf",
+            "./assets/fonts/PlusJakartaSans_800ExtraBold.ttf"
+          ],
+          "widgets": [
+            {
+              "name": "LoopToday",
+              "label": "Loop \u00b7 Today",
+              "description": "Today's tasks. Tick to finish, + to add.",
+              "minWidth": "250dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 3,
+              "previewImage": "./assets/widget-preview/today.png",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "horizontal|vertical"
+            },
+            {
+              "name": "LoopMonth",
+              "label": "Loop \u00b7 Month",
+              "description": "This month at a glance.",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/widget-preview/month.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "LoopAdd",
+              "label": "Loop \u00b7 Add task",
+              "description": "Add a task or dump a note.",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/widget-preview/add.png"
+            }
+          ]
+        }
+      ]
     ],
     "scheme": "loop",
     "experiments": {

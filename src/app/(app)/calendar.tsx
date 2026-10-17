@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { Check } from '@/components/Check';
 import { IconButton, Fab } from '@/components/ui';
+import { PulseDot } from '@/components/Motion';
 import { PressScale } from '@/components/PressScale';
 import { useSheets } from '@/components/Sheet';
 import { useSnackbar } from '@/components/Snackbar';
@@ -473,7 +474,7 @@ function WeekView({ week, today, tasks, events, hidden, onPickDay }: { week: Dat
               <View key={d} style={{ flex: 1 }}>
                 {d === today ? (
                   <View aria-label={`Now, ${nowTime()}`} style={{ position: 'absolute', left: -3, right: 0, top: (nowMin / 60) * W_HOUR, height: 2, backgroundColor: c.cal.nowLine }}>
-                    <View style={{ position: 'absolute', left: -3, top: -3, width: 8, height: 8, borderRadius: 4, backgroundColor: c.cal.nowLine }} />
+                    <PulseDot color={c.cal.nowLine} style={{ position: 'absolute', left: -3, top: -3 }} />
                   </View>
                 ) : null}
                 {timedBlocks(d, today, tasks, events, hidden, actions.openDetails, (id) => sheets.open(() => <EventSheet eventId={id} />)).map((b) => (
@@ -586,7 +587,7 @@ function DayView({ day, today, tasks, lists, events, hidden }: { day: DateKey; t
             ))}
             {day === today ? (
               <View aria-label={`Now, ${nowTime()}`} style={{ position: 'absolute', left: 44, right: 0, top: (nowMin / 60) * D_HOUR, height: 2, backgroundColor: c.cal.nowLine }}>
-                <View style={{ position: 'absolute', left: -4, top: -3, width: 8, height: 8, borderRadius: 4, backgroundColor: c.cal.nowLine }} />
+                <PulseDot color={c.cal.nowLine} style={{ position: 'absolute', left: -4, top: -3 }} />
               </View>
             ) : null}
             <View style={{ position: 'absolute', left: 52, right: 8, top: 0, bottom: 0 }}>
