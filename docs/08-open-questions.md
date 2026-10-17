@@ -13,3 +13,8 @@ Ask the owner before building these. Defaults in brackets are what the designs c
 9. **"Not today" on the 18:00 reminder** waits until tomorrow. Should there be a "later tonight" option instead?
 10. **Sorting in the prototype:** Delete and Skip jump to "All sorted" only because the prototype has no state. In the app they go to the next note.
 11. **Desktop/web layout** is not designed yet beyond early drafts. Design it with the owner after the phone build.
+
+## Decided during the build
+
+- **"Archive all" in the morning check-in** (17 Oct): keeps the leftover tasks in their lists and clears their date ("Someday"). Confirmed by the owner.
+- **Remind until I act** (17 Oct): added as a Settings toggle under Daily check-ins; repeats an unanswered morning check-in every 15 minutes, up to an hour.
