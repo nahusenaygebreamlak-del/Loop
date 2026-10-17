@@ -7,6 +7,7 @@ import type { TimeKey } from '@/lib/dates';
 // A null time means that check-in is turned off.
 
 export type Settings = {
+  theme: 'system' | 'light' | 'dark';
   morningTime: TimeKey | null;
   afternoonTime: TimeKey | null;
   sortTime: TimeKey | null;
@@ -25,6 +26,7 @@ type Actions = {
 export const useSettings = create<Settings & Actions>()(
   persist(
     (set) => ({
+      theme: 'system',
       morningTime: '08:30',
       afternoonTime: '14:00',
       sortTime: '18:00',

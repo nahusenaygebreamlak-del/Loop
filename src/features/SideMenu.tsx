@@ -15,6 +15,7 @@ import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { useSyncLine } from '@/sync/status';
 import { goMain } from './nav';
 import { ListEditSheet } from './sheets/ListEditSheet';
 
@@ -26,6 +27,7 @@ export function SideMenu() {
   const sheets = useSheets();
   const snack = useSnackbar();
   const path = usePathname();
+  const sync = useSyncLine();
   const { today } = useToday();
   const allTasks = useStore((s) => s.tasks);
   const allLists = useStore((s) => s.lists);
@@ -66,8 +68,8 @@ export function SideMenu() {
         </View>
         <View style={{ flex: 1 }}>
           <AppText style={{ ...font(800), fontSize: 17 }}>Loop</AppText>
-          <AppText tone="secondary" style={{ fontSize: 13 }}>
-            Saved on this phone
+          <AppText tone={sync.tone} style={{ fontSize: 13 }} numberOfLines={2} accessibilityLiveRegion="polite">
+            {sync.line}
           </AppText>
         </View>
         <IconButton

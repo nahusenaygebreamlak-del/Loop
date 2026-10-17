@@ -33,3 +33,4 @@ Tell Claude it's done. Claude restarts the app, and "Continue with Google" will 
 - Supabase project: `loop` (West EU, Ireland), `https://hjyfivfgasdpkpgctmcd.supabase.co`. Schema applied; Google provider on; Site URL `http://localhost:8081`; redirect URLs `http://localhost:8081/**` and `loop://**`.
 - Google Cloud project: `Loop` (`loop-511820`), app in Testing with the owner as a test user; web OAuth client "Loop (Supabase)".
 - Keys live in `.env` (not committed).
+- Migrations applied: `20261016000000_init.sql` (16 Oct), `20261017000000_sync.sql` (17 Oct). New ones are pasted into the SQL editor the same way.

@@ -7,6 +7,8 @@ import { useSheets } from '@/components/Sheet';
 import { Card, GroupLabel, IconButton } from '@/components/ui';
 import { goBack } from '@/features/nav';
 import { useAuth } from '@/lib/auth';
+import { syncNow, useSyncStatus } from '@/sync/engine';
+import { ago } from '@/sync/status';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
@@ -17,6 +19,7 @@ export default function Account() {
   const insets = useSafeAreaInsets();
   const sheets = useSheets();
   const { session, preview, signOut } = useAuth();
+  const { state, lastSyncedAt, pending } = useSyncStatus();
   const name = (session?.user.user_metadata?.full_name as string | undefined) ?? (preview ? 'Preview' : 'You');
   const email = session?.user.email;
 
@@ -49,7 +52,13 @@ export default function Account() {
 
         <GroupLabel style={{ paddingTop: 22, paddingBottom: 8 }}>This phone</GroupLabel>
         <Card>
-          <SetRow name="Sync" hint="Changes are saved on this phone for now" value="Not yet" valueMuted />
+          <SetRow
+            name="Sync"
+            hint={state === 'offline' ? 'Offline · changes will sync later' : pending ? `${pending} change${pending === 1 ? '' : 's'} waiting` : session ? 'All changes saved' : 'Preview mode, saved on this phone only'}
+            value={!session ? 'Off' : state === 'offline' ? 'Offline' : state === 'error' ? 'Retrying' : lastSyncedAt ? ago(lastSyncedAt).replace(/^./, (x) => x.toUpperCase()) : 'Syncing…'}
+            valueMuted
+            onPress={session ? () => void syncNow() : undefined}
+          />
           <SetRow
             name="Sign out"
             danger

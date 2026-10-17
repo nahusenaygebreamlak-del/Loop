@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
+import { signOutSync, startSync, stopSync } from '@/sync/engine';
 import { isSupabaseConfigured, supabase } from './supabase';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -49,6 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Sync runs while a real account is signed in (not in preview mode).
+  const uid = session?.user.id;
+  useEffect(() => {
+    if (uid) void startSync(uid);
+    else stopSync();
+  }, [uid]);
+
   const value: AuthState = {
     session,
     signedIn: !!session || preview,
@@ -67,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPreview(false);
         return;
       }
+      await signOutSync();
       await supabase.auth.signOut();
     },
   };

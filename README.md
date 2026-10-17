@@ -49,6 +49,7 @@ They come from a design canvas. Each file is one screen: plain HTML with **inlin
 - Build: **Milestone 1 (tasks core) done**: Today, quick add with natural language, task details, list screen, all pickers, tick/delete with Undo. Data is stored on the device; sync comes in Milestone 4.
 - Build: **Milestone 2 (navigation) done**: side menu, Next 7 Days, All tasks, Tag view, Completed, Trash (restore, delete for good, empty, 30-day purge), lists add/edit/archive/delete, Search, Settings with check-in times, theme, week and time, Account and sign out.
 - Build: **Milestone 3 (Inbox and Notes) done**: Inbox with Dump a thought, one-at-a-time sorting (task / note / delete / skip), All sorted summary, Undo sorting until midnight, Notes list, editor with checklists, bullets, headings and bold lines, note options, note ↔ task.
+- Build: **Milestone 4 (sync) done**: offline-first sync with Supabase (outbox of local changes, pull every 30 s and on return, deletes via tombstones), first sign-in merges this device's data into the account, sign-out clears the device, sync / offline status in the menu and Account.
 
 ## Running the app
 
