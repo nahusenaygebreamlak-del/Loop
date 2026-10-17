@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { MainScroll, ScreenHeader } from '@/components/rows';
-import { EmptyCard, IconButton } from '@/components/ui';
+import { IconButton } from '@/components/ui';
 import { goMain } from '@/features/nav';
 import { useMenu } from '@/features/useMenu';
 import { checklistCount, notePreview, notesList, noteDate } from '@/lib/inboxViews';
@@ -37,7 +38,19 @@ export default function Notes() {
           title="Notes"
         />
         <View style={{ paddingTop: 20, paddingHorizontal: size.sideMargin, gap: 10 }}>
-          {notes.length === 0 ? <EmptyCard>{"No notes yet. Notes are for things to keep that aren't tasks."}</EmptyCard> : null}
+          {notes.length === 0 ? (
+            <EmptyState style={{ marginHorizontal: 0 }} icon="note" title="No notes yet" text="Packing lists, ideas, meeting notes. Things worth keeping that don't need a date.">
+              <View style={{ alignSelf: 'stretch', gap: 8, marginTop: 12 }}>
+                {['Start one with New note', 'Or pick "Keep as note" while sorting the Inbox'].map((h) => (
+                  <View key={h} style={{ backgroundColor: c.ground, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14 }}>
+                    <AppText tone="secondary" style={{ ...font(600), fontSize: 14 }}>
+                      {h}
+                    </AppText>
+                  </View>
+                ))}
+              </View>
+            </EmptyState>
+          ) : null}
           {notes.map((n) => {
             const preview = notePreview(n);
             const checks = checklistCount(n);

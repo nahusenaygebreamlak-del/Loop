@@ -40,6 +40,12 @@ const ICONS = {
   checklist: [<Circle key="a" cx="6" cy="7" r="2.5" />, <Circle key="b" cx="6" cy="17" r="2.5" />, <Path key="c" d="M11 7h9M11 17h9" />],
   bullets: [<Path key="a" d="M5 7h.01M5 12h.01M5 17h.01" strokeWidth={3.2} />, <Path key="b" d="M10 7h10M10 12h10M10 17h10" />],
   chevronDown: [<Path key="a" d="M6 9l6 6 6-6" />],
+  carried: [<Path key="a" d="M4 12a8 8 0 0 1 13.7-5.6M20 4v4h-4M20 12a8 8 0 0 1-13.7 5.6M4 20v-4h4" />],
+  drag: [<Path key="a" d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" strokeWidth={3} />],
+  alert: [<Circle key="a" cx="12" cy="12" r="9" />, <Path key="b" d="M12 7v6M12 16.5h.01" />],
+  wifiOff: [<Path key="a" d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5-2.7M12 20h.01M19 13a10 10 0 0 0-2.4-1.6M2 9a15 15 0 0 1 4.4-2.7M22 9a15 15 0 0 0-9-3.9" />],
+  cloudWait: [<Path key="a" d="M7 18a5 5 0 0 1-.5-10 6 6 0 0 1 11.5 1.5A4 4 0 0 1 17 18z" />, <Path key="b" d="M12 11v4l2 1" />],
+  undo: [<Path key="a" d="M9 14l-5-5 5-5" />, <Path key="b" d="M4 9h10a6 6 0 0 1 0 12h-3" />],
 } as const;
 
 export type IconName = keyof typeof ICONS;

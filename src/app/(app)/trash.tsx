@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { ConfirmDialog } from '@/components/Dialog';
 import { PressScale } from '@/components/PressScale';
 import { MainScroll, ScreenHeader } from '@/components/rows';
 import { useSheets } from '@/components/Sheet';
 import { useSnackbar } from '@/components/Snackbar';
-import { Card, EmptyCard } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { TrashItemSheet } from '@/features/sheets/TrashItemSheet';
 import { useMenu } from '@/features/useMenu';
 import { daysLeft, trashEntries } from '@/lib/taskViews';
@@ -41,7 +42,7 @@ export default function Trash() {
       <ScreenHeader onMenu={openMenu} subtitle="Deleted things stay here for 30 days" title="Trash" />
       <View style={{ height: 22 }} />
       {entries.length === 0 ? (
-        <EmptyCard>Trash is empty.</EmptyCard>
+        <EmptyState icon="trash" title="Trash is empty" text="Deleted things wait here for 30 days before they're gone for good." />
       ) : (
         <>
           <Card>

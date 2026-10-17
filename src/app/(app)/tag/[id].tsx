@@ -2,9 +2,10 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { ListTag, MainScroll, ScreenHeader, TaskRow } from '@/components/rows';
 import { useSheets } from '@/components/Sheet';
-import { Card, EmptyCard, Fab, GroupLabel } from '@/components/ui';
+import { Card, Fab, GroupLabel } from '@/components/ui';
 import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
 import { useMenu } from '@/features/useMenu';
@@ -47,7 +48,7 @@ export default function TagView() {
       />
       {groups.length === 0 ? (
         <View style={{ paddingTop: 26 }}>
-          <EmptyCard>No open tasks with this tag.</EmptyCard>
+          <EmptyState glyph="#" title={`No open tasks with #${tag.name}`} text={`Type #${tag.name} when adding a task to tag it.`} />
         </View>
       ) : null}
       {groups.map((g, gi) => (

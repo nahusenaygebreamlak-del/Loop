@@ -394,3 +394,11 @@ async function push() {
     return { dirty, deleted, profileDirty: cur.profileDirty === profileSent ? 0 : cur.profileDirty };
   });
 }
+
+/** Task ids with changes still waiting to be sent ("waiting to sync" while offline). */
+export function usePendingTaskIds(): Set<string> {
+  const dirty = useMeta((m) => m.dirty);
+  const ids = new Set<string>();
+  for (const k of Object.keys(dirty)) if (k.startsWith('tasks:')) ids.add(k.slice(6));
+  return ids;
+}

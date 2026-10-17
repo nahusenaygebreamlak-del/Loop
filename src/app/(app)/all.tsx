@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { FilterChips, MainScroll, ScreenHeader, ShowMoreRow, TaskRow } from '@/components/rows';
 import { useSheets } from '@/components/Sheet';
-import { Card, EmptyCard, Fab, IconButton, Swatch } from '@/components/ui';
+import { Card, Fab, IconButton, Swatch } from '@/components/ui';
 import { goMain } from '@/features/nav';
 import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
@@ -56,7 +57,7 @@ export default function AllTasks() {
       />
       {groups.length === 0 ? (
         <View style={{ paddingTop: 22 }}>
-          <EmptyCard>No open tasks. Tap + to add one.</EmptyCard>
+          <EmptyState icon="allTasks" title="No open tasks" text="Everything's done or there's nothing yet. Tap + to add one." />
         </View>
       ) : null}
       {groups.map((g) => {

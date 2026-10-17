@@ -1,11 +1,12 @@
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { useSheets } from '@/components/Sheet';
 import { useSnackbar } from '@/components/Snackbar';
-import { Card, EmptyCard, GroupLabel, IconButton, Swatch } from '@/components/ui';
+import { Card, GroupLabel, IconButton, Swatch } from '@/components/ui';
 import { goBack, goMain } from '@/features/nav';
 import { ListEditSheet } from '@/features/sheets/ListEditSheet';
 import { liveLists, openCount } from '@/lib/taskViews';
@@ -77,7 +78,7 @@ export default function ListsSettings() {
 
         <GroupLabel style={{ paddingTop: 12 }}>Archived</GroupLabel>
         {archived.length === 0 ? (
-          <EmptyCard>No archived lists.</EmptyCard>
+          <EmptyState icon="archive" title="No archived lists" text="Archive a list from its ⋯ menu to hide it without losing tasks." />
         ) : (
           <Card>
             {archived.map((l, i) => (

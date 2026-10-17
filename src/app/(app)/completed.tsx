@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { Check } from '@/components/Check';
 import { FilterChips, MainScroll, ScreenHeader, ShowMoreRow } from '@/components/rows';
-import { Card, EmptyCard } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { useMenu } from '@/features/useMenu';
 import { addDays, formatTime, relativeDay, toKey } from '@/lib/dates';
 import { completedGroups, liveLists, visibleTasks } from '@/lib/taskViews';
@@ -47,7 +48,7 @@ export default function Completed() {
       />
       {groups.length === 0 ? (
         <View style={{ paddingTop: 22 }}>
-          <EmptyCard>Nothing done yet. Ticked tasks show up here.</EmptyCard>
+          <EmptyState icon="check" title="Nothing done yet" text="Ticked tasks collect here, so you can see what you got through." />
         </View>
       ) : null}
       {groups.map((g) => {

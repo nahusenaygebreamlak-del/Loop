@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { Check } from '@/components/Check';
 import { ContentIn } from '@/components/ContentIn';
 import { PressScale } from '@/components/PressScale';
 import { useSheets } from '@/components/Sheet';
-import { Card, EmptyCard, Fab, GroupLabel, IconButton, Swatch } from '@/components/ui';
+import { Card, Fab, GroupLabel, IconButton, Swatch } from '@/components/ui';
 import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
 import { ListMenuSheet } from '@/features/sheets/ListMenuSheet';
@@ -74,7 +75,12 @@ export default function ListScreen() {
 
         {groups.length === 0 ? (
           <ContentIn index={1} style={{ paddingTop: 26 }}>
-            <EmptyCard>No tasks in this list yet.</EmptyCard>
+            <EmptyState
+              icon="listPlain"
+              title={`Nothing in ${list.name} yet`}
+              text="Add a task, or move one here from another list."
+              actions={[{ label: `Add to ${list.name}`, primary: true, onPress: () => sheets.open(() => <QuickAddSheet listId={list.id} />) }]}
+            />
           </ContentIn>
         ) : null}
 

@@ -15,6 +15,7 @@ import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { LoopMarkTile } from '@/components/LoopMark';
 import { useSyncLine } from '@/sync/status';
 import { goMain } from './nav';
 import { ListEditSheet } from './sheets/ListEditSheet';
@@ -63,9 +64,7 @@ export function SideMenu() {
       style={[styles.nav, { backgroundColor: c.ground, paddingTop: 18 + insets.top, paddingBottom: 20 + insets.bottom }]}
     >
       <View style={styles.head}>
-        <View aria-hidden style={[styles.mark, { backgroundColor: c.accent }]}>
-          <AppText style={{ ...font(800), fontSize: 18, color: c.onAccent }}>L</AppText>
-        </View>
+        <LoopMarkTile />
         <View style={{ flex: 1 }}>
           <AppText style={{ ...font(800), fontSize: 17 }}>Loop</AppText>
           <AppText tone={sync.tone} style={{ fontSize: 13 }} numberOfLines={2} accessibilityLiveRegion="polite">

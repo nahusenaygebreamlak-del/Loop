@@ -2,12 +2,13 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Platform, TextInput, View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { MainScroll, ScreenHeader } from '@/components/rows';
 import { useSheets } from '@/components/Sheet';
 import { useSnackbar } from '@/components/Snackbar';
-import { Card, EmptyCard, GroupLabel } from '@/components/ui';
+import { Card, GroupLabel } from '@/components/ui';
 import { goMain } from '@/features/nav';
 import { UndoSortingSheet } from '@/features/sheets/UndoSortingSheet';
 import { useMenu } from '@/features/useMenu';
@@ -140,7 +141,7 @@ export default function Inbox() {
         </>
       ) : (
         <View style={{ paddingTop: 22 }}>
-          <EmptyCard>Nothing waiting. Dump a thought above and sort it later.</EmptyCard>
+          <EmptyState icon="inboxTray" title="Inbox zero" text="Nothing waiting. Dump a thought above and sort it later." />
         </View>
       )}
     </MainScroll>

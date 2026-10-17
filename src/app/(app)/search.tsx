@@ -3,10 +3,11 @@ import { useState } from 'react';
 import { Platform, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
+import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { TaskRow } from '@/components/rows';
-import { Card, EmptyCard, GroupLabel, IconButton, Swatch } from '@/components/ui';
+import { Card, GroupLabel, IconButton, Swatch } from '@/components/ui';
 import { goBack, goMain } from '@/features/nav';
 import { useTaskActions } from '@/features/useTaskActions';
 import { addDays, monthDay, toKey, weekdayShort } from '@/lib/dates';
@@ -101,7 +102,7 @@ export default function Search() {
 
         {nothing ? (
           <View style={{ paddingTop: 24 }}>
-            <EmptyCard>{`Nothing matches "${q.trim()}".`}</EmptyCard>
+            <EmptyState icon="search" title={`Nothing matches "${q.trim()}"`} text="Try fewer words, or look in Completed and Trash." actions={[{ label: 'Search Completed', onPress: () => goMain('/completed') }]} />
           </View>
         ) : null}
 

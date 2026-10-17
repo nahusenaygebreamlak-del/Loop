@@ -1,3 +1,4 @@
+import { EmptyState } from '@/components/EmptyState';
 import { View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { PressScale } from '@/components/PressScale';
@@ -35,9 +36,7 @@ export function UndoSortingSheet() {
     <SheetCard label="Undo sorting" style={{ paddingBottom: 28 }}>
       <SheetTitle hint="Undo puts a note back in the Inbox. Available until midnight.">Sorted today</SheetTitle>
       {items.length === 0 ? (
-        <AppText tone="secondary" style={{ fontSize: 15 }}>
-          Nothing left to undo today.
-        </AppText>
+        <EmptyState style={{ marginHorizontal: 0, backgroundColor: c.ground }} icon="undo" title="Nothing left to undo today" text="Everything sorted today is back in the Inbox or already undone." />
       ) : (
         <>
           <View style={{ backgroundColor: c.ground, borderRadius: radius.card, overflow: 'hidden' }}>
