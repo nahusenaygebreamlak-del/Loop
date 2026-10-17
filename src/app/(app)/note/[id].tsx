@@ -1,11 +1,12 @@
 import { randomUUID } from 'expo-crypto';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, View, type TextInputInstance } from 'react-native';
+import { Keyboard, ScrollView, View, type TextInputInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { Check } from '@/components/Check';
 import { GrowingInput } from '@/components/GrowingInput';
+import { KeyboardLift } from '@/components/KeyboardLift';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { useSheets } from '@/components/Sheet';
@@ -126,7 +127,7 @@ function NoteEditor({ id }: { id: string }) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.card }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardLift style={{ backgroundColor: c.card }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 14 + insets.top, paddingHorizontal: 14, paddingBottom: 4 }}>
         <IconButton
           icon="back"
@@ -202,7 +203,7 @@ function NoteEditor({ id }: { id: string }) {
         <View style={{ flex: 1 }} />
         <Tool icon="chevronDown" label="Hide keyboard" onPress={() => Keyboard.dismiss()} />
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardLift>
   );
 }
 

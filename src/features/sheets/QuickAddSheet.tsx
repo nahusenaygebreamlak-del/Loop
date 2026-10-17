@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
+import { Platform, StyleSheet, Text, TextInput, View, type TextInputInstance } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
@@ -25,7 +25,8 @@ type Overrides = { date?: DateValue; priority?: Priority; listId?: string | null
 
 const TITLE = { ...font(700), fontSize: 20, lineHeight: 29 };
 // Web textareas default to two rows; start at one like the native field.
-const WEB_ONE_ROW = Platform.OS === 'web' ? ({ rows: 1 } as object) : {};
+const WEB = Platform.OS === 'web';
+const WEB_ONE_ROW = WEB ? ({ rows: 1 } as object) : {};
 
 function findList(lists: List[], name: string | null): List | undefined {
   if (!name) return undefined;
@@ -128,31 +129,28 @@ export function QuickAddSheet({ listId: presetList, date: presetDate, initialTex
   return (
     <SheetCard label="Add task" gap={18} style={{ paddingBottom: 20 }}>
       <View>
-        <AppText style={[TITLE, styles.layer]} aria-hidden>
-          {highlighted.map((p, i) =>
-            p.tok ? (
-              <AppText key={i} style={[TITLE, { color: c.accentText, backgroundColor: c.tint }]}>
+        {/* Web: a highlighted copy drawn under a transparent input. Phones: the input styles its own text. */}
+        {WEB ? (
+          <AppText style={[TITLE, styles.layer]} aria-hidden>
+            {highlighted.map((p, i) => (
+              <Text key={i} style={p.tok ? { color: c.accentText, backgroundColor: c.tint } : { color: c.text }}>
                 {p.t}
-              </AppText>
-            ) : (
-              <AppText key={i} style={[TITLE, { color: c.text }]}>
-                {p.t}
-              </AppText>
-            ),
-          )}
-        </AppText>
+              </Text>
+            ))}
+          </AppText>
+        ) : null}
         <TextInput
           ref={inputRef}
           autoFocus
           multiline
           {...WEB_ONE_ROW}
-          value={text}
+          {...(WEB ? { value: text } : {})}
           onChangeText={(t) => setText(t.replace(/\n/g, ''))}
           onSubmitEditing={save}
           submitBehavior="submit"
           onKeyPress={(e) => {
             // Web textareas don't fire onSubmitEditing on Enter.
-            if (Platform.OS === 'web' && e.nativeEvent.key === 'Enter') {
+            if (WEB && e.nativeEvent.key === 'Enter') {
               (e as unknown as { preventDefault: () => void }).preventDefault();
               save();
             }
@@ -164,8 +162,16 @@ export function QuickAddSheet({ listId: presetList, date: presetDate, initialTex
           accessibilityHint="Type dates, #tags, !priority, ~list"
           cursorColor={c.accent}
           selectionColor={c.accent}
-          style={[TITLE, styles.input, { color: text ? 'transparent' : c.text, ...(Platform.OS === 'web' ? ({ caretColor: c.accent, outlineStyle: 'none' } as object) : null) }]}
-        />
+          style={[TITLE, styles.input, { color: WEB && text ? 'transparent' : c.text }, WEB ? ({ caretColor: c.accent, outlineStyle: 'none' } as object) : null]}
+        >
+          {WEB
+            ? undefined
+            : highlighted.map((p, i) => (
+                <Text key={i} style={p.tok ? { color: c.accentText, backgroundColor: c.tint } : { color: c.text }}>
+                  {p.t}
+                </Text>
+              ))}
+        </TextInput>
       </View>
       <TextInput
         value={notes}

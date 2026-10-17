@@ -4,6 +4,7 @@ import { Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { GrowingInput } from '@/components/GrowingInput';
+import { KeyboardLift } from '@/components/KeyboardLift';
 import { Check } from '@/components/Check';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
@@ -63,7 +64,7 @@ function TaskDetail({ id }: { id: string }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.ground }}>
+    <KeyboardLift style={{ backgroundColor: c.ground }}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 40 + insets.bottom }}>
         <View style={styles.header}>
           <IconButton icon="back" label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
@@ -162,7 +163,7 @@ function TaskDetail({ id }: { id: string }) {
           )}
         </Card>
       </ScrollView>
-    </View>
+    </KeyboardLift>
   );
 }
 

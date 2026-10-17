@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { Modal, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '@/lib/useKeyboard';
 import { useTheme } from '@/theme/ThemeProvider';
 import { easingCurve, motion, radius } from '@/theme/tokens';
 
@@ -91,11 +92,15 @@ function SheetFrame({
     return { transform: [{ translateY: (1 - p) * size.h }] };
   });
 
+  // Sheets sit above the keyboard: the backdrop stays, the panel's bottom edge follows the keyboard.
+  const keyboard = useKeyboardHeight();
+  const lift = useAnimatedStyle(() => ({ paddingBottom: kind === 'drawer' ? 0 : keyboard.value }));
+
   const measure = (e: { nativeEvent: { layout: { width: number; height: number } } }) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
 
   return (
     <Modal transparent visible animationType="none" onRequestClose={onRequestClose} statusBarTranslucent navigationBarTranslucent>
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Animated.View style={[styles.fill, lift]}>
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: c.backdrop }, backdrop]}>
           <Pressable style={styles.fill} onPress={onRequestClose} accessibilityRole="button" accessibilityLabel="Close" />
         </Animated.View>
@@ -117,7 +122,7 @@ function SheetFrame({
             </Animated.View>
           </View>
         )}
-      </KeyboardAvoidingView>
+      </Animated.View>
     </Modal>
   );
 }

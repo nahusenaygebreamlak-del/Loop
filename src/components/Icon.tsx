@@ -25,7 +25,11 @@ const ICONS = {
   clock: [<Circle key="a" cx="12" cy="12" r="8" />, <Path key="b" d="M12 8v4l3 2" />],
   bell: [<Path key="a" d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />, <Path key="b" d="M10 20a2 2 0 0 0 4 0" />],
   repeat: [<Path key="a" d="M17 3l3 3-3 3M4 11V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3M20 13v2a3 3 0 0 1-3 3H4" />],
-  gear: [<Circle key="a" cx="12" cy="12" r="3" />, <Path key="b" d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" />],
+  // Standard cog (the design's sun-like gear read as brightness).
+  gear: [
+    <Path key="a" d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />,
+    <Circle key="b" cx="12" cy="12" r="3" />,
+  ],
   next7: [<Rect key="a" x="4" y="5" width="16" height="15" rx="3" />, <Path key="b" d="M9 3v4M15 3v4M8 12h8M8 16h5" />],
   allTasks: [<Rect key="a" x="4" y="4" width="16" height="16" rx="4" />, <Path key="b" d="M8 9h8M8 13h8M8 17h5" />],
   completed: [<Circle key="a" cx="12" cy="12" r="8" />, <Path key="b" d="M8.5 12l2.5 2.5 4.5-5" />],
