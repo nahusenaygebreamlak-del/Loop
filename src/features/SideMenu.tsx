@@ -6,7 +6,6 @@ import { AppText } from '@/components/AppText';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { useCloseSheet, useSheets } from '@/components/Sheet';
-import { useSnackbar } from '@/components/Snackbar';
 import { IconButton } from '@/components/ui';
 import { addDays } from '@/lib/dates';
 import { isOpen, liveLists, openCount, visibleTasks } from '@/lib/taskViews';
@@ -27,7 +26,6 @@ export function SideMenu() {
   const insets = useSafeAreaInsets();
   const close = useCloseSheet();
   const sheets = useSheets();
-  const snack = useSnackbar();
   const path = usePathname();
   const sync = useSyncLine();
   const { today } = useToday();
@@ -52,10 +50,6 @@ export function SideMenu() {
   const go = (href: Href) => {
     close();
     goMain(href);
-  };
-  const later = (what: string, milestone: number) => {
-    close();
-    snack({ title: `${what} arrives in Milestone ${milestone}` });
   };
 
   return (
@@ -95,7 +89,7 @@ export function SideMenu() {
           <Item icon="next7" label="Next 7 Days" count={counts.next7} on={path === '/next7'} onPress={() => go('/next7')} />
           <Item icon="inboxTray" label="Inbox" count={counts.inbox} on={path.startsWith('/inbox')} onPress={() => go('/inbox')} />
           <Item icon="note" label="Notes" count={counts.notes} on={path === '/notes'} onPress={() => go('/notes')} />
-          <Item icon="calendar" label="Calendar" onPress={() => later('Calendar', 7)} />
+          <Item icon="calendar" label="Calendar" on={path === '/calendar'} onPress={() => go('/calendar')} />
           <Item icon="allTasks" label="All tasks" count={counts.all} on={path === '/all'} onPress={() => go('/all')} />
         </View>
 

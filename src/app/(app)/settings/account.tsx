@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
@@ -9,6 +10,7 @@ import { useSnackbar } from '@/components/Snackbar';
 import { Spinner } from '@/components/Spinner';
 import { Card, GroupLabel, IconButton } from '@/components/ui';
 import { goBack } from '@/features/nav';
+import { connectGoogleCalendar, disconnectGoogleCalendar, loadCalendars, setCalendarEnabled, useCalendar } from '@/calendar/google';
 import { useAuth } from '@/lib/auth';
 import { syncNow, useSyncStatus } from '@/sync/engine';
 import { ago } from '@/sync/status';
@@ -22,6 +24,10 @@ export default function Account() {
   const insets = useSafeAreaInsets();
   const sheets = useSheets();
   const snack = useSnackbar();
+  const cal = useCalendar();
+  useEffect(() => {
+    if (useCalendar.getState().status === 'connected') void loadCalendars().catch(() => {});
+  }, []);
   const { session, preview, signOut } = useAuth();
   const { state, lastSyncedAt, pending } = useSyncStatus();
   const name = (session?.user.user_metadata?.full_name as string | undefined) ?? (preview ? 'Preview' : 'You');
@@ -50,23 +56,64 @@ export default function Account() {
         </View>
 
         <GroupLabel style={{ paddingTop: 22, paddingBottom: 8 }}>Google Calendar</GroupLabel>
-        <Card>
-          <SetRow
-            name="Not connected"
-            hint="Show your meetings next to your tasks. Read-only."
-            last
-            trailing={
-              <PressScale
-                accessibilityRole="button"
-                accessibilityLabel="Connect Google Calendar"
-                onPress={() => snack({ title: 'Google Calendar arrives in Milestone 7' })}
-                style={{ minHeight: 40, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accent, justifyContent: 'center' }}
-              >
-                <AppText style={{ ...font(800), fontSize: 14, color: c.onAccent }}>Connect</AppText>
-              </PressScale>
-            }
-          />
-        </Card>
+        {cal.status === 'off' || cal.status === 'connecting' ? (
+          <Card>
+            <SetRow
+              name="Not connected"
+              hint="Show your meetings next to your tasks. Read-only."
+              last
+              trailing={
+                <PressScale
+                  accessibilityRole="button"
+                  accessibilityLabel="Connect Google Calendar"
+                  disabled={cal.status === 'connecting'}
+                  onPress={() => connectGoogleCalendar().catch(() => snack({ title: "Couldn't connect Google Calendar", sub: 'Your tasks are fine. Try again in a moment.' }))}
+                  style={{ minHeight: 40, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accent, justifyContent: 'center' }}
+                >
+                  {cal.status === 'connecting' ? <Spinner color={c.onAccent} track="rgba(255,255,255,0.3)" /> : <AppText style={{ ...font(800), fontSize: 14, color: c.onAccent }}>Connect</AppText>}
+                </PressScale>
+              }
+            />
+          </Card>
+        ) : (
+          <Card>
+            <SetRow
+              name={cal.status === 'failed' ? "Can't reach Google" : 'Connected'}
+              hint={cal.status === 'failed' ? 'Tap to sign in again · your tasks are fine' : `Last synced ${ago(cal.fetchedAt)} · read-only`}
+              hintColor={cal.status === 'failed' ? c.dangerText : undefined}
+              trailing={<View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: cal.status === 'failed' ? c.danger : listColors.learning }} />}
+              onPress={cal.status === 'failed' ? () => void connectGoogleCalendar().catch(() => {}) : undefined}
+            />
+            {cal.calendars.map((g) => (
+              <SetRow
+                key={g.id}
+                name={g.name}
+                lead={<View style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: c.cal.eventDot }} />}
+                toggle={g.enabled}
+                onPress={() => void setCalendarEnabled(g.id, !g.enabled).catch(() => snack({ title: "Couldn't change that calendar", sub: 'Try again in a moment.' }))}
+              />
+            ))}
+            <SetRow
+              name="Disconnect Google Calendar"
+              hint="Events disappear from Loop. Tasks stay."
+              danger
+              last
+              onPress={() =>
+                sheets.open(
+                  () => (
+                    <ConfirmDialog
+                      title="Disconnect Google Calendar?"
+                      body="Events disappear from Loop. Your tasks stay, and nothing changes in Google."
+                      confirmLabel="Disconnect"
+                      onConfirm={() => void disconnectGoogleCalendar()}
+                    />
+                  ),
+                  'dialog',
+                )
+              }
+            />
+          </Card>
+        )}
 
         <GroupLabel style={{ paddingTop: 22, paddingBottom: 8 }}>This phone</GroupLabel>
         <Card>

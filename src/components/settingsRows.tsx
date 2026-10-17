@@ -17,6 +17,7 @@ export function SetRow({
   danger,
   toggle,
   trailing,
+  lead,
   last,
   onPress,
 }: {
@@ -29,12 +30,14 @@ export function SetRow({
   danger?: boolean;
   toggle?: boolean;
   trailing?: ReactNode;
+  lead?: ReactNode;
   last?: boolean;
   onPress?: () => void;
 }) {
   const { c } = useTheme();
   const content = (
     <>
+      {lead}
       <View style={{ flex: 1 }}>
         <AppText style={{ ...font(700), fontSize: 15, color: danger ? c.dangerText : c.text }}>{name}</AppText>
         {hint ? (

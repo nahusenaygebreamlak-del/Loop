@@ -1,3 +1,4 @@
+import { finishWebConnect } from '@/calendar/google';
 import {
   PlusJakartaSans_300Light,
   PlusJakartaSans_400Regular,
@@ -82,6 +83,9 @@ function RootStack() {
     </>
   );
 }
+
+// Web: finish connecting Google Calendar after Google redirects back.
+finishWebConnect();
 
 function NotificationsBridge() {
   useNotifications();

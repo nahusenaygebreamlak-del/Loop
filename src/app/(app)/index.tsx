@@ -12,7 +12,12 @@ import { ShowMoreRow, TaskRow } from '@/components/rows';
 import { useSheets } from '@/components/Sheet';
 import { Card, Fab, GroupLabel, IconButton } from '@/components/ui';
 import { goMain } from '@/features/nav';
+import { refreshEvents, setEventHidden, useCalendar } from '@/calendar/google';
+import { useSnackbar } from '@/components/Snackbar';
+import { GoogleFailedCard, lastSeen } from '@/features/calendar/GoogleCards';
 import { CarriedOverSheet } from '@/features/sheets/CarriedOverSheet';
+import { EventSheet } from '@/features/sheets/EventSheet';
+import { eventsOn } from '@/lib/events';
 import { SetupCheckinsSheet } from '@/features/sheets/SetupCheckinsSheet';
 import { leftovers } from '@/lib/checkins';
 import { askForNotifications } from '@/notifications/setup';
@@ -56,6 +61,11 @@ export default function Today() {
   const isToday = day === today;
 
   // NCarriedOver after the check-in moved a task for the 3rd time. Wait for the summary snackbar to settle first.
+  const calFailed = useCalendar((s2) => s2.status === 'failed');
+  const calFailedDismissed = useCalendar((s2) => s2.failedDismissedOn);
+  useEffect(() => {
+    void refreshEvents();
+  }, [today]);
   const onboarded = useLocal((l) => l.onboarded);
   const tutDoneCard = useLocal((l) => l.tutDoneCard);
   const checkinsOffered = useLocal((l) => l.checkinsOffered);
@@ -155,6 +165,7 @@ export default function Today() {
 
         <WeekStrip today={today} selected={day} weekStart={weekStart} hasItems={hasItems} onSelect={(d) => setPicked(d === today ? null : d)} />
 
+        {isToday && calFailed && calFailedDismissed !== today ? <GoogleFailedCard /> : null}
         {isToday && tutDoneCard ? <TutDoneCard inboxCount={inboxOpen(inbox).length} /> : null}
 
         {isToday ? (
@@ -234,10 +245,15 @@ function TodayBody({
   const actions = useTaskActions();
   const sheets = useSheets();
   const { carried, schedule, anytime, currentId } = todayView(tasks, today, now);
+  const snack = useSnackbar();
+  const cal = useCalendar();
+  const connected = cal.status === 'connected' || cal.status === 'failed';
+  const todayEvents = connected ? eventsOn(cal.events, today, cal.hidden).filter((e) => !e.allDay) : [];
+  const stale = cal.status === 'failed' ? lastSeen(cal.fetchedAt) : null;
   const all = [...carried, ...schedule, ...anytime];
 
   // NTodayEmpty: nothing at all today.
-  if (!all.length) {
+  if (!all.length && !todayEvents.length) {
     return (
       <EmptyState
         fill
@@ -253,7 +269,7 @@ function TodayBody({
   }
 
   // NTodayDone: everything ticked.
-  if (plainDone && all.every((t) => t.doneAt)) {
+  if (plainDone && all.length && all.every((t) => t.doneAt)) {
     return (
       <>
         <GroupLabel>{`Today · ${all.length} of ${all.length} done`}</GroupLabel>
@@ -266,7 +282,7 @@ function TodayBody({
     );
   }
 
-  if (all.every((t) => t.doneAt)) {
+  if (all.length && !todayEvents.length && all.every((t) => t.doneAt)) {
     const tomorrow = tasks.filter((t) => isOpen(t) && t.dueDate === addDays(today, 1)).length;
     const done = [...all].sort((a, b) => (a.startTime ?? '99').localeCompare(b.startTime ?? '99'));
     const shown = done.slice(0, 2);
@@ -336,16 +352,30 @@ function TodayBody({
         </ContentIn>
       ) : null}
 
-      {schedule.length ? (
+      {schedule.length || todayEvents.length ? (
         <ContentIn index={1}>
           <GroupLabel style={{ paddingTop: carried.length ? 16 : 28, paddingBottom: 12 }}>Schedule</GroupLabel>
-          <Timeline tasks={schedule} currentId={currentId} lists={lists} onOpen={actions.openDetails} onLongPress={quickActions} onToggle={actions.toggle} />
+          <Timeline
+            tasks={schedule}
+            currentId={currentId}
+            lists={lists}
+            onOpen={actions.openDetails}
+            onLongPress={quickActions}
+            onToggle={actions.toggle}
+            events={todayEvents}
+            stale={stale}
+            onOpenEvent={(id) => sheets.open(() => <EventSheet eventId={id} />)}
+            onHideEvent={(id) => {
+              void setEventHidden(id, true);
+              snack({ title: 'Hidden from your list', sub: 'Still in Google Calendar', actions: [{ label: 'Undo', onPress: () => void setEventHidden(id, false) }] });
+            }}
+          />
         </ContentIn>
       ) : null}
 
       {anytime.length ? (
         <ContentIn index={2}>
-          <GroupLabel style={{ paddingTop: schedule.length || carried.length ? 16 : 28, paddingBottom: 12 }}>{`Anytime today · ${anytime.length}`}</GroupLabel>
+          <GroupLabel style={{ paddingTop: schedule.length || todayEvents.length || carried.length ? 16 : 28, paddingBottom: 12 }}>{`Anytime today · ${anytime.length}`}</GroupLabel>
           <Card style={{ paddingVertical: 4, paddingLeft: 20, paddingRight: 12 }}>
             {anytime.map((t, i) => {
               const done = !!t.doneAt;
