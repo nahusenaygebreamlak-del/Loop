@@ -44,6 +44,17 @@
     "scheme": "loop",
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "73134e4e-33e8-4cd2-9baa-09ac00feccae"
+      }
+    },
+    "owner": "nahu0024"
   }
 }
