@@ -12,6 +12,7 @@ import { goBack } from '@/features/nav';
 import { CheckinTimeSheet, THEME_LABEL, ThemeSheet, WeekTimeSheet } from '@/features/sheets/SettingsSheets';
 import { formatTime } from '@/lib/dates';
 import { useAuth } from '@/lib/auth';
+import LoopAlarm from '../../../../modules/loop-alarm';
 import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -33,6 +34,7 @@ export default function Settings() {
   const name = (session?.user.user_metadata?.full_name as string | undefined) ?? (preview ? 'Preview' : 'You');
   const email = session?.user.email ?? 'Not signed in';
   const time = (t: string | null) => (t ? formatTime(t) : 'Off');
+  const needsExact = !!LoopAlarm && !LoopAlarm.canScheduleExactAlarms();
 
   return (
     <View style={{ flex: 1, backgroundColor: c.ground }}>
@@ -67,8 +69,22 @@ export default function Settings() {
         <Card>
           <SetRow name="Morning" hint="Plan the day, sort leftovers" value={time(s.morningTime)} valueMuted={!s.morningTime} onPress={() => sheets.open(() => <CheckinTimeSheet kind="morningTime" />)} />
           <SetRow name="Afternoon" hint="Only if something is still open" value={time(s.afternoonTime)} valueMuted={!s.afternoonTime} onPress={() => sheets.open(() => <CheckinTimeSheet kind="afternoonTime" />)} />
-          <SetRow name="Full screen when locked" toggle={s.fullScreen} onPress={() => s.set({ fullScreen: !s.fullScreen })} />
-          <SetRow name="On weekends" toggle={s.weekends} last onPress={() => s.set({ weekends: !s.weekends })} />
+          <SetRow
+            name="Full screen when locked"
+            hint={s.fullScreen && LoopAlarm && !LoopAlarm.canUseFullScreenIntent() ? 'Allow it in Android settings · tap to open' : undefined}
+            toggle={s.fullScreen}
+            onPress={() => {
+              const on = !s.fullScreen;
+              s.set({ fullScreen: on });
+              // Android 14+ needs a one-time "full-screen notifications" permission.
+              if (on && LoopAlarm && !LoopAlarm.canUseFullScreenIntent()) LoopAlarm.openFullScreenSettings();
+            }}
+          />
+          <SetRow name="Remind until I act" hint="Repeats the morning check-in every 15 min, up to an hour" toggle={s.remindUntilAct} onPress={() => s.set({ remindUntilAct: !s.remindUntilAct })} />
+          <SetRow name="On weekends" toggle={s.weekends} last={!needsExact} onPress={() => s.set({ weekends: !s.weekends })} />
+          {needsExact ? (
+            <SetRow name="Allow exact times" hint="Android may send check-ins a few minutes late until you allow alarms" danger last onPress={() => LoopAlarm?.openExactAlarmSettings()} />
+          ) : null}
         </Card>
 
         <GroupLabel style={{ paddingTop: 16, paddingBottom: 8 }}>Inbox</GroupLabel>

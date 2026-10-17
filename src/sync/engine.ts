@@ -66,8 +66,8 @@ let again = false;
 const cleanups: (() => void)[] = [];
 
 function profileOf(s: ProfileSettings): ProfileSettings {
-  const { theme, weekStart, timeFormat, morningTime, afternoonTime, sortTime, fullScreen, weekends } = s;
-  return { theme, weekStart, timeFormat, morningTime, afternoonTime, sortTime, fullScreen, weekends };
+  const { theme, weekStart, timeFormat, morningTime, afternoonTime, sortTime, fullScreen, weekends, remindUntilAct } = s;
+  return { theme, weekStart, timeFormat, morningTime, afternoonTime, sortTime, fullScreen, weekends, remindUntilAct };
 }
 
 function waitHydrated(store: { persist: { hasHydrated: () => boolean; onFinishHydration: (fn: () => void) => () => void } }) {
@@ -80,25 +80,17 @@ function waitHydrated(store: { persist: { hasHydrated: () => boolean; onFinishHy
   });
 }
 
-/** Starts syncing for a signed-in user. */
-export async function startSync(uid: string) {
-  if (userId === uid) return;
-  stopSync();
-  await Promise.all([waitHydrated(useStore), waitHydrated(useSettings), waitHydrated(useMeta)]);
-  userId = uid;
-
-  const meta = useMeta.getState();
-  if (meta.userId && meta.userId !== uid) {
-    // Someone else's data is on this device: start clean.
-    clearLocalData();
-  }
-  adopting = useMeta.getState().userId !== uid;
-  if (adopting) useMeta.setState({ userId: uid, cursor: null, dirty: {}, deleted: {}, profileDirty: 0 });
-
-  // Record local edits into the outbox.
-  cleanups.push(
+let outboxInstalled = false;
+/**
+ * Records local edits into the outbox whenever this device belongs to an account,
+ * even while sync isn't running (a notification button changes tasks with the app closed).
+ */
+export function installOutbox() {
+  if (outboxInstalled) return;
+  outboxInstalled = true;
+  const subs = [
     useStore.subscribe((next, prev) => {
-      if (applyingRemote) return;
+      if (applyingRemote || !useMeta.getState().userId) return;
       const m = useMeta.getState();
       const dirty = { ...m.dirty };
       const deleted = { ...m.deleted };
@@ -126,13 +118,38 @@ export async function startSync(uid: string) {
       }
     }),
     useSettings.subscribe((next, prev) => {
-      if (applyingRemote) return;
+      if (applyingRemote || !useMeta.getState().userId) return;
       if (JSON.stringify(profileOf(next)) === JSON.stringify(profileOf(prev))) return;
       useMeta.setState((m) => ({ seq: m.seq + 1, profileDirty: m.seq + 1 }));
       refreshPending();
       scheduleSoon();
     }),
-  );
+  
+  ];
+  void subs;
+}
+
+/** For code running with the app closed: wait for saved state, then record edits for the next sync. */
+export async function prepareOutbox() {
+  await Promise.all([waitHydrated(useStore), waitHydrated(useSettings), waitHydrated(useMeta)]);
+  installOutbox();
+}
+
+/** Starts syncing for a signed-in user. */
+export async function startSync(uid: string) {
+  if (userId === uid) return;
+  stopSync();
+  await Promise.all([waitHydrated(useStore), waitHydrated(useSettings), waitHydrated(useMeta)]);
+  userId = uid;
+
+  const meta = useMeta.getState();
+  if (meta.userId && meta.userId !== uid) {
+    // Someone else's data is on this device: start clean.
+    clearLocalData();
+  }
+  adopting = useMeta.getState().userId !== uid;
+  installOutbox();
+  if (adopting) useMeta.setState({ userId: uid, cursor: null, dirty: {}, deleted: {}, profileDirty: 0 });
 
   // When to sync: now, every 30 s, when the app comes back, when the web page goes online.
   const interval = setInterval(() => void syncNow(), 30_000);

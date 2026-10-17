@@ -35,6 +35,7 @@ export function toRow(table: Table, x: List | Task | Tag | InboxItem | Note, use
         reminder_minutes: t.reminderMinutes,
         repeat_rule: t.repeatRule,
         carried_over_count: t.carriedOverCount,
+        carried_at: t.carriedAt,
         sort_order: t.sortOrder,
         subtasks: t.subtasks,
         tag_ids: t.tagIds,
@@ -88,6 +89,7 @@ export function fromRow(table: Table, r: Row): List | Task | Tag | InboxItem | N
         reminderMinutes: r.reminder_minutes == null ? null : Number(r.reminder_minutes),
         repeatRule: (r.repeat_rule as string) ?? null,
         carriedOverCount: Number(r.carried_over_count ?? 0),
+        carriedAt: (r.carried_at as string) ?? null,
         sortOrder: Number(r.sort_order ?? 0),
         subtasks: (r.subtasks as Task['subtasks']) ?? [],
         tagIds: (r.tag_ids as string[]) ?? [],
@@ -159,6 +161,7 @@ export type ProfileSettings = {
   sortTime: string | null;
   fullScreen: boolean;
   weekends: boolean;
+  remindUntilAct: boolean;
 };
 
 export function settingsToProfile(s: ProfileSettings): Row {
@@ -171,6 +174,7 @@ export function settingsToProfile(s: ProfileSettings): Row {
     sort_time: s.sortTime,
     full_screen_enabled: s.fullScreen,
     weekends_enabled: s.weekends,
+    remind_until_act: s.remindUntilAct,
   };
 }
 
@@ -184,5 +188,6 @@ export function profileToSettings(r: Row): ProfileSettings {
     sortTime: hhmm(r.sort_time),
     fullScreen: !!r.full_screen_enabled,
     weekends: !!r.weekends_enabled,
+    remindUntilAct: !!r.remind_until_act,
   };
 }

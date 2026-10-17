@@ -6,6 +6,11 @@ import { router, type Href } from 'expo-router';
  */
 export function goMain(href: Href) {
   if (router.canDismiss()) router.dismissAll();
+  else if (href === '/') {
+    // Opened straight on a screen (a notification, a reloaded web page): there's no Today underneath yet.
+    router.replace('/');
+    return;
+  }
   if (href !== '/') setTimeout(() => router.push(href), 0);
 }
 

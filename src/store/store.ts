@@ -63,6 +63,9 @@ type Actions = {
   /** "Make a task": text becomes the task's notes, checklist items become subtasks. Returns the task id. */
   noteToTask: (id: string) => string | null;
 
+  /** Check-in result: new dates / done states for several tasks at once (also used for Undo). */
+  applyCheckin: (changes: { id: string; dueDate: string | null; doneAt: string | null; carriedOverCount: number; carriedAt: string | null }[]) => void;
+
   addList: (name: string, color: ListColor) => string;
   updateList: (id: string, patch: Partial<List>) => void;
   /** Hides the list and its tasks. Returns an undo function. */
@@ -137,6 +140,7 @@ export const useStore = create<Store>()(
             reminderMinutes: null,
             repeatRule: null,
             carriedOverCount: 0,
+            carriedAt: null,
             sortOrder: get().tasks.length,
             tagIds: [],
             subtasks: [],
@@ -168,6 +172,7 @@ export const useStore = create<Store>()(
                 dueDate: next,
                 doneAt: null,
                 carriedOverCount: 0,
+                carriedAt: null,
                 subtasks: before.subtasks.map((st) => ({ ...st, id: randomUUID(), doneAt: null })),
               })
             : null;
@@ -340,6 +345,19 @@ export const useStore = create<Store>()(
           return taskId;
         },
 
+        applyCheckin: (changes) => {
+          for (const c of changes) {
+            const t = get().tasks.find((x) => x.id === c.id);
+            if (!t) continue;
+            // Ticking a repeating task makes its next occurrence, as everywhere else.
+            if (c.doneAt && !t.doneAt && t.repeatRule) {
+              get().toggleDone(c.id);
+              continue;
+            }
+            patchTask(c.id, { dueDate: c.dueDate, doneAt: c.doneAt, carriedOverCount: c.carriedOverCount, carriedAt: c.carriedAt });
+          }
+        },
+
         addList: (name, color) => {
           const ts = now();
           const list: List = {
@@ -440,6 +458,17 @@ const subscribeHydration = (cb: () => void) => useStore.persist.onFinishHydratio
 const getHydrated = () => useStore.persist.hasHydrated();
 
 /** True once saved data has been read from the device. */
+/** Resolves once saved data has been read (for code running outside React, e.g. notification buttons). */
+export function whenHydrated(): Promise<void> {
+  return new Promise((resolve) => {
+    if (useStore.persist.hasHydrated()) return resolve();
+    const unsub = useStore.persist.onFinishHydration(() => {
+      unsub();
+      resolve();
+    });
+  });
+}
+
 export function useHydrated() {
   return useSyncExternalStore(subscribeHydration, getHydrated, getHydrated);
 }

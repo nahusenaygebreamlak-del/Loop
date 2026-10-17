@@ -34,6 +34,8 @@ export type Task = {
   reminderMinutes: number | null;
   repeatRule: string | null;
   carriedOverCount: number;
+  /** The day a check-in last moved this task (Today shows it under "From yesterday"). */
+  carriedAt: DateKey | null;
   sortOrder: number;
   tagIds: string[];
   subtasks: Subtask[];

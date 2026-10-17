@@ -8,14 +8,19 @@ export const isOpen = (t: Task) => !t.doneAt && !t.deletedAt;
 const byTime = (a: Task, b: Task) => timeToMinutes(a.startTime!) - timeToMinutes(b.startTime!);
 const byPriorityThenOrder = (a: Task, b: Task) => b.priority - a.priority || a.sortOrder - b.sortOrder;
 
-export type TodayView = { schedule: Task[]; anytime: Task[]; currentId: string | null };
+export type TodayView = { carried: Task[]; schedule: Task[]; anytime: Task[]; currentId: string | null };
 
-/** Today: timed tasks on the timeline, untimed below. Done tasks stay visible for the day. Overdue tasks don't appear. */
+/**
+ * Today: tasks the morning check-in just moved ("From yesterday", NAfterCheckin), timed tasks on the timeline,
+ * untimed below. Done tasks stay visible for the day. Overdue tasks don't appear.
+ */
 export function todayView(tasks: Task[], today: DateKey, now: TimeKey): TodayView {
-  const dated = tasks.filter((t) => isLive(t) && t.dueDate === today);
+  const all = tasks.filter((t) => isLive(t) && t.dueDate === today);
+  const carried = all.filter((t) => t.carriedAt === today && !t.startTime).sort(byPriorityThenOrder);
+  const dated = all.filter((t) => !carried.includes(t));
   const schedule = dated.filter((t) => t.startTime).sort(byTime);
   const anytime = dated.filter((t) => !t.startTime).sort(byPriorityThenOrder);
-  return { schedule, anytime, currentId: currentTaskId(schedule, now) };
+  return { carried, schedule, anytime, currentId: currentTaskId(schedule, now) };
 }
 
 /** The open timed task happening now (no end time = one hour). */
@@ -284,3 +289,9 @@ export function highlightParts(text: string, q: string): { t: string; hit: boole
 
 /** "10:00 – 11:00" or "" for a task. */
 export const timeRangeOf = (t: Task) => timeRange(t.startTime, t.endTime);
+
+/** "moved twice" / "moved 3 times" once a task keeps getting carried over. */
+export function movedLabel(count: number): string | null {
+  if (count < 2) return null;
+  return count === 2 ? 'moved twice' : `moved ${count} times`;
+}

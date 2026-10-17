@@ -13,6 +13,8 @@ export type Settings = {
   sortTime: TimeKey | null;
   fullScreen: boolean;
   weekends: boolean;
+  /** An unanswered morning check-in repeats every 15 minutes (up to an hour). */
+  remindUntilAct: boolean;
   weekStart: 0 | 1; // Sunday or Monday
   timeFormat: '24h' | '12h';
   recentSearches: string[];
@@ -32,6 +34,7 @@ export const useSettings = create<Settings & Actions>()(
       sortTime: '18:00',
       fullScreen: false,
       weekends: false,
+      remindUntilAct: false,
       weekStart: 0,
       timeFormat: '24h',
       recentSearches: [],

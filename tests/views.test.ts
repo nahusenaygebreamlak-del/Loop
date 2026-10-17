@@ -17,6 +17,7 @@ const task = (p: Partial<Task>): Task => ({
   reminderMinutes: null,
   repeatRule: null,
   carriedOverCount: 0,
+  carriedAt: null,
   sortOrder: n,
   tagIds: [],
   subtasks: [],

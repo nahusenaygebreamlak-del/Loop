@@ -5,7 +5,7 @@ import type { List, Task } from '../src/store/types.ts';
 
 const task: Task = {
   id: 't1', listId: 'l1', title: 'Call bank', notes: '', dueDate: '2026-10-17', startTime: '15:00', endTime: null, priority: 3,
-  reminderMinutes: 15, repeatRule: 'FREQ=WEEKLY;BYDAY=FR', carriedOverCount: 0, sortOrder: 2, tagIds: ['g1'],
+  reminderMinutes: 15, repeatRule: 'FREQ=WEEKLY;BYDAY=FR', carriedOverCount: 0, carriedAt: null, sortOrder: 2, tagIds: ['g1'],
   subtasks: [{ id: 's1', title: 'Find card', doneAt: null, sortOrder: 0 }], doneAt: null, deletedAt: null,
   createdAt: '2026-10-16T21:00:00.000Z', updatedAt: '2026-10-16T21:00:00.000Z',
 };
@@ -39,6 +39,6 @@ test('first sign-in folds local default lists into the account lists', () => {
 });
 
 test('settings ⇄ profile, with check-ins turned off', () => {
-  const s = { theme: 'dark' as const, weekStart: 1 as const, timeFormat: '12h' as const, morningTime: null, afternoonTime: '14:00', sortTime: '18:00', fullScreen: true, weekends: false };
+  const s = { theme: 'dark' as const, weekStart: 1 as const, timeFormat: '12h' as const, morningTime: null, afternoonTime: '14:00', sortTime: '18:00', fullScreen: true, weekends: false, remindUntilAct: true };
   assert.deepEqual(profileToSettings({ ...settingsToProfile(s), afternoon_time: '14:00:00', sort_time: '18:00:00' }), s);
 });

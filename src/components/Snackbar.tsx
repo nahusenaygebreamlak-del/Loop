@@ -16,6 +16,12 @@ type Snack = SnackOptions & { id: number };
 
 const SnackContext = createContext<((s: SnackOptions) => void) | null>(null);
 
+// For code outside React screens (e.g. finishing the check-in after navigating).
+let external: ((s: SnackOptions) => void) | null = null;
+export function pushSnack(s: SnackOptions) {
+  external?.(s);
+}
+
 export function SnackbarProvider({ children }: { children: ReactNode }) {
   const [snack, setSnack] = useState<Snack | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,6 +42,12 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(() => show, [show]);
+  useEffect(() => {
+    external = show;
+    return () => {
+      if (external === show) external = null;
+    };
+  }, [show]);
 
   return (
     <SnackContext.Provider value={value}>

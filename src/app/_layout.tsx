@@ -16,6 +16,7 @@ import { SheetProvider } from '@/components/Sheet';
 import { SnackbarProvider } from '@/components/Snackbar';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { setTimeFormat } from '@/lib/dates';
+import { useNotifications } from '@/notifications/useNotifications';
 import { useSettings } from '@/store/settings';
 import { useHydrated } from '@/store/store';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
@@ -66,6 +67,8 @@ function RootStack() {
 
   return (
     <>
+      {/* Check-ins are scheduled only for a signed-in account (Milestone 5). */}
+      {signedIn ? <NotificationsBridge /> : null}
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack key={timeFormat} screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.ground } }}>
         <Stack.Protected guard={signedIn}>
@@ -78,4 +81,9 @@ function RootStack() {
       </Stack>
     </>
   );
+}
+
+function NotificationsBridge() {
+  useNotifications();
+  return null;
 }

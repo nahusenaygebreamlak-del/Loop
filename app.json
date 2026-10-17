@@ -39,7 +39,14 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#2F6BE3",
+          "defaultChannel": "checkins"
+        }
+      ]
     ],
     "scheme": "loop",
     "experiments": {

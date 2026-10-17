@@ -14,7 +14,7 @@ import { goMain } from '@/features/nav';
 import { useMenu } from '@/features/useMenu';
 import { useTaskActions } from '@/features/useTaskActions';
 import { longDate, weekOf } from '@/lib/dates';
-import { daysWithItems, todayView, visibleTasks } from '@/lib/taskViews';
+import { daysWithItems, movedLabel, todayView, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
 import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
@@ -35,7 +35,7 @@ export default function Today() {
   const lists = useStore((s) => s.lists);
   const tasks = visibleTasks(allTasks, lists);
 
-  const { schedule, anytime, currentId } = todayView(tasks, today, now);
+  const { carried, schedule, anytime, currentId } = todayView(tasks, today, now);
   const week = weekOf(today, weekStart);
   const dots = daysWithItems(tasks, week);
   const quickActions = (id: string) => sheets.open(() => <QuickActionsSheet taskId={id} actions={actions} />);
@@ -60,7 +60,37 @@ export default function Today() {
 
         <WeekStrip days={week} today={today} withItems={dots} />
 
-        {schedule.length === 0 && anytime.length === 0 ? (
+        {carried.length ? (
+          <ContentIn index={1}>
+            <GroupLabel style={{ paddingTop: 28, paddingBottom: 12 }}>{`From yesterday · ${carried.length}`}</GroupLabel>
+            <Card>
+              {carried.map((t, i) => {
+                const done = !!t.doneAt;
+                const sub = ['Anytime', lists.find((l) => l.id === t.listId)?.name, movedLabel(t.carriedOverCount)].filter(Boolean).join(' · ');
+                return (
+                  <View key={t.id} style={[styles.carriedRow, { backgroundColor: c.tint }, i < carried.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.card }]}>
+                    <PressScale
+                      kind="row"
+                      accessibilityRole="button"
+                      accessibilityHint="Opens task details. Long press for quick actions."
+                      onPress={() => actions.openDetails(t.id)}
+                      onLongPress={() => quickActions(t.id)}
+                      style={{ flex: 1 }}
+                    >
+                      <AppText style={[styles.carriedTitle, done && { color: c.textSecondary, textDecorationLine: 'line-through' }]}>{t.title}</AppText>
+                      <AppText tone="secondary" variant="secondary" style={{ marginTop: 4 }}>
+                        {sub}
+                      </AppText>
+                    </PressScale>
+                    <Check done={done} priority={t.priority} label={t.title} onToggle={() => actions.toggle(t.id)} />
+                  </View>
+                );
+              })}
+            </Card>
+          </ContentIn>
+        ) : null}
+
+        {carried.length === 0 && schedule.length === 0 && anytime.length === 0 ? (
           <ContentIn index={1} style={{ paddingTop: 28 }}>
             <EmptyCard>Nothing planned for today. Tap + to add a task.</EmptyCard>
           </ContentIn>
@@ -68,14 +98,14 @@ export default function Today() {
 
         {schedule.length ? (
           <ContentIn index={1}>
-            <GroupLabel style={{ paddingTop: 28, paddingBottom: 12 }}>Schedule</GroupLabel>
+            <GroupLabel style={{ paddingTop: carried.length ? 16 : 28, paddingBottom: 12 }}>Schedule</GroupLabel>
             <Timeline tasks={schedule} currentId={currentId} lists={lists} onOpen={actions.openDetails} onLongPress={quickActions} onToggle={actions.toggle} />
           </ContentIn>
         ) : null}
 
         {anytime.length ? (
           <ContentIn index={2}>
-            <GroupLabel style={{ paddingTop: schedule.length ? 16 : 28, paddingBottom: 12 }}>{`Anytime today · ${anytime.length}`}</GroupLabel>
+            <GroupLabel style={{ paddingTop: schedule.length || carried.length ? 16 : 28, paddingBottom: 12 }}>{`Anytime today · ${anytime.length}`}</GroupLabel>
             <Card style={{ paddingVertical: 4, paddingLeft: 20, paddingRight: 12 }}>
               {anytime.map((t, i) => {
                 const done = !!t.doneAt;
@@ -109,4 +139,6 @@ const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   anyRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   anyTitle: { ...font(600), fontSize: 16 },
+  carriedRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 10, paddingLeft: 20, paddingRight: 12 },
+  carriedTitle: { ...font(700), fontSize: 16, lineHeight: 21 },
 });
