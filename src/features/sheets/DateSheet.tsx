@@ -27,7 +27,7 @@ export type DateValue = {
 const WEEK_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 /** NDatePicker: quick chips, month calendar, Time, Reminder, Repeat. Done saves. */
-export function DateSheet({ value, onChange }: { value: DateValue; onChange: (v: DateValue) => void }) {
+export function DateSheet({ value, onChange, title }: { value: DateValue; onChange: (v: DateValue) => void; title?: string }) {
   const weekStart = useSettings((s) => s.weekStart);
   const { c } = useTheme();
   const close = useCloseSheet();
@@ -131,6 +131,7 @@ export function DateSheet({ value, onChange }: { value: DateValue; onChange: (v:
               <TimeSheet
                 start={v.startTime}
                 end={v.endTime}
+                date={v.dueDate ?? today}
                 onChange={(s, e) => setV((cur) => ({ ...cur, startTime: s, endTime: e, dueDate: s && !cur.dueDate ? today : cur.dueDate }))}
               />
             ))
@@ -141,7 +142,7 @@ export function DateSheet({ value, onChange }: { value: DateValue; onChange: (v:
           label="Reminder"
           value={reminderLabel(v.reminderMinutes)}
           muted={v.reminderMinutes == null}
-          onPress={() => sheets.open(() => <ReminderSheet value={v.reminderMinutes} onChange={(r) => setV((cur) => ({ ...cur, reminderMinutes: r }))} />)}
+          onPress={() => sheets.open(() => <ReminderSheet title={title} date={v.dueDate} time={v.startTime} value={v.reminderMinutes} onChange={(r) => setV((cur) => ({ ...cur, reminderMinutes: r }))} />)}
         />
         <Row
           icon="repeat"

@@ -5,7 +5,7 @@ export type ColorScheme = 'light' | 'dark';
 export type ThemePreference = 'system' | ColorScheme;
 
 type LightColors = typeof raw.color.light;
-export type ThemeColors = LightColors & { dangerRing: string; priorityMediumText: string; priority: Record<'high' | 'medium' | 'low' | 'none', string> };
+export type ThemeColors = LightColors & { dangerRing: string; priorityMediumText: string; warn: string; warnText: string; warnTint: string; priority: Record<'high' | 'medium' | 'low' | 'none', string> };
 
 function buildColors(scheme: ColorScheme): ThemeColors {
   const base = raw.color[scheme] as LightColors & { dangerRing?: string };
@@ -14,6 +14,10 @@ function buildColors(scheme: ColorScheme): ThemeColors {
     ...base,
     dangerRing,
     priorityMediumText: scheme === 'dark' ? raw.color.priority.mediumTextDark : raw.color.priority.mediumText,
+    // Orange warnings (NNotifOff, NSnackbars sync error, NCarriedOver), added 17 Oct.
+    warn: '#D9822B',
+    warnText: scheme === 'dark' ? '#F0A35C' : '#B4600F',
+    warnTint: scheme === 'dark' ? '#3A2A18' : '#FFF1E2',
     // Tokens note: in dark mode, high uses dangerRing and none uses line.
     priority: {
       high: scheme === 'dark' ? dangerRing : raw.color.priority.high,

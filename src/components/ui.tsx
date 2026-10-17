@@ -43,13 +43,12 @@ export function Card({ children, style }: { children: ReactNode; style?: StylePr
 }
 
 /** Quiet empty state in the style of "Nothing planned for the next 7 days." */
-export function EmptyCard({ children }: { children: string }) {
+/** Small uppercase label (.cap) above a control in a sheet. */
+export function CapLabel({ children, style }: { children: string; style?: StyleProp<ViewStyle> }) {
   const { c } = useTheme();
   return (
-    <View style={{ marginHorizontal: size.sideMargin, borderRadius: radius.card, paddingVertical: 18, paddingHorizontal: 20, backgroundColor: c.fill }}>
-      <AppText tone="secondary" style={{ fontSize: 14.5 }}>
-        {children}
-      </AppText>
+    <View style={style}>
+      <AppText style={{ ...font(700), fontSize: 12.5, letterSpacing: 0.5, textTransform: 'uppercase', color: c.textSecondary }}>{children}</AppText>
     </View>
   );
 }

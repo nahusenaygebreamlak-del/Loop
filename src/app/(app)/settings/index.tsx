@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ScrollView, View } from 'react-native';
+import { Linking, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -12,6 +12,7 @@ import { goBack } from '@/features/nav';
 import { CheckinTimeSheet, THEME_LABEL, ThemeSheet, WeekTimeSheet } from '@/features/sheets/SettingsSheets';
 import { formatTime } from '@/lib/dates';
 import { useAuth } from '@/lib/auth';
+import { useNotificationsAllowed } from '@/notifications/useAllowed';
 import LoopAlarm from '../../../../modules/loop-alarm';
 import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
@@ -35,6 +36,7 @@ export default function Settings() {
   const email = session?.user.email ?? 'Not signed in';
   const time = (t: string | null) => (t ? formatTime(t) : 'Off');
   const needsExact = !!LoopAlarm && !LoopAlarm.canScheduleExactAlarms();
+  const off = useNotificationsAllowed() === false;
 
   return (
     <View style={{ flex: 1, backgroundColor: c.ground }}>
@@ -65,25 +67,67 @@ export default function Settings() {
           <Icon name="forward" size={18} color={c.line} />
         </PressScale>
 
+        {off ? (
+          <View accessibilityRole="alert" style={{ marginTop: 18, marginHorizontal: size.sideMargin, backgroundColor: c.card, borderRadius: 20, paddingVertical: 16, paddingHorizontal: 18, gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ width: 10, height: 10, borderRadius: 5, marginTop: 6, backgroundColor: c.warn }} />
+              <View style={{ flex: 1 }}>
+                <AppText style={{ ...font(800), fontSize: 16 }}>Notifications are off for Loop</AppText>
+                <AppText tone="secondary" style={{ fontSize: 14, lineHeight: 21, marginTop: 4 }}>
+                  {"Check-ins can't reach you, so they're paused. Leftovers will show on Today when you open the app."}
+                </AppText>
+              </View>
+            </View>
+            <PressScale
+              accessibilityRole="button"
+              onPress={() => void Linking.openSettings()}
+              style={{ minHeight: 48, borderRadius: 14, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <AppText style={{ ...font(800), fontSize: 15, color: c.onAccent }}>Open phone settings</AppText>
+            </PressScale>
+          </View>
+        ) : null}
+
         <GroupLabel style={{ paddingTop: 16, paddingBottom: 8 }}>Daily check-ins</GroupLabel>
-        <Card>
-          <SetRow name="Morning" hint="Plan the day, sort leftovers" value={time(s.morningTime)} valueMuted={!s.morningTime} onPress={() => sheets.open(() => <CheckinTimeSheet kind="morningTime" />)} />
-          <SetRow name="Afternoon" hint="Only if something is still open" value={time(s.afternoonTime)} valueMuted={!s.afternoonTime} onPress={() => sheets.open(() => <CheckinTimeSheet kind="afternoonTime" />)} />
+        <Card style={off ? { opacity: 0.6 } : undefined}>
           <SetRow
-            name="Full screen when locked"
-            hint={s.fullScreen && LoopAlarm && !LoopAlarm.canUseFullScreenIntent() ? 'Allow it in Android settings · tap to open' : undefined}
-            toggle={s.fullScreen}
-            onPress={() => {
-              const on = !s.fullScreen;
-              s.set({ fullScreen: on });
-              // Android 14+ needs a one-time "full-screen notifications" permission.
-              if (on && LoopAlarm && !LoopAlarm.canUseFullScreenIntent()) LoopAlarm.openFullScreenSettings();
-            }}
+            name="Morning"
+            hint={off ? 'Paused' : 'Plan the day, sort leftovers'}
+            value={time(s.morningTime)}
+            valueMuted={off || !s.morningTime}
+            valueStrike={off && !!s.morningTime}
+            onPress={() => sheets.open(() => <CheckinTimeSheet kind="morningTime" />)}
           />
-          <SetRow name="Remind until I act" hint="Repeats the morning check-in every 15 min, up to an hour" toggle={s.remindUntilAct} onPress={() => s.set({ remindUntilAct: !s.remindUntilAct })} />
-          <SetRow name="On weekends" toggle={s.weekends} last={!needsExact} onPress={() => s.set({ weekends: !s.weekends })} />
+          <SetRow
+            name="Afternoon"
+            hint={off ? 'Paused' : 'Only if something is still open'}
+            value={time(s.afternoonTime)}
+            valueMuted={off || !s.afternoonTime}
+            valueStrike={off && !!s.afternoonTime}
+            last={off}
+            onPress={() => sheets.open(() => <CheckinTimeSheet kind="afternoonTime" />)}
+          />
+          {off ? null : (
+            <>
+              <SetRow
+                name="Full screen when locked"
+                hint={s.fullScreen && LoopAlarm && !LoopAlarm.canUseFullScreenIntent() ? 'Allow it in Android settings · tap to open' : undefined}
+                toggle={s.fullScreen}
+                onPress={() => {
+                  const on = !s.fullScreen;
+                  s.set({ fullScreen: on });
+                  // Android 14+ needs a one-time "full-screen notifications" permission.
+                  if (on && LoopAlarm && !LoopAlarm.canUseFullScreenIntent()) LoopAlarm.openFullScreenSettings();
+                }}
+              />
+              <SetRow name="On weekends" toggle={s.weekends} last onPress={() => s.set({ weekends: !s.weekends })} />
+            </>
+          )}
+        </Card>
+        <Card style={{ marginTop: 10 }}>
+          <SetRow name="Remind until I act" hint="Repeats every 15 min until you answer" toggle={s.remindUntilAct} last={!needsExact} onPress={() => s.set({ remindUntilAct: !s.remindUntilAct })} />
           {needsExact ? (
-            <SetRow name="Allow exact times" hint="Android may send check-ins a few minutes late until you allow alarms" danger last onPress={() => LoopAlarm?.openExactAlarmSettings()} />
+            <SetRow name="Allow exact times" hint="Android may delay check-ins by a few minutes" hintColor={c.warnText} value="Allow" last onPress={() => LoopAlarm?.openExactAlarmSettings()} />
           ) : null}
         </Card>
 

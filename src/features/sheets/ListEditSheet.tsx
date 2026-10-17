@@ -4,7 +4,7 @@ import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { SheetCard, useCloseSheet } from '@/components/Sheet';
-import { SheetButton } from '@/components/ui';
+import { CapLabel, SheetButton } from '@/components/ui';
 import { useStore } from '@/store/store';
 import type { ListColor } from '@/store/types';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -68,9 +68,7 @@ export function ListEditSheet({ listId, onSaved }: { listId?: string; onSaved?: 
         />
       </View>
       <View>
-        <AppText variant="label" tone="secondary" style={{ marginBottom: 12 }}>
-          Colour
-        </AppText>
+        <CapLabel style={{ marginBottom: 12 }}>Colour</CapLabel>
         <View accessibilityRole="radiogroup" accessibilityLabel="Colour" style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           {COLORS.map((x) => {
             const on = x.key === color;

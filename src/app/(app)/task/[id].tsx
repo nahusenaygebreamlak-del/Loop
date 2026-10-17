@@ -114,7 +114,7 @@ function TaskDetail({ id }: { id: string }) {
             valueColor={task.reminderMinutes == null ? c.textSecondary : c.text}
             onPress={() =>
               task.dueDate
-                ? sheets.open(() => <ReminderSheet value={task.reminderMinutes} onChange={(r) => updateTask(task.id, { reminderMinutes: r })} />)
+                ? sheets.open(() => <ReminderSheet title={task.title} date={task.dueDate} time={task.startTime} value={task.reminderMinutes} onChange={(r) => updateTask(task.id, { reminderMinutes: r })} />)
                 : sheets.open(() => (
                     <DateSheet
                       value={{ dueDate: task.dueDate, startTime: task.startTime, endTime: task.endTime, reminderMinutes: task.reminderMinutes, repeatRule: task.repeatRule }}

@@ -5,8 +5,9 @@ import { AppText } from '@/components/AppText';
 import { EmptyState } from '@/components/EmptyState';
 import { ListTag, MainScroll, ScreenHeader, TaskRow } from '@/components/rows';
 import { useSheets } from '@/components/Sheet';
-import { Card, Fab, GroupLabel } from '@/components/ui';
+import { Card, Fab, GroupLabel, IconButton } from '@/components/ui';
 import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
+import { TagMenuSheet } from '@/features/sheets/TagMenuSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
 import { useMenu } from '@/features/useMenu';
 import { useTaskActions } from '@/features/useTaskActions';
@@ -36,6 +37,7 @@ export default function TagView() {
     <MainScroll fab={<Fab label={`Add task with #${tag.name}`} onPress={() => sheets.open(() => <QuickAddSheet initialText={`#${tag.name} `} />)} />}>
       <ScreenHeader
         onMenu={openMenu}
+        right={<IconButton icon="more" label={`Options for #${tag.name}`} style={{ marginRight: -10 }} onPress={() => sheets.open(() => <TagMenuSheet tagId={tag.id} />)} />}
         subtitle={`Tag · ${open.length} open task${open.length === 1 ? '' : 's'}${listCount > 1 ? ` across ${listCount} lists` : ''}`}
         title={
           <>

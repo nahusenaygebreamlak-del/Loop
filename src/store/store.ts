@@ -36,6 +36,10 @@ type Actions = {
   toggleSubtask: (taskId: string, subId: string) => void;
   /** Returns the tag id, creating the tag if needed. */
   ensureTag: (name: string) => string;
+  /** Renames on every task; merges into an existing tag of that name. Returns the tag id now used. */
+  renameTag: (id: string, name: string) => string;
+  /** Removes the tag from every task (tasks stay). */
+  deleteTag: (id: string) => void;
   addInboxItem: (text: string) => string;
   /** Hard removal, used by Undo right after capture. */
   removeInboxItem: (id: string) => void;
@@ -224,6 +228,27 @@ export const useStore = create<Store>()(
           const tag: Tag = { id: randomUUID(), name: clean, createdAt: now() };
           set((s) => ({ tags: [...s.tags, tag] }));
           return tag.id;
+        },
+
+        renameTag: (id, name) => {
+          const clean = name.replace(/^#/, '').trim().toLowerCase().replace(/\s+/g, '-');
+          const tag = get().tags.find((t) => t.id === id);
+          if (!tag || !clean || clean === tag.name) return id;
+          const other = get().tags.find((t) => t.name === clean && t.id !== id);
+          if (!other) {
+            set((s) => ({ tags: s.tags.map((t) => (t.id === id ? { ...t, name: clean } : t)) }));
+            return id;
+          }
+          for (const t of get().tasks) {
+            if (t.tagIds.includes(id)) patchTask(t.id, { tagIds: [...new Set(t.tagIds.map((x) => (x === id ? other.id : x)))] });
+          }
+          set((s) => ({ tags: s.tags.filter((t) => t.id !== id) }));
+          return other.id;
+        },
+
+        deleteTag: (id) => {
+          for (const t of get().tasks) if (t.tagIds.includes(id)) patchTask(t.id, { tagIds: t.tagIds.filter((x) => x !== id) });
+          set((s) => ({ tags: s.tags.filter((t) => t.id !== id) }));
         },
 
         addInboxItem: (text) => {

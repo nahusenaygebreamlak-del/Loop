@@ -2,8 +2,11 @@ import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { ConfirmDialog } from '@/components/Dialog';
+import { PressScale } from '@/components/PressScale';
 import { SetRow } from '@/components/settingsRows';
 import { useSheets } from '@/components/Sheet';
+import { useSnackbar } from '@/components/Snackbar';
+import { Spinner } from '@/components/Spinner';
 import { Card, GroupLabel, IconButton } from '@/components/ui';
 import { goBack } from '@/features/nav';
 import { useAuth } from '@/lib/auth';
@@ -13,11 +16,12 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 
-/** NAccount (Google Calendar part arrives in Milestone 7, sync status in Milestone 4). */
+/** NAccount / NAccountNoGoogle (connecting Google Calendar arrives in Milestone 7). */
 export default function Account() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const sheets = useSheets();
+  const snack = useSnackbar();
   const { session, preview, signOut } = useAuth();
   const { state, lastSyncedAt, pending } = useSyncStatus();
   const name = (session?.user.user_metadata?.full_name as string | undefined) ?? (preview ? 'Preview' : 'You');
@@ -47,16 +51,46 @@ export default function Account() {
 
         <GroupLabel style={{ paddingTop: 22, paddingBottom: 8 }}>Google Calendar</GroupLabel>
         <Card>
-          <SetRow name="Not connected" hint="Arrives with the Calendar in Milestone 7. Read-only." last />
+          <SetRow
+            name="Not connected"
+            hint="Show your meetings next to your tasks. Read-only."
+            last
+            trailing={
+              <PressScale
+                accessibilityRole="button"
+                accessibilityLabel="Connect Google Calendar"
+                onPress={() => snack({ title: 'Google Calendar arrives in Milestone 7' })}
+                style={{ minHeight: 40, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accent, justifyContent: 'center' }}
+              >
+                <AppText style={{ ...font(800), fontSize: 14, color: c.onAccent }}>Connect</AppText>
+              </PressScale>
+            }
+          />
         </Card>
 
         <GroupLabel style={{ paddingTop: 22, paddingBottom: 8 }}>This phone</GroupLabel>
         <Card>
           <SetRow
             name="Sync"
-            hint={state === 'offline' ? 'Offline · changes will sync later' : pending ? `${pending} change${pending === 1 ? '' : 's'} waiting` : session ? 'All changes saved' : 'Preview mode, saved on this phone only'}
-            value={!session ? 'Off' : state === 'offline' ? 'Offline' : state === 'error' ? 'Retrying' : lastSyncedAt ? ago(lastSyncedAt).replace(/^./, (x) => x.toUpperCase()) : 'Syncing…'}
-            valueMuted
+            hint={
+              !session
+                ? 'Preview mode, saved on this phone only'
+                : state === 'offline'
+                  ? 'Offline · changes will sync later'
+                  : state === 'syncing' && pending
+                    ? `Syncing ${pending} change${pending === 1 ? '' : 's'}…`
+                    : state === 'syncing'
+                      ? 'Syncing…'
+                      : state === 'error'
+                        ? "Couldn't sync · retrying"
+                        : pending
+                          ? `${pending} change${pending === 1 ? '' : 's'} waiting`
+                          : `All changes saved${lastSyncedAt ? ` · ${ago(lastSyncedAt)}` : ''}`
+            }
+            hintColor={state === 'error' ? c.warnText : undefined}
+            value={!session ? 'Off' : state === 'syncing' ? undefined : state === 'offline' ? 'Offline' : state === 'error' ? 'Retry' : undefined}
+            valueMuted={state !== 'error'}
+            trailing={session && state === 'syncing' ? <Spinner /> : undefined}
             onPress={session ? () => void syncNow() : undefined}
           />
           <SetRow

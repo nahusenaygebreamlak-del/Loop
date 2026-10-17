@@ -85,7 +85,7 @@ export function ListMenuSheet({ listId }: { listId: string }) {
           icon="sort"
           label="Sort tasks by"
           value={SORT_LABEL[list.sortBy]}
-          onPress={() => sheets.open(() => <SortSheet value={list.sortBy} onChange={(sortBy) => updateList(listId, { sortBy })} />)}
+          onPress={() => sheets.open(() => <SortSheet listName={list.name} value={list.sortBy} onChange={(sortBy) => updateList(listId, { sortBy })} />)}
         />
         <Row
           icon="completed"
@@ -128,17 +128,25 @@ function ArchiveInstead({ onArchive }: { onArchive: () => void }) {
   );
 }
 
-function SortSheet({ value, onChange }: { value: ListSort; onChange: (v: ListSort) => void }) {
+const SORT_OPTION: Record<ListSort, { label: string; hint: string }> = {
+  date: { label: 'Date and time', hint: 'Earliest first' },
+  priority: { label: 'Priority', hint: 'High first, then by date' },
+  title: { label: 'Title', hint: 'A to Z' },
+};
+
+/** NSortBy */
+function SortSheet({ listName, value, onChange }: { listName: string; value: ListSort; onChange: (v: ListSort) => void }) {
   const close = useCloseSheet();
   const options: ListSort[] = ['date', 'priority', 'title'];
   return (
     <SheetCard label="Sort tasks by" style={{ paddingBottom: 28 }}>
-      <SheetTitle>Sort tasks by</SheetTitle>
-      <OptionGroup label="Sort tasks by">
+      <SheetTitle hint="Groups (Overdue, Today, Next 7 days, No date) stay. This sets the order inside each group.">{`Sort ${listName} by`}</SheetTitle>
+      <OptionGroup label="Sort by">
         {options.map((o, i) => (
           <OptionRow
             key={o}
-            label={SORT_LABEL[o]}
+            label={SORT_OPTION[o].label}
+            hint={SORT_OPTION[o].hint}
             selected={value === o}
             last={i === options.length - 1}
             onPress={() => {

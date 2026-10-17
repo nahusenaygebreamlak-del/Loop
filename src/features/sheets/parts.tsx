@@ -17,6 +17,7 @@ export function OptionRow({
   last,
   minHeight = 58,
   role = 'radio',
+  danger,
 }: {
   label: string;
   hint?: string;
@@ -27,6 +28,7 @@ export function OptionRow({
   last?: boolean;
   minHeight?: number;
   role?: 'radio' | 'button';
+  danger?: boolean;
 }) {
   const { c } = useTheme();
   return (
@@ -40,7 +42,7 @@ export function OptionRow({
     >
       {lead}
       <View style={{ flexShrink: 1 }}>
-        <AppText style={styles.optionLabel}>{label}</AppText>
+        <AppText style={[styles.optionLabel, danger && { color: c.dangerText }]}>{label}</AppText>
         {hint ? (
           <AppText tone="secondary" style={styles.hint}>
             {hint}
@@ -54,12 +56,12 @@ export function OptionRow({
 }
 
 /** Pill chip (.c in the date picker, .p in the time picker). */
-export function PickChip({ label, on, onPress, big }: { label: string; on: boolean; onPress: () => void; big?: boolean }) {
+export function PickChip({ label, on, onPress, big, full }: { label: string; on: boolean; onPress: () => void; big?: boolean; full?: boolean }) {
   const { c } = useTheme();
   return (
     <PressScale
-      accessibilityRole="button"
-      accessibilityState={{ selected: on }}
+      accessibilityRole={full ? 'radio' : 'button'}
+      accessibilityState={full ? { checked: on } : { selected: on }}
       onPress={onPress}
       style={{
         minHeight: big ? 42 : 38,
@@ -67,6 +69,7 @@ export function PickChip({ label, on, onPress, big }: { label: string; on: boole
         borderRadius: big ? 14 : 12,
         backgroundColor: on ? c.accent : c.ground,
         justifyContent: 'center',
+        alignItems: full ? 'center' : undefined,
       }}
     >
       <AppText style={{ ...font(700), fontSize: big ? 14.5 : 14, color: on ? c.onAccent : big ? c.text : c.textSecondary }}>{label}</AppText>
@@ -76,11 +79,16 @@ export function PickChip({ label, on, onPress, big }: { label: string; on: boole
 
 const ROW = 44;
 const GAP = 4;
-const STEP = ROW + GAP;
+// NTimeSheet: 40 px rows, 19/600 for the others.
+const C_ROW = 40;
+const C_GAP = 2;
 
 /** One scrolling column of the time wheel (NTimePicker .col). The bold value follows the scroll; the choice settles when scrolling stops. */
-export function WheelColumn({ values, index, onChange, label }: { values: string[]; index: number; onChange: (i: number) => void; label: string }) {
+export function WheelColumn({ values, index, onChange, label, compact }: { values: string[]; index: number; onChange: (i: number) => void; label: string; compact?: boolean }) {
   const { c } = useTheme();
+  const ROW_H = compact ? C_ROW : ROW;
+  const STEP = compact ? C_ROW + C_GAP : ROW + GAP;
+  const GAP_ = compact ? C_GAP : GAP;
   const ref = useRef<ScrollViewInstance>(null);
   const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
   const committed = useRef(index);
@@ -94,7 +102,7 @@ export function WheelColumn({ values, index, onChange, label }: { values: string
       committed.current = index;
       ref.current?.scrollTo({ y: index * STEP, animated: true });
     }
-  }, [index]);
+  }, [index, STEP]);
 
   const finish = (y: number) => {
     const i = indexFor(y);
@@ -127,7 +135,7 @@ export function WheelColumn({ values, index, onChange, label }: { values: string
         const next = e.nativeEvent.actionName === 'increment' ? Math.min(values.length - 1, index + 1) : Math.max(0, index - 1);
         onChange(next);
       }}
-      style={{ flex: 1, height: STEP * 5 - GAP }}
+      style={{ flex: 1, height: STEP * 5 - GAP_ }}
     >
       <ScrollView
         ref={ref}
@@ -141,13 +149,13 @@ export function WheelColumn({ values, index, onChange, label }: { values: string
         onScrollEndDrag={(e) => {
           if (!e.nativeEvent.velocity || Math.abs(e.nativeEvent.velocity.y) < 0.05) finish(e.nativeEvent.contentOffset.y);
         }}
-        contentContainerStyle={{ paddingVertical: STEP * 2, alignItems: 'center', gap: GAP }}
+        contentContainerStyle={{ paddingVertical: STEP * 2, alignItems: 'center', gap: GAP_ }}
       >
         {values.map((v, i) => {
           const on = i === live;
           return (
-            <PressScale key={`${v}-${i}`} onPress={() => finish(i * STEP)} style={{ height: ROW, justifyContent: 'center' }} aria-hidden>
-              <AppText style={on ? { ...font(800), fontSize: 28, color: c.text } : { ...font(600), fontSize: 20, color: c.line }}>{v}</AppText>
+            <PressScale key={`${v}-${i}`} onPress={() => finish(i * STEP)} style={{ height: ROW_H, justifyContent: 'center' }} aria-hidden>
+              <AppText style={on ? { ...font(800), fontSize: 28, color: c.text } : { ...font(600), fontSize: compact ? 19 : 20, color: c.line }}>{v}</AppText>
             </PressScale>
           );
         })}
@@ -157,11 +165,11 @@ export function WheelColumn({ values, index, onChange, label }: { values: string
 }
 
 /** Grey wheel well with the white selection band (NTimePicker). */
-export function WheelWell({ children }: { children: ReactNode }) {
+export function WheelWell({ children, compact }: { children: ReactNode; compact?: boolean }) {
   const { c } = useTheme();
   return (
-    <View style={[styles.well, { backgroundColor: c.ground }]}>
-      <View pointerEvents="none" style={[styles.band, { backgroundColor: c.card }]} />
+    <View style={[styles.well, { backgroundColor: c.ground }, compact && { paddingVertical: 6 }]}>
+      <View pointerEvents="none" style={[styles.band, { backgroundColor: c.card }, compact && { height: 50, marginTop: -25 }]} />
       {children}
     </View>
   );

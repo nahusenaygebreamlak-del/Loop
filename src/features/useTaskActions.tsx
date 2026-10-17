@@ -43,7 +43,7 @@ export function useTaskActions() {
       const t = get(id);
       if (!t) return;
       const value: DateValue = { dueDate: t.dueDate, startTime: t.startTime, endTime: t.endTime, reminderMinutes: t.reminderMinutes, repeatRule: t.repeatRule };
-      sheets.open(() => <DateSheet value={value} onChange={(v) => updateTask(id, v)} />);
+      sheets.open(() => <DateSheet title={useStore.getState().tasks.find((t) => t.id === id)?.title} value={value} onChange={(v) => updateTask(id, v)} />);
     },
     [sheets, updateTask],
   );

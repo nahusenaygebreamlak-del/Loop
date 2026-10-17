@@ -12,6 +12,8 @@ export function SetRow({
   hint,
   value,
   valueMuted,
+  valueStrike,
+  hintColor,
   danger,
   toggle,
   trailing,
@@ -22,6 +24,8 @@ export function SetRow({
   hint?: string;
   value?: string;
   valueMuted?: boolean;
+  valueStrike?: boolean;
+  hintColor?: string;
   danger?: boolean;
   toggle?: boolean;
   trailing?: ReactNode;
@@ -34,12 +38,12 @@ export function SetRow({
       <View style={{ flex: 1 }}>
         <AppText style={{ ...font(700), fontSize: 15, color: danger ? c.dangerText : c.text }}>{name}</AppText>
         {hint ? (
-          <AppText tone="secondary" style={{ ...font(500), fontSize: 12.5, marginTop: 2 }}>
+          <AppText tone="secondary" style={[{ ...font(500), fontSize: 12.5, marginTop: 2 }, hintColor ? { color: hintColor } : null]}>
             {hint}
           </AppText>
         ) : null}
       </View>
-      {value ? <AppText style={{ ...font(700), fontSize: 14.5, color: valueMuted ? c.textSecondary : c.accentText, fontVariant: ['tabular-nums'] }}>{value}</AppText> : null}
+      {value ? <AppText style={{ ...font(700), fontSize: 14.5, color: valueMuted ? c.textSecondary : c.accentText, fontVariant: ['tabular-nums'], textDecorationLine: valueStrike ? 'line-through' : 'none' }}>{value}</AppText> : null}
       {toggle !== undefined ? <SwitchKnob on={toggle} /> : null}
       {trailing}
     </>

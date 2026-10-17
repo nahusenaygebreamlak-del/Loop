@@ -93,7 +93,10 @@ export function formatTime(t: TimeKey): string {
 
 export function timeRange(start: TimeKey | null, end: TimeKey | null): string {
   if (!start) return '';
-  return end ? `${formatTime(start)} – ${formatTime(end)}` : formatTime(start);
+  if (!end) return formatTime(start);
+  // 12-hour: one AM/PM for a range inside one half of the day ("10:00 – 11:00 AM").
+  if (use12h && (Number(start.slice(0, 2)) < 12) === (Number(end.slice(0, 2)) < 12)) return `${formatTime(start).slice(0, -3)} – ${formatTime(end)}`;
+  return `${formatTime(start)} – ${formatTime(end)}`;
 }
 
 export function weekdayLong(key: DateKey): string {
