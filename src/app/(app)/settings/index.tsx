@@ -10,6 +10,7 @@ import { Card, GroupLabel, IconButton } from '@/components/ui';
 import { goBack } from '@/features/nav';
 import { CheckinTimeSheet, THEME_LABEL, ThemeSheet, WeekTimeSheet } from '@/features/sheets/SettingsSheets';
 import { formatTime } from '@/lib/dates';
+import { useCalendar } from '@/calendar/google';
 import { useAuth } from '@/lib/auth';
 import { useNotificationsAllowed } from '@/notifications/useAllowed';
 import LoopAlarm from '../../../../modules/loop-alarm';
@@ -27,6 +28,7 @@ export default function Settings() {
   const { session, preview } = useAuth();
   const s = useSettings();
   const timeFormat = useTimeFormat();
+  const calStatus = useCalendar((st) => st.status);
   const lists = useStore((st) => st.lists);
   const live = lists.filter((l) => !l.deletedAt && !l.archivedAt).length;
   const archived = lists.filter((l) => !l.deletedAt && l.archivedAt).length;
@@ -60,7 +62,7 @@ export default function Settings() {
           <View style={{ flex: 1 }}>
             <AppText style={{ ...font(800), fontSize: 16 }}>Account and Google</AppText>
             <AppText tone="secondary" numberOfLines={1} style={{ fontSize: 13, marginTop: 2 }}>
-              {email} · Calendar not connected
+              {email} · {calStatus === 'off' || calStatus === 'connecting' ? 'Calendar not connected' : 'Calendar connected'}
             </AppText>
           </View>
           <Icon name="forward" size={18} color={c.line} />

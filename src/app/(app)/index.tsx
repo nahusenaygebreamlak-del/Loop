@@ -17,7 +17,7 @@ import { useSnackbar } from '@/components/Snackbar';
 import { GoogleFailedCard, lastSeen } from '@/features/calendar/GoogleCards';
 import { CarriedOverSheet } from '@/features/sheets/CarriedOverSheet';
 import { EventSheet } from '@/features/sheets/EventSheet';
-import { eventsOn } from '@/lib/events';
+import { eventEnd, eventsOn, eventStart } from '@/lib/events';
 import { SetupCheckinsSheet } from '@/features/sheets/SetupCheckinsSheet';
 import { leftovers } from '@/lib/checkins';
 import { askForNotifications } from '@/notifications/setup';
@@ -27,7 +27,7 @@ import { Timeline } from '@/features/today/Timeline';
 import { WeekStrip } from '@/features/today/WeekStrip';
 import { useMenu } from '@/features/useMenu';
 import { useTaskActions } from '@/features/useTaskActions';
-import { addDays, longDate, weekdayLong, type DateKey } from '@/lib/dates';
+import { addDays, longDate, timeRange, weekdayLong, type DateKey } from '@/lib/dates';
 import { inboxOpen } from '@/lib/inboxViews';
 import { shortRuleLabel } from '@/lib/repeat';
 import { isLive, isOpen, movedLabel, timelineSub, todayView, visibleTasks } from '@/lib/taskViews';
@@ -408,6 +408,9 @@ function TodayBody({
 function OtherDay({ day, tasks, listName, quickActions, waiting }: { day: DateKey; tasks: Task[]; listName: (t: Task) => string | undefined; quickActions: (id: string) => void; waiting: Waiting }) {
   const actions = useTaskActions();
   const sheets = useSheets();
+  const { c } = useTheme();
+  const cal = useCalendar();
+  const evs = cal.status === 'connected' || cal.status === 'failed' ? eventsOn(cal.events, day, cal.hidden) : [];
   const dated = tasks.filter((t) => isLive(t) && t.dueDate === day);
   const timed = dated.filter((t) => t.startTime).sort((a, b) => a.startTime!.localeCompare(b.startTime!));
   const untimed = dated.filter((t) => !t.startTime).sort((a, b) => b.priority - a.priority || a.sortOrder - b.sortOrder);
@@ -437,7 +440,7 @@ function OtherDay({ day, tasks, listName, quickActions, waiting }: { day: DateKe
     />
   );
 
-  if (!dated.length) {
+  if (!dated.length && !evs.length) {
     return (
       <EmptyState
         style={{ marginTop: 26 }}
@@ -450,10 +453,27 @@ function OtherDay({ day, tasks, listName, quickActions, waiting }: { day: DateKe
   }
   return (
     <>
-      {timed.length ? (
+      {timed.length || evs.length ? (
         <>
-          <GroupLabel style={{ paddingTop: 26 }}>{`Schedule · ${timed.length}`}</GroupLabel>
-          <Card>{timed.map((t, i, a) => row(t, i, a, true))}</Card>
+          <GroupLabel style={{ paddingTop: 26 }}>{`Schedule · ${timed.length + evs.length}`}</GroupLabel>
+          <Card>
+            {timed.map((t, i, a) => row(t, i, evs.length ? [...a, t] : a, true))}
+            {evs.map((e, i) => (
+              <PressScale
+                key={e.id}
+                kind="row"
+                accessibilityRole="button"
+                accessibilityHint="Opens the Google event"
+                onPress={() => sheets.open(() => <EventSheet eventId={e.id} />)}
+                style={{ minHeight: 64, justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 20, borderTopWidth: i === 0 && timed.length ? 1 : 0, borderBottomWidth: i < evs.length - 1 ? 1 : 0, borderColor: c.ground }}
+              >
+                <AppText style={{ ...font(700), fontSize: 16 }}>{e.title}</AppText>
+                <AppText tone="secondary" style={{ fontSize: 13.5, marginTop: 4 }}>
+                  {`${e.allDay ? 'All day' : timeRange(eventStart(e), eventEnd(e))} · Google Calendar`}
+                </AppText>
+              </PressScale>
+            ))}
+          </Card>
         </>
       ) : null}
       {untimed.length ? (

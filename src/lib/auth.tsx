@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
+import { clearCalendarCache } from '@/calendar/google';
 import { signOutSync, startSync, stopSync } from '@/sync/engine';
 import { isSupabaseConfigured, supabase } from './supabase';
 
@@ -76,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       await signOutSync();
+      clearCalendarCache();
       await supabase.auth.signOut();
     },
   };
