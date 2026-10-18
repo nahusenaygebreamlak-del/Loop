@@ -93,6 +93,14 @@
             }
           ]
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "# The widget library uses WorkManager, which loads its Room database by reflection.\n# Without these, the shrunk release build crashes on launch (WorkDatabase_Impl stripped).\n-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class androidx.work.impl.WorkDatabase_Impl { *; }\n-keep class androidx.work.** { *; }\n-keep class com.reactnativeandroidwidget.** { *; }"
+          }
+        }
       ]
     ],
     "scheme": "loop",
