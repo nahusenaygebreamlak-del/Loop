@@ -7,10 +7,8 @@ import { minutesToTime, shortDate, timeRange, timeToMinutes, type DateKey, type 
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius } from '@/theme/tokens';
 import { font } from '@/theme/typography';
-import { PickChip, WheelColumn, WheelWell } from './parts';
+import { ClockWheels, PickChip } from './parts';
 
-const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
-const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 const LENGTHS: { label: string; min: number | null }[] = [
   { label: 'No end', min: null },
   { label: '30 min', min: 30 },
@@ -18,8 +16,6 @@ const LENGTHS: { label: string; min: number | null }[] = [
   { label: '2 hours', min: 120 },
 ];
 
-const split = (t: TimeKey) => [Number(t.slice(0, 2)), Math.round(Number(t.slice(3, 5)) / 5) % 12] as const;
-const join = (h: number, m: number): TimeKey => `${HOURS[h]}:${MINUTES[m]}`;
 
 /** NTimeSheet: Starts / Ends tiles (the active one outlined), length chips, 5-minute wheel. */
 export function TimeSheet({
@@ -41,7 +37,6 @@ export function TimeSheet({
 
   const to = length ? minutesToTime(Math.min(timeToMinutes(from) + length, 23 * 60 + 55)) : null;
   const wheel = editing === 'end' && to ? to : from;
-  const [h, m] = split(wheel);
   const setWheel = (t: TimeKey) => {
     if (editing === 'start') setFrom(t);
     else setLength(Math.max(5, timeToMinutes(t) - timeToMinutes(from)));
@@ -96,11 +91,7 @@ export function TimeSheet({
           />
         ))}
       </View>
-      <WheelWell compact>
-        <WheelColumn compact key={`h-${editing}`} label={editing === 'start' ? 'Start hour' : 'End hour'} values={HOURS} index={h} onChange={(i) => setWheel(join(i, m))} />
-        <AppText style={{ ...font(800), fontSize: 28 }}>:</AppText>
-        <WheelColumn compact key={`m-${editing}`} label={editing === 'start' ? 'Start minute' : 'End minute'} values={MINUTES} index={m} onChange={(i) => setWheel(join(h, i))} />
-      </WheelWell>
+      <ClockWheels compact id={editing} label={editing === 'start' ? 'Start ' : 'End '} value={wheel} onChange={setWheel} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <PressScale
           accessibilityRole="button"

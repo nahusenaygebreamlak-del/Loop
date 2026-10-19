@@ -44,7 +44,8 @@ export async function rescheduleCheckins(): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       identifier: r.id,
       content: { title: r.title, body: r.body, data: { kind: 'task', taskId: r.taskId } },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: r.at, channelId: CHANNEL },
+      // Alarm-clock delivery: Android (and Samsung's battery saver) never defers it.
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: r.at, channelId: CHANNEL, delivery: 'alarmClock' },
     });
   }
 

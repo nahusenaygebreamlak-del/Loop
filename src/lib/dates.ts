@@ -84,6 +84,10 @@ export function setTimeFormat(format: '12h' | '24h') {
   use12h = format === '12h';
 }
 
+export function uses12h(): boolean {
+  return use12h;
+}
+
 /** "15:00", or "3:00 PM" in 12-hour mode. */
 export function formatTime(t: TimeKey): string {
   if (!use12h) return t;

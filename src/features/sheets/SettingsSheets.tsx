@@ -4,13 +4,13 @@ import { AppText } from '@/components/AppText';
 import { PressScale } from '@/components/PressScale';
 import { SheetCard, useCloseSheet } from '@/components/Sheet';
 import { CapLabel, OptionGroup, SheetButton, SheetTitle } from '@/components/ui';
-import type { TimeKey } from '@/lib/dates';
+import { formatTime, type TimeKey } from '@/lib/dates';
 import { useSettings, useTimeFormat } from '@/store/settings';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { ThemePreference } from '@/theme/tokens';
 import { colors, radius } from '@/theme/tokens';
 import { font } from '@/theme/typography';
-import { OptionRow, PickChip, WheelColumn, WheelWell } from './parts';
+import { ClockWheels, OptionRow, PickChip } from './parts';
 
 export type CheckinKind = 'morningTime' | 'afternoonTime' | 'sortTime';
 
@@ -20,8 +20,6 @@ const CHECKIN: Record<CheckinKind, { title: string; hint: string; picks: TimeKey
   sortTime: { title: 'Inbox sort reminder', hint: 'Only sent when the Inbox has notes.', picks: ['12:00', '18:00', '21:00'], fallback: '18:00' },
 };
 
-const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
-const MINUTES = ['00', '15', '30', '45'];
 
 /** NTimePicker: quick picks, wheel, Turn off / Save. */
 export function CheckinTimeSheet({ kind, initial, onSave }: { kind: CheckinKind; initial?: TimeKey; onSave?: (t: TimeKey) => void }) {
@@ -32,9 +30,7 @@ export function CheckinTimeSheet({ kind, initial, onSave }: { kind: CheckinKind;
   const set = useSettings((s) => s.set);
   const cfg = CHECKIN[kind];
   const start = current ?? cfg.fallback;
-  const [h, setH] = useState(Number(start.slice(0, 2)));
-  const [m, setM] = useState(Math.max(0, MINUTES.indexOf(start.slice(3, 5))));
-  const value = `${HOURS[h]}:${MINUTES[m]}`;
+  const [value, setValue] = useState<TimeKey>(start);
 
   return (
     <SheetCard label={cfg.title} gap={18} style={{ paddingBottom: 28 }}>
@@ -44,20 +40,13 @@ export function CheckinTimeSheet({ kind, initial, onSave }: { kind: CheckinKind;
           <PickChip
             key={p}
             big
-            label={p}
+            label={formatTime(p)}
             on={p === value}
-            onPress={() => {
-              setH(Number(p.slice(0, 2)));
-              setM(MINUTES.indexOf(p.slice(3, 5)));
-            }}
+            onPress={() => setValue(p)}
           />
         ))}
       </View>
-      <WheelWell>
-        <WheelColumn label="Hour" values={HOURS} index={h} onChange={setH} />
-        <AppText style={{ ...font(800), fontSize: 28 }}>:</AppText>
-        <WheelColumn label="Minute" values={MINUTES} index={m} onChange={setM} />
-      </WheelWell>
+      <ClockWheels value={value} onChange={setValue} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {onSave ? null : (
         <PressScale
@@ -83,7 +72,7 @@ export function CheckinTimeSheet({ kind, initial, onSave }: { kind: CheckinKind;
           style={{ flex: 1, minHeight: 56, borderRadius: radius.button, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}
         >
           <AppText variant="button" tone="onAccent">
-            Save {value}
+            Save {formatTime(value)}
           </AppText>
         </PressScale>
       </View>
