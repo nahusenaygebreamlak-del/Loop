@@ -16,11 +16,18 @@ import { useStore } from '@/store/store';
 import type { ListColor } from '@/store/types';
 import { listColors, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { useDesk } from '@/desktop/layout';
+import { AllDesk } from '@/desktop/views/ViewsDesk';
 
 const SHOWN = 2;
 
 /** NAllTasks */
-export default function AllTasks() {
+export default function Route() {
+  const { desk } = useDesk();
+  return desk ? <AllDesk /> : <AllTasksPhone />;
+}
+
+function AllTasksPhone() {
   const sheets = useSheets();
   const openMenu = useMenu();
   const actions = useTaskActions();

@@ -13,6 +13,8 @@ import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
 import { ListMenuSheet } from '@/features/sheets/ListMenuSheet';
 import { useMenu } from '@/features/useMenu';
+import { useDesk } from '@/desktop/layout';
+import { ListDesk } from '@/desktop/views/ListDesk';
 import { useTaskActions } from '@/features/useTaskActions';
 import { listGroups, listRowSub, openCount, sortTasks, type Group } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
@@ -21,8 +23,14 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 
+export default function ListRoute() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { desk } = useDesk();
+  return desk ? <ListDesk id={id} /> : <ListScreen />;
+}
+
 /** VProject: one list, grouped Overdue / Today / Next 7 days / Later / No date. */
-export default function ListScreen() {
+function ListScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { c } = useTheme();
   const insets = useSafeAreaInsets();

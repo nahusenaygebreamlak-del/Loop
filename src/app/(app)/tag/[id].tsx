@@ -14,9 +14,17 @@ import { useTaskActions } from '@/features/useTaskActions';
 import { dueShort, isOpen, tagGroups, timeRangeOf, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
 import { useStore } from '@/store/store';
+import { useDesk } from '@/desktop/layout';
+import { TagDesk } from '@/desktop/views/ViewsDesk';
 
 /** NTagView */
-export default function TagView() {
+export default function Route() {
+  const { desk } = useDesk();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  return desk ? <TagDesk id={id} /> : <TagViewPhone />;
+}
+
+function TagViewPhone() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const sheets = useSheets();
   const openMenu = useMenu();

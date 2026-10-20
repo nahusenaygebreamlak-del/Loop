@@ -13,6 +13,8 @@ import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { useDesk } from '@/desktop/layout';
+import { CompletedDesk } from '@/desktop/views/CompletedDesk';
 
 const SHOWN = 3;
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -22,7 +24,12 @@ const doneTime = (iso: string) => {
 };
 
 /** NCompleted: tapping a filled circle brings the task back. */
-export default function Completed() {
+export default function Route() {
+  const { desk } = useDesk();
+  return desk ? <CompletedDesk /> : <CompletedPhone />;
+}
+
+function CompletedPhone() {
   const { c } = useTheme();
   const openMenu = useMenu();
   const { today } = useToday();

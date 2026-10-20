@@ -17,11 +17,18 @@ import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { useDesk } from '@/desktop/layout';
+import { Next7Desk } from '@/desktop/views/ViewsDesk';
 
 const SHOWN = 2;
 
 /** NNext7 */
-export default function Next7() {
+export default function Route() {
+  const { desk } = useDesk();
+  return desk ? <Next7Desk /> : <Next7Phone />;
+}
+
+function Next7Phone() {
   const { c } = useTheme();
   const sheets = useSheets();
   const openMenu = useMenu();

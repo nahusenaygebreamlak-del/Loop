@@ -19,6 +19,7 @@ import { listColors } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 import { Kbd } from './Kbd';
 import { useOpenTaskMenu } from './Menu';
+import { DonePanel } from './views/CompletedDesk';
 import { selectTask } from './state';
 
 const webInput = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
@@ -46,6 +47,7 @@ function TaskPanelInner({ id, onClose }: { id: string; onClose: () => void }) {
   const [adding, setAdding] = useState(false);
 
   if (!task) return <EmptyPanel />;
+  if (task.doneAt) return <DonePanel task={task} onClose={onClose} />;
 
   const saveTitle = () => (title.trim() ? updateTask(task.id, { title: title.trim() }) : setTitle(task.title));
   const saveNotes = () => notes !== task.notes && updateTask(task.id, { notes });

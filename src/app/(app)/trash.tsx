@@ -17,11 +17,18 @@ import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { useDesk } from '@/desktop/layout';
+import { TrashDesk } from '@/desktop/views/TrashDesk';
 
 const KIND_LABEL = { task: 'Task', inbox: 'Inbox note', note: 'Note' } as const;
 
 /** NTrash */
-export default function Trash() {
+export default function Route() {
+  const { desk } = useDesk();
+  return desk ? <TrashDesk /> : <TrashPhone />;
+}
+
+function TrashPhone() {
   const { c } = useTheme();
   const sheets = useSheets();
   const snack = useSnackbar();
