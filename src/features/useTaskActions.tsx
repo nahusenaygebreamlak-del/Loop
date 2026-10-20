@@ -2,6 +2,8 @@ import { router } from 'expo-router';
 import { useCallback } from 'react';
 import { useSheets } from '@/components/Sheet';
 import { useSnackbar } from '@/components/Snackbar';
+import { isDeskNow } from '@/desktop/layout';
+import { selectTask } from '@/desktop/state';
 import { useStore } from '@/store/store';
 import type { Task } from '@/store/types';
 import { DateSheet, type DateValue } from './sheets/DateSheet';
@@ -36,7 +38,8 @@ export function useTaskActions() {
     [deleteTask, snack],
   );
 
-  const openDetails = useCallback((id: string) => router.push({ pathname: '/task/[id]', params: { id } }), []);
+  // On the computer, details open in the panel instead of a new screen.
+  const openDetails = useCallback((id: string) => (isDeskNow() ? selectTask(id) : router.push({ pathname: '/task/[id]', params: { id } })), []);
 
   const pickDate = useCallback(
     (id: string) => {

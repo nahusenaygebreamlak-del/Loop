@@ -13,6 +13,10 @@ type Local = {
   /** "Meet the check-ins" and "Want a nudge to sort these?" are each offered once. */
   checkinsOffered: boolean;
   sortOffered: boolean;
+  /** Computer: Settings › Detail panel (on unless turned off). */
+  deskPanel?: boolean;
+  /** Computer: the welcome (WWelcome) has been shown. */
+  deskWelcomed?: boolean;
 };
 
 export const useLocal = create<Local>()(

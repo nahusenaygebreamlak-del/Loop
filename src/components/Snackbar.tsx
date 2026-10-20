@@ -4,6 +4,8 @@ import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, w
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
 import { easingCurve, motion } from '@/theme/tokens';
+import { useDesk, isDeskNow } from '@/desktop/layout';
+import { Kbd } from '@/desktop/Kbd';
 import { AppText } from './AppText';
 import { PressScale } from './PressScale';
 
@@ -22,6 +24,18 @@ export function pushSnack(s: SnackOptions) {
   external?.(s);
 }
 
+// Computer: Ctrl Z runs the latest snackbar's Undo (docs/11, "Toasts").
+let lastUndo: (() => void) | null = null;
+let dismissCurrent: (() => void) | null = null;
+export function undoLast(): boolean {
+  if (!lastUndo) return false;
+  const fn = lastUndo;
+  lastUndo = null;
+  fn();
+  dismissCurrent?.();
+  return true;
+}
+
 export function SnackbarProvider({ children }: { children: ReactNode }) {
   const [snack, setSnack] = useState<Snack | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,8 +50,11 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
     (s: SnackOptions) => {
       if (timer.current) clearTimeout(timer.current);
       setSnack({ ...s, id: nextId.current++ });
+      lastUndo = s.actions?.find((a) => a.label === 'Undo')?.onPress ?? null;
+      dismissCurrent = dismiss;
       // NSnackbars: 4 s, or 8 s when the snackbar offers Undo.
-      timer.current = setTimeout(dismiss, s.duration ?? (s.actions?.some((a) => a.label === 'Undo') ? 8000 : 4000));
+      // Computer toasts stay 6 s.
+      timer.current = setTimeout(dismiss, s.duration ?? (isDeskNow() ? 6000 : s.actions?.some((a) => a.label === 'Undo') ? 8000 : 4000));
     },
     [dismiss],
   );
@@ -67,6 +84,7 @@ export function useSnackbar() {
 function SnackbarView({ snack, onDone }: { snack: Snack; onDone: () => void }) {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
+  const { desk, sideInline, panelInline } = useDesk();
   const reduced = useReducedMotion();
   const p = useSharedValue(reduced ? 1 : 0);
 
@@ -82,7 +100,13 @@ function SnackbarView({ snack, onDone }: { snack: Snack; onDone: () => void }) {
     <Animated.View
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
-      style={[styles.bar, { backgroundColor: c.snackbar, bottom: (snack.bottom ?? 112) + insets.bottom, minHeight: snack.sub ? undefined : 60 }, anim]}
+      style={[
+        styles.bar,
+        { backgroundColor: c.snackbar, bottom: (snack.bottom ?? 112) + insets.bottom, minHeight: snack.sub ? undefined : 60 },
+        // Computer: centred over the main column, 28 px from the bottom.
+        desk ? { left: sideInline ? 264 : 0, right: panelInline ? 416 : 0, bottom: 28, alignSelf: 'center', marginHorizontal: 'auto', maxWidth: 560, minHeight: 52, borderRadius: 16, paddingVertical: 6, paddingLeft: 18 } : null,
+        anim,
+      ]}
     >
       <View style={styles.text}>
         <AppText style={[styles.title, { color: c.snackbarText }]}>{snack.title}</AppText>
@@ -102,9 +126,17 @@ function SnackbarView({ snack, onDone }: { snack: Snack; onDone: () => void }) {
           }}
           style={[styles.action, { paddingHorizontal: snack.actions!.length > 1 ? 12 : 16 }]}
         >
-          <AppText variant="button" style={{ fontSize: 15, color: c.snackbarAction }}>
-            {a.label}
-          </AppText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <AppText variant="button" style={{ fontSize: desk ? 14.5 : 15, color: c.snackbarAction }}>
+              {a.label}
+            </AppText>
+            {desk && a.label === 'Undo' ? (
+              <View style={{ flexDirection: 'row', gap: 4 }}>
+                <Kbd k="Ctrl" onDark />
+                <Kbd k="Z" onDark />
+              </View>
+            ) : null}
+          </View>
         </PressScale>
       ))}
     </Animated.View>

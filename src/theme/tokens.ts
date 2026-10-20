@@ -5,7 +5,15 @@ export type ColorScheme = 'light' | 'dark';
 export type ThemePreference = 'system' | ColorScheme;
 
 type LightColors = typeof raw.color.light;
-export type ThemeColors = LightColors & { dangerRing: string; priorityMediumText: string; warn: string; warnText: string; warnTint: string; cal: CalColors; priority: Record<'high' | 'medium' | 'low' | 'none', string> };
+export type ThemeColors = LightColors & { dangerRing: string; priorityMediumText: string; warn: string; warnText: string; warnTint: string; cal: CalColors; desk: DeskColors; priority: Record<'high' | 'medium' | 'low' | 'none', string> };
+
+type DeskColors = { kbdBg: string; kbdText: string; border: string; scrim: string; hover: string; eventRow: string; hour: string };
+
+// Computer layout (W* / DW* designs, 20 Oct): key caps, pop-up borders and scrim, menu hover.
+const DESK: Record<ColorScheme, DeskColors> = {
+  light: { kbdBg: '#E4E8F1', kbdText: '#636B80', border: '#E4E8F1', scrim: 'rgba(20,26,46,0.32)', hover: '#F2F4F9', eventRow: '#E9EDF5', hour: '#EEF1F6' },
+  dark: { kbdBg: '#232B3D', kbdText: '#9AA3B8', border: '#232B3D', scrim: 'rgba(0,0,0,0.55)', hover: '#0F1320', eventRow: '#202838', hour: '#232B3D' },
+};
 
 type CalColors = { eventBg: string; eventText: string; agendaEvent: string; segBg: string; hour: string; taskBg: string; taskText: string; eventDot: string; nowLine: string };
 
@@ -27,6 +35,7 @@ function buildColors(scheme: ColorScheme): ThemeColors {
     warnText: scheme === 'dark' ? '#F0A35C' : '#B4600F',
     warnTint: scheme === 'dark' ? '#3A2A18' : '#FFF1E2',
     cal: CAL[scheme],
+    desk: DESK[scheme],
     // Tokens note: in dark mode, high uses dangerRing and none uses line.
     priority: {
       high: scheme === 'dark' ? dangerRing : raw.color.priority.high,
