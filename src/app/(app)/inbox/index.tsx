@@ -22,6 +22,8 @@ import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { useDesk } from '@/desktop/layout';
+import { InboxDesk } from '@/desktop/views/InboxDesk';
 
 /** "done in about a minute" from the first and last sort of the day. */
 function doneIn(times: string[]): string {
@@ -33,7 +35,12 @@ function doneIn(times: string[]): string {
 const startSort = (id?: string) => router.push(id ? { pathname: '/inbox/sort', params: { start: id } } : '/inbox/sort');
 
 /** VInbox, and NAllSorted once everything has been sorted. */
-export default function Inbox() {
+export default function Route() {
+  const { desk } = useDesk();
+  return desk ? <InboxDesk /> : <InboxPhone />;
+}
+
+function InboxPhone() {
   const { c } = useTheme();
   const sheets = useSheets();
   const snack = useSnackbar();

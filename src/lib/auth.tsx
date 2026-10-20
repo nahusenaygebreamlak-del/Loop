@@ -26,7 +26,12 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
-  const [preview, setPreview] = useState(false);
+  // Preview mode (no Supabase keys) survives a page reload on web.
+  const [preview, setPreviewState] = useState(() => Platform.OS === 'web' && !isSupabaseConfigured && typeof sessionStorage !== 'undefined' && sessionStorage.getItem('loop.preview') === '1');
+  const setPreview = (on: boolean) => {
+    if (Platform.OS === 'web' && typeof sessionStorage !== 'undefined') sessionStorage.setItem('loop.preview', on ? '1' : '0');
+    setPreviewState(on);
+  };
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
