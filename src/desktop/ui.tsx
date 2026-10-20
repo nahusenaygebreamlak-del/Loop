@@ -141,6 +141,7 @@ export function TaskRowDesk({
           accessibilityRole="button"
           accessibilityState={{ selected }}
           accessibilityHint="Opens it in the panel. Right-click for quick actions."
+          {...({ dataSet: { looprow: '1' } } as object)}
           onPress={() => selectTask(task.id)}
           onHoverIn={() => setHover(true)}
           onHoverOut={() => setHover(false)}

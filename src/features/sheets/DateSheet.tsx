@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { SheetCard, useCloseSheet, useSheets } from '@/components/Sheet';
 import { SheetButton } from '@/components/ui';
-import { addDays, fromKey, monthGrid, monthName, nextMonday, shortDate, timeRange, todayKey, type DateKey, type TimeKey } from '@/lib/dates';
+import { Kbd } from '@/desktop/Kbd';
+import { useDesk } from '@/desktop/layout';
+import { parseQuickAdd } from '@/lib/parse';
+import { addDays, formatTime, fromKey, monthGrid, monthName, nextMonday, shortDate, timeRange, todayKey, type DateKey, type TimeKey } from '@/lib/dates';
 import { shortRuleLabel } from '@/lib/repeat';
 import { reminderLabel } from '@/lib/taskViews';
 import { useSettings } from '@/store/settings';
@@ -51,8 +54,47 @@ export function DateSheet({ value, onChange, title }: { value: DateValue; onChan
   const letters = [...WEEK_LETTERS.slice(weekStart), ...WEEK_LETTERS.slice(0, weekStart)];
   const shiftMonth = (d: number) => setMonth(({ y, m }) => ({ y: m + d < 0 ? y - 1 : m + d > 11 ? y + 1 : y, m: (m + d + 12) % 12 }));
 
+  // Computer (WDatePop): type a date like "next fri 9am"; Enter applies it.
+  const { desk } = useDesk();
+  const [typed, setTyped] = useState('');
+  const guess = typed.trim() ? parseQuickAdd(typed) : null;
+  const guessDate = guess ? (guess.date ?? (guess.startTime ? (v.dueDate ?? today) : null)) : null;
+  const applyTyped = () => {
+    if (!guess || !guessDate) return false;
+    const next = { ...v, dueDate: guessDate, startTime: guess.startTime ?? v.startTime, endTime: guess.startTime ? guess.endTime : v.endTime };
+    setV(next);
+    setDate(guessDate);
+    return next;
+  };
+  const done = () => {
+    onChange(v);
+    close();
+  };
+
   return (
     <SheetCard label="Date and reminder" gap={14}>
+      {desk ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.ground }}>
+          <Icon name="calendar" size={16} color={c.textSecondary} />
+          <TextInput
+            autoFocus
+            value={typed}
+            onChangeText={setTyped}
+            onSubmitEditing={() => {
+              const next = applyTyped();
+              if (next) {
+                onChange(next);
+                close();
+              } else done();
+            }}
+            placeholder="Type a date, like next fri 9am"
+            placeholderTextColor={c.textSecondary}
+            accessibilityLabel="Type a date"
+            style={[{ flex: 1, ...font(700), fontSize: 14.5, color: c.text }, { outlineStyle: 'none' } as object]}
+          />
+          {guessDate ? <AppText style={{ ...font(700), fontSize: 13, color: c.accentText }}>{`${shortDate(guessDate)}${guess?.startTime ? ` · ${formatTime(guess.startTime)}` : ''}`}</AppText> : null}
+        </View>
+      ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24, flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 24 }}>
         <PickChip label="Today" on={v.dueDate === today} onPress={() => setDate(today)} />
         <PickChip label="Tomorrow" on={v.dueDate === tomorrow} onPress={() => setDate(tomorrow)} />
@@ -161,13 +203,19 @@ export function DateSheet({ value, onChange, title }: { value: DateValue; onChan
         />
       </View>
 
-      <SheetButton
-        label="Done"
-        onPress={() => {
-          onChange(v);
-          close();
-        }}
-      />
+      {desk ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <AppText tone="secondary" style={{ fontSize: 12.5 }}>
+            Type a date, or pick one above
+          </AppText>
+          <PressScale accessibilityRole="button" onPress={done} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 40, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.accent }}>
+            <AppText style={{ ...font(800), fontSize: 14.5, color: c.onAccent }}>Done</AppText>
+            <Kbd k="Enter" onAccent />
+          </PressScale>
+        </View>
+      ) : (
+        <SheetButton label="Done" onPress={done} />
+      )}
     </SheetCard>
   );
 }

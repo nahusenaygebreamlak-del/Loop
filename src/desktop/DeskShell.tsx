@@ -1,5 +1,5 @@
 import { usePathname } from 'expo-router';
-import { type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -28,6 +28,11 @@ export function DeskShell({ children }: { children: ReactNode }) {
   const panelOn = useLocal((l) => l.deskPanel !== false);
   useDeskKeys();
   useBrowserCheckins();
+  // WWelcome: the first time on the computer.
+  const welcomed = useLocal((l) => l.deskWelcomed);
+  useEffect(() => {
+    if (!welcomed) useDeskState.setState({ overlay: 'welcome' });
+  }, [welcomed]);
 
   const path = usePathname();
   // Notes use the right side for the editor, Calendar for its own column, Settings for two columns.

@@ -5,6 +5,7 @@ import { overlayOpen } from '@/components/Sheet';
 import { undoLast } from '@/components/Snackbar';
 import { goMain } from '@/features/nav';
 import { useTaskActions } from '@/features/useTaskActions';
+import { useLocal } from '@/store/local';
 import { useStore } from '@/store/store';
 import { typingInField } from './dom';
 import { closeOverlay, openQuickAdd, selectTask, useDeskState } from './state';
@@ -52,8 +53,9 @@ export function useDeskKeys() {
 
       // Pop-ups own the keyboard; Esc closes them.
       if (desk.overlay) {
-        if (key === 'Escape') {
+        if (key === 'Escape' || (desk.overlay === 'welcome' && key === 'Enter')) {
           e.preventDefault();
+          if (desk.overlay === 'welcome') useLocal.setState({ deskWelcomed: true });
           closeOverlay();
         }
         return;
@@ -63,6 +65,9 @@ export function useDeskKeys() {
         return;
       }
       if (overlayOpen() || typingInField() || e.altKey) return;
+      // Space / Enter on a real button (not a task row) belong to that button.
+      const focused = document.activeElement as HTMLElement | null;
+      if ((key === ' ' || key === 'Enter') && focused && focused !== document.body && focused.getAttribute('role') === 'button' && !focused.dataset.looprow) return;
 
       for (const h of handlers) if (h(key, e)) return e.preventDefault();
 
@@ -141,7 +146,13 @@ export function useDeskKeys() {
           });
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // Capture phase: a focused task row (a web button) would otherwise swallow Space and Enter.
+    const capture = (e: KeyboardEvent) => {
+      const before = e.defaultPrevented;
+      onKey(e);
+      if (!before && e.defaultPrevented) e.stopPropagation();
+    };
+    window.addEventListener('keydown', capture, true);
+    return () => window.removeEventListener('keydown', capture, true);
   }, []);
 }

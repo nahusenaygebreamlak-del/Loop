@@ -224,6 +224,7 @@ function ScheduleTask({ task, now, lists }: { task: Task; now: boolean; lists: L
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ selected }}
+          {...({ dataSet: { looprow: '1' } } as object)}
           onPress={() => selectTask(task.id)}
           style={{
             flexDirection: 'row',

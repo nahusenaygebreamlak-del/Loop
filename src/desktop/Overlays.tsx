@@ -45,7 +45,14 @@ function Scrim({ children, top }: { children: ReactNode; top: number }) {
   const { c } = useTheme();
   return (
     <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', paddingTop: top, paddingHorizontal: 16 }}>
-      <Pressable accessibilityLabel="Close" onPress={closeOverlay} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: c.desk.scrim }} />
+      <Pressable
+        accessibilityLabel="Close"
+        onPress={() => {
+          if (useDeskState.getState().overlay === 'welcome') useLocal.setState({ deskWelcomed: true });
+          closeOverlay();
+        }}
+        style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: c.desk.scrim }}
+      />
       {children}
     </View>
   );
@@ -511,7 +518,14 @@ function WelcomePop() {
         )}
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <PressScale accessibilityRole="button" onPress={() => useDeskState.setState({ overlay: 'shortcuts' })} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }}>
+        <PressScale
+          accessibilityRole="button"
+          onPress={() => {
+            useLocal.setState({ deskWelcomed: true });
+            useDeskState.setState({ overlay: 'shortcuts' });
+          }}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }}
+        >
           <AppText style={{ ...font(700), fontSize: 14, color: c.accentText }}>See all shortcuts</AppText>
           <Kbd k="?" />
         </PressScale>

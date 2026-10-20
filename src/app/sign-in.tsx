@@ -6,12 +6,19 @@ import { LoopMarkSvg, LoopWordmark } from '@/components/Brand';
 import { ContentIn } from '@/components/ContentIn';
 import { Icon } from '@/components/Icon';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useDesk } from '@/desktop/layout';
+import { SignInDesk } from '@/desktop/views/SignInDesk';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/theme/ThemeProvider';
 import { font } from '@/theme/typography';
 
+export default function SignInRoute() {
+  const { desk } = useDesk();
+  return desk ? <SignInDesk /> : <SignIn />;
+}
+
 /** NSignIn, and NSignInError when sign-in fails. */
-export default function SignIn() {
+function SignIn() {
   const { c, scheme } = useTheme();
   const { signInWithGoogle } = useAuth();
   const insets = useSafeAreaInsets();

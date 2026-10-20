@@ -14,7 +14,7 @@ export function useSyncLine(): { line: string; tone: 'secondary' | 'syncing' | '
   }, []);
 
   if (!session || state === 'off') return { line: Platform.OS === 'web' ? 'Saved on this computer' : 'Saved on this phone', tone: 'secondary' };
-  if (state === 'offline') return { line: 'Offline · changes will sync later', tone: 'secondary' };
+  if (state === 'offline') return { line: Platform.OS === 'web' && pending ? `Offline · ${pending} change${pending === 1 ? '' : 's'} waiting` : 'Offline · changes will sync later', tone: 'secondary' };
   if (state === 'error') return { line: "Can't sync right now · your tasks are fine", tone: 'warn' };
   if (state === 'syncing' && !lastSyncedAt) return { line: 'Syncing…', tone: 'syncing' };
   if (pending && state !== 'synced') return { line: 'Syncing…', tone: 'syncing' };

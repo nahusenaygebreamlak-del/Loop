@@ -25,7 +25,8 @@ export function useTaskActions() {
     (id: string) => {
       const wasDone = !!get(id)?.doneAt;
       const undo = toggleDone(id);
-      if (!wasDone) snack({ title: 'Task done', actions: [{ label: 'Undo', onPress: undo }] });
+      // Computer toast (WDoneUndo): "Done: <task>".
+      if (!wasDone) snack({ title: isDeskNow() ? `Done: ${get(id)?.title ?? 'task'}` : 'Task done', actions: [{ label: 'Undo', onPress: undo }] });
     },
     [toggleDone, snack],
   );
@@ -33,7 +34,7 @@ export function useTaskActions() {
   const remove = useCallback(
     (id: string) => {
       const undo = deleteTask(id);
-      snack({ title: 'Task moved to Trash', sub: 'Kept for 30 days', actions: [{ label: 'Undo', onPress: undo }] });
+      snack({ title: isDeskNow() ? 'Moved to Trash' : 'Task moved to Trash', sub: 'Kept for 30 days', actions: [{ label: 'Undo', onPress: undo }] });
     },
     [deleteTask, snack],
   );
