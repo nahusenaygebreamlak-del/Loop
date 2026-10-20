@@ -26,6 +26,8 @@ import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
 import { Timeline } from '@/features/today/Timeline';
 import { WeekStrip } from '@/features/today/WeekStrip';
+import { useDesk } from '@/desktop/layout';
+import { TodayDesk } from '@/desktop/views/TodayDesk';
 import { useMenu } from '@/features/useMenu';
 import { useTaskActions } from '@/features/useTaskActions';
 import { addDays, longDate, timeRange, weekdayLong, type DateKey } from '@/lib/dates';
@@ -42,8 +44,14 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 
-/** VToday, with NTodayOtherDay (a day picked in the strip), NTodayDone, NTodayEmpty and NOffline. */
+/** Today: the computer layout (WToday) on wide web windows, the phone layout otherwise. */
 export default function Today() {
+  const { desk } = useDesk();
+  return desk ? <TodayDesk /> : <TodayPhone />;
+}
+
+/** VToday, with NTodayOtherDay (a day picked in the strip), NTodayDone, NTodayEmpty and NOffline. */
+function TodayPhone() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const sheets = useSheets();

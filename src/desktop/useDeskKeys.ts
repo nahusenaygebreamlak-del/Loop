@@ -81,6 +81,11 @@ export function useDeskKeys() {
         e.preventDefault();
         fn();
       };
+      // Pop-ups with a text field open after the key press, so the letter doesn't land in the field.
+      const later = (fn: () => void) => {
+        e.preventDefault();
+        setTimeout(fn, 0);
+      };
 
       if (ctrl) {
         if (key === 'd' && sel) run(() => selectTask(useStore.getState().duplicateTask(sel)));
@@ -88,14 +93,14 @@ export function useDeskKeys() {
       }
       switch (key) {
         case 'q':
-          return run(() => openQuickAdd({ list: p.startsWith('/list/') ? p.split('/')[2] : null }));
+          return later(() => openQuickAdd({ list: p.startsWith('/list/') ? p.split('/')[2] : null }));
         case 'n':
-          return run(() => {
+          return later(() => {
             goMain('/inbox');
             useDeskState.setState({ focusDump: Date.now() });
           });
         case '/':
-          return run(() => useDeskState.setState({ overlay: 'search' }));
+          return later(() => useDeskState.setState({ overlay: 'search' }));
         case '?':
           return run(() => useDeskState.setState({ overlay: 'shortcuts' }));
         case 'g':

@@ -17,6 +17,8 @@ type Local = {
   deskPanel?: boolean;
   /** Computer: the welcome (WWelcome) has been shown. */
   deskWelcomed?: boolean;
+  /** Computer: the check-in card's "Not now" for this day. */
+  checkinCardDismissed?: string;
 };
 
 export const useLocal = create<Local>()(

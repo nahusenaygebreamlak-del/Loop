@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useSyncStatus } from './engine';
@@ -12,7 +13,7 @@ export function useSyncLine(): { line: string; tone: 'secondary' | 'syncing' | '
     return () => clearInterval(t);
   }, []);
 
-  if (!session || state === 'off') return { line: 'Saved on this phone', tone: 'secondary' };
+  if (!session || state === 'off') return { line: Platform.OS === 'web' ? 'Saved on this computer' : 'Saved on this phone', tone: 'secondary' };
   if (state === 'offline') return { line: 'Offline · changes will sync later', tone: 'secondary' };
   if (state === 'error') return { line: "Can't sync right now · your tasks are fine", tone: 'warn' };
   if (state === 'syncing' && !lastSyncedAt) return { line: 'Syncing…', tone: 'syncing' };

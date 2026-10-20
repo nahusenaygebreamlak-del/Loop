@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, Text, TextInput, View, type TextInputInstance } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -20,6 +20,14 @@ import { Kbd } from './Kbd';
 import { closeOverlay, selectTask, useDeskState } from './state';
 
 const webInput = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
+
+/** The pop-up opens from a key press; focus its field once it's on screen. */
+function useFocusSoon(ref: { current: TextInputInstance | null }) {
+  useEffect(() => {
+    const t = setTimeout(() => ref.current?.focus(), 30);
+    return () => clearTimeout(t);
+  }, [ref]);
+}
 
 /** Whichever pop-up is open: quick add, search, shortcuts, welcome. */
 export function Overlays() {
@@ -68,6 +76,8 @@ function QuickBar() {
   const [text, setText] = useState(start.quickText);
   const [notes, setNotes] = useState('');
   const [describe, setDescribe] = useState(false);
+  const field = useRef<TextInputInstance>(null);
+  useFocusSoon(field);
   const parsed = useMemo(() => parseQuickAdd(text), [text]);
   const today = todayKey();
   const typedList = findList(lists, parsed.list) ?? lists.find((l) => !l.deletedAt && !l.archivedAt && parsed.tags.includes(l.name.toLowerCase()));
@@ -115,7 +125,7 @@ function QuickBar() {
   return (
     <PopCard label="Add task" style={{ paddingTop: 20, paddingHorizontal: 22, paddingBottom: 16, gap: 14 }}>
       <View>
-        <AppText aria-hidden style={[TITLE, { position: 'absolute', top: 0, left: 0, right: 0 }]}>
+        <AppText aria-hidden numberOfLines={1} ellipsizeMode="clip" style={[TITLE, { position: 'absolute', top: 0, left: 0, right: 0 }]}>
           {parts.map((p, n) => (
             <Text key={n} style={[tokStyle(p.kind), p.kind ? { borderRadius: 6 } : null]}>
               {p.t}
@@ -123,6 +133,7 @@ function QuickBar() {
           ))}
         </AppText>
         <TextInput
+          ref={field}
           autoFocus
           value={text}
           onChangeText={setText}
@@ -204,6 +215,7 @@ function SearchPop() {
   const [filter, setFilter] = useState<Filter>('all');
   const [cursor, setCursor] = useState(0);
   const input = useRef<TextInputInstance>(null);
+  useFocusSoon(input);
   const today = todayKey();
   const r = search(q, { tasks, lists, tags, inbox, notes });
   const open = r.tasks.filter((t) => !t.doneAt);
