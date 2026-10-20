@@ -17,6 +17,7 @@ import type { List } from '@/store/types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { haptic } from '@/lib/haptics';
 
 const ROW = 57; // 56 px row + hairline
 
@@ -64,7 +65,10 @@ export default function ListsSettings() {
               count={live.length}
               open={openCount(tasks, l.id)}
               active={dragging === l.id}
-              onStart={() => setDragging(l.id)}
+              onStart={() => {
+                haptic('medium');
+                setDragging(l.id);
+              }}
               onEnd={(to) => {
                 setDragging(null);
                 reorder(i, to);

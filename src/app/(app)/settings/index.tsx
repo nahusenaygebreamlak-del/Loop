@@ -112,7 +112,7 @@ export default function Settings() {
             <>
               <SetRow
                 name="Full screen when locked"
-                hint={s.fullScreen && LoopAlarm && !LoopAlarm.canUseFullScreenIntent() ? 'Allow it in Android settings · tap to open' : undefined}
+                hint={s.fullScreen && LoopAlarm && !LoopAlarm.canUseFullScreenIntent() ? 'Allow it in Android settings · tap to open' : 'Reminders and the morning check-in fill the screen'}
                 toggle={s.fullScreen}
                 onPress={() => {
                   const on = !s.fullScreen;
@@ -155,15 +155,6 @@ export default function Settings() {
           />
         </Card>
 
-        <GroupLabel style={{ paddingTop: 16, paddingBottom: 8 }}>Help</GroupLabel>
-        <Card>
-          <SetRow
-            name="Replay the tutorial"
-            trailing={<Icon name="forward" size={18} color={c.line} />}
-            last
-            onPress={() => router.push('/welcome/tutorial')}
-          />
-        </Card>
       </ScrollView>
     </View>
   );

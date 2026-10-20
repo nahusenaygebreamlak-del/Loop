@@ -1,6 +1,7 @@
 import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { motion } from '@/theme/tokens';
+import { haptic } from '@/lib/haptics';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -10,7 +11,7 @@ type Props = Omit<PressableProps, 'style'> & {
   kind?: 'button' | 'row';
 };
 
-export function PressScale({ kind = 'button', style, onPressIn, onPressOut, ...rest }: Props) {
+export function PressScale({ kind = 'button', style, onPressIn, onPressOut, onLongPress, ...rest }: Props) {
   const reduced = useReducedMotion();
   const scale = useSharedValue(1);
   const target = kind === 'row' ? motion.press.rowScale : motion.press.scale;
@@ -19,6 +20,14 @@ export function PressScale({ kind = 'button', style, onPressIn, onPressOut, ...r
   return (
     <AnimatedPressable
       {...rest}
+      onLongPress={
+        onLongPress
+          ? (e) => {
+              haptic('medium');
+              onLongPress(e);
+            }
+          : undefined
+      }
       style={[style, animated]}
       onPressIn={(e) => {
         if (!reduced) scale.set(withTiming(target, { duration: motion.press.duration }));

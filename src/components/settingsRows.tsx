@@ -5,6 +5,7 @@ import { font } from '@/theme/typography';
 import { AppText } from './AppText';
 import { PressScale } from './PressScale';
 import { SwitchKnob } from './Switch';
+import { haptic } from '@/lib/haptics';
 
 /** Settings row (.set): name + optional hint on the left, value / switch / chevron on the right. */
 export function SetRow({
@@ -59,7 +60,10 @@ export function SetRow({
       accessibilityRole={toggle !== undefined ? 'switch' : 'button'}
       accessibilityState={toggle !== undefined ? { checked: toggle } : undefined}
       accessibilityLabel={[name, hint, value].filter(Boolean).join(', ')}
-      onPress={onPress}
+      onPress={() => {
+        if (toggle !== undefined) haptic('light');
+        onPress();
+      }}
       style={style}
     >
       {content}

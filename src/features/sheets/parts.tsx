@@ -6,6 +6,7 @@ import { Radio } from '@/components/ui';
 import { useTheme } from '@/theme/ThemeProvider';
 import { uses12h, type TimeKey } from '@/lib/dates';
 import { font } from '@/theme/typography';
+import { haptic } from '@/lib/haptics';
 
 /** Option row inside an OptionGroup (.o): 58 px, white hairline between rows. */
 export function OptionRow({
@@ -94,6 +95,7 @@ export function WheelColumn({ values, index, onChange, label, compact }: { value
   const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
   const committed = useRef(index);
   const [live, setLive] = useState(index);
+  const lastTick = useRef(index);
 
   const indexFor = (y: number) => Math.max(0, Math.min(values.length - 1, Math.round(y / STEP)));
 
@@ -117,7 +119,12 @@ export function WheelColumn({ values, index, onChange, label, compact }: { value
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;
-    setLive(indexFor(y));
+    const i = indexFor(y);
+    if (i !== lastTick.current) {
+      lastTick.current = i;
+      haptic('tick');
+    }
+    setLive(i);
     // Web has no momentum-end event, so settle once scrolling has stopped.
     if (Platform.OS === 'web') {
       if (settle.current) clearTimeout(settle.current);

@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
-import { AndroidImportance } from 'expo-notifications';
+import { AndroidImportance, AndroidNotificationVisibility } from 'expo-notifications';
 import { Platform } from 'react-native';
-import { CATEGORIES, CHANNEL, CHANNEL_QUIET } from './constants';
+import { CATEGORIES, CHANNEL, CHANNEL_QUIET, OLD_CHANNELS } from './constants';
 
 let ready: Promise<void> | null = null;
 
@@ -9,10 +9,15 @@ let ready: Promise<void> | null = null;
 export function ensureNotificationSetup(): Promise<void> {
   if (Platform.OS === 'web') return Promise.resolve();
   ready ??= (async () => {
+    for (const old of OLD_CHANNELS) await Notifications.deleteNotificationChannelAsync(old).catch(() => {});
     await Notifications.setNotificationChannelAsync(CHANNEL, {
       name: 'Daily check-ins',
-      description: 'Morning and afternoon check-ins and the Inbox reminder',
+      description: 'Morning and afternoon check-ins and the Inbox reminder, with sound and vibration',
       importance: AndroidImportance.HIGH,
+      sound: 'default',
+      enableVibrate: true,
+      vibrationPattern: [0, 400, 200, 400],
+      lockscreenVisibility: AndroidNotificationVisibility.PUBLIC,
       lightColor: '#2F6BE3',
     });
     await Notifications.setNotificationChannelAsync(CHANNEL_QUIET, {

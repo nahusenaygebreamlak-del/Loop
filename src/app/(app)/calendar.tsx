@@ -42,6 +42,7 @@ import type { List, Task } from '@/store/types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { haptic } from '@/lib/haptics';
 
 type View_ = 'month' | 'week' | 'day';
 type Item = { kind: 'task'; task: Task; start: string | null; end: string | null } | { kind: 'event'; event: GEvent; start: string | null; end: string | null };
@@ -553,6 +554,7 @@ function DayView({ day, today, tasks, lists, events, hidden }: { day: DateKey; t
                 ringColor={c.priority[(['none', 'low', 'medium', 'high'] as const)[t.priority]]}
                 onTap={() => actions.openDetails(t.id)}
                 onDragStart={(x, y) => {
+                  haptic('medium');
                   ghost.setValue({ x, y });
                   setDrag({ title: t.title });
                 }}

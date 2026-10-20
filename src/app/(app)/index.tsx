@@ -68,19 +68,14 @@ export default function Today() {
     void refreshEvents();
   }, [today]);
   const onboarded = useLocal((l) => l.onboarded);
-  const tutDoneCard = useLocal((l) => l.tutDoneCard);
   const checkinsOffered = useLocal((l) => l.checkinsOffered);
   const checkinsSet = useSettings((st) => !!st.morningTime || !!st.afternoonTime);
 
-  // First launch: NAllowNotif → tutorial. An account that already has tasks (another device) skips it.
+  // First launch: ask for notification permission once (a designed onboarding flow comes later).
   useEffect(() => {
     if (onboarded) return;
-    if (useStore.getState().tasks.length) {
-      useLocal.setState({ onboarded: true });
-      void askForNotifications().catch(() => false);
-      return;
-    }
-    router.replace('/welcome/notifications');
+    useLocal.setState({ onboarded: true });
+    void askForNotifications().catch(() => false);
   }, [onboarded]);
 
   // NSetupCheckins: offered once, the first time tasks are left over.
@@ -167,11 +162,10 @@ export default function Today() {
         <WeekStrip today={today} selected={day} weekStart={weekStart} hasItems={hasItems} onSelect={(d) => setPicked(d === today ? null : d)} />
 
         {isToday && calFailed && calFailedDismissed !== today ? <GoogleFailedCard /> : null}
-        {isToday && tutDoneCard ? <TutDoneCard inboxCount={inboxOpen(inbox).length} /> : null}
 
         {isToday ? (
           <TodayBody
-            plainDone={tutDoneCard} tasks={tasks} today={today} now={now} lists={lists} inboxCount={inboxOpen(inbox).length} quickActions={quickActions} waiting={waiting} onPick={setPicked} />
+            tasks={tasks} today={today} now={now} lists={lists} inboxCount={inboxOpen(inbox).length} quickActions={quickActions} waiting={waiting} onPick={setPicked} />
         ) : (
           <OtherDay day={day} tasks={tasks} listName={listName} quickActions={quickActions} waiting={waiting} />
         )}
@@ -186,42 +180,7 @@ export default function Today() {
 
 type Waiting = (t: Task) => React.ReactNode;
 
-/** NTutDone: "You're set" after the tutorial. Fixed accent card in both themes. */
-function TutDoneCard({ inboxCount }: { inboxCount: number }) {
-  const { c } = useTheme();
-  const dismiss = () => useLocal.setState({ tutDoneCard: false });
-  return (
-    <View accessibilityLabel="Tutorial finished" style={{ marginTop: 22, marginHorizontal: size.sideMargin, backgroundColor: c.accent, borderRadius: 22, padding: 20, gap: 14 }}>
-      <View style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}>
-        <View aria-hidden style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="check" size={20} strokeWidth={2.8} color={c.accent} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <AppText style={{ ...font(800), fontSize: 17, color: c.onAccent }}>{"You're set"}</AppText>
-          <AppText style={{ fontSize: 14, lineHeight: 21, marginTop: 4, color: c.onAccentSecondary }}>Add with +, tick to finish, and dump anything unsure into the Inbox.</AppText>
-        </View>
-      </View>
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <PressScale accessibilityRole="button" onPress={dismiss} style={{ flex: 1, minHeight: 46, borderRadius: 14, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
-          <AppText style={{ ...font(800), fontSize: 14.5, color: c.accent }}>Got it</AppText>
-        </PressScale>
-        <PressScale
-          accessibilityRole="button"
-          onPress={() => {
-            dismiss();
-            goMain('/inbox');
-          }}
-          style={{ flex: 1, minHeight: 46, borderRadius: 14, backgroundColor: '#1F55C4', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <AppText style={{ ...font(700), fontSize: 14.5, color: '#FFFFFF' }}>{inboxCount ? `Open Inbox · ${inboxCount}` : 'Open Inbox'}</AppText>
-        </PressScale>
-      </View>
-    </View>
-  );
-}
-
 function TodayBody({
-  plainDone,
   tasks,
   today,
   now,
@@ -239,8 +198,6 @@ function TodayBody({
   quickActions: (id: string) => void;
   waiting: Waiting;
   onPick: (d: DateKey) => void;
-  /** Right after the tutorial: just the list ("Today · 1 of 1 done"), no "All done" card. */
-  plainDone?: boolean;
 }) {
   const { c } = useTheme();
   const actions = useTaskActions();
@@ -270,19 +227,6 @@ function TodayBody({
   }
 
   // NTodayDone: everything ticked.
-  if (plainDone && all.length && all.every((t) => t.doneAt)) {
-    return (
-      <>
-        <GroupLabel>{`Today · ${all.length} of ${all.length} done`}</GroupLabel>
-        <Card>
-          {all.map((t, i) => (
-            <TaskRow key={t.id} task={t} sub={t.startTime ? timelineSub(t, []).split(' · ')[0] : undefined} last={i === all.length - 1} onOpen={() => actions.openDetails(t.id)} onLongPress={() => quickActions(t.id)} onToggle={() => actions.toggle(t.id)} />
-          ))}
-        </Card>
-      </>
-    );
-  }
-
   if (all.length && !todayEvents.length && all.every((t) => t.doneAt)) {
     const tomorrow = tasks.filter((t) => isOpen(t) && t.dueDate === addDays(today, 1)).length;
     const done = [...all].sort((a, b) => (a.startTime ?? '99').localeCompare(b.startTime ?? '99'));

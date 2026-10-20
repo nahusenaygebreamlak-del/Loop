@@ -6,6 +6,7 @@ import { easingCurve, motion, size } from '@/theme/tokens';
 import type { Priority } from '@/lib/parse';
 import { Icon } from './Icon';
 import { PressScale } from './PressScale';
+import { haptic } from '@/lib/haptics';
 
 const PRIORITY_KEY = ['none', 'low', 'medium', 'high'] as const;
 
@@ -45,7 +46,10 @@ export function Check({ done, onToggle, priority = 0, onAccent, label, circle = 
       accessibilityRole="checkbox"
       accessibilityState={{ checked: done }}
       accessibilityLabel={done ? `Mark not done: ${label}` : `Mark done: ${label}`}
-      onPress={onToggle}
+      onPress={() => {
+        haptic(done ? 'light' : 'success');
+        onToggle();
+      }}
       hitSlop={4}
       style={{ width: size.check.tapArea, height: size.check.tapArea, alignItems: 'center', justifyContent: 'center' }}
     >

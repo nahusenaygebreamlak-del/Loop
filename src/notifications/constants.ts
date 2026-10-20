@@ -1,7 +1,9 @@
 // Notification categories (button sets), actions and channels for the check-ins.
 
 export const TASK = 'loop-notification-actions';
-export const CHANNEL = 'checkins';
+// v2: Android never lets an app change a channel's sound or vibration, so these are new channels.
+export const CHANNEL = 'checkins-v2';
+export const OLD_CHANNELS = ['checkins'];
 export const CHANNEL_QUIET = 'checkin-results';
 
 export const A = {
