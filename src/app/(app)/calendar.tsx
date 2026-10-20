@@ -43,6 +43,8 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 import { haptic } from '@/lib/haptics';
+import { useDesk } from '@/desktop/layout';
+import { CalendarDesk } from '@/desktop/views/CalendarDesk';
 
 type View_ = 'month' | 'week' | 'day';
 type Item = { kind: 'task'; task: Task; start: string | null; end: string | null } | { kind: 'event'; event: GEvent; start: string | null; end: string | null };
@@ -55,7 +57,12 @@ function itemsOn(day: DateKey, tasks: Task[], events: GEvent[], hidden: string[]
 }
 
 /** VCalendar (month), NCalWeek, NCalDay, with NSetupGoogle / NCalendarConnected / NGoogleFailed. */
-export default function Calendar() {
+export default function Route() {
+  const { desk } = useDesk();
+  return desk ? <CalendarDesk /> : <CalendarPhone />;
+}
+
+function CalendarPhone() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const openMenu = useMenu();
