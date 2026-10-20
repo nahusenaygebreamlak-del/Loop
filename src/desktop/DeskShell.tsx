@@ -1,3 +1,4 @@
+import { usePathname } from 'expo-router';
 import { type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -26,7 +27,10 @@ export function DeskShell({ children }: { children: ReactNode }) {
   const panelOn = useLocal((l) => l.deskPanel !== false);
   useDeskKeys();
 
-  const showPanel = panelOn && (panelInline || !!selected);
+  const path = usePathname();
+  // Notes use the right side for the editor; Settings uses two columns.
+  const ownRight = /^\/(notes|note|settings)/.test(path);
+  const showPanel = !ownRight && panelOn && (panelInline || !!selected);
 
   return (
     <View style={{ flex: 1, flexDirection: 'row', backgroundColor: c.ground }}>

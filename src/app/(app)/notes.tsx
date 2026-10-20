@@ -16,9 +16,16 @@ import { radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useDesk } from '@/desktop/layout';
+import { NotesDesk } from '@/desktop/views/NotesDesk';
 
 /** NNotes */
-export default function Notes() {
+export default function Route() {
+  const { desk } = useDesk();
+  return desk ? <NotesDesk /> : <NotesPhone />;
+}
+
+function NotesPhone() {
   const { c } = useTheme();
   const openMenu = useMenu();
   const { today } = useToday();

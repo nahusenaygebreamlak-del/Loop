@@ -59,7 +59,7 @@ export type InboxItem = {
 };
 
 export type NoteBlockType = 'text' | 'heading' | 'bullet' | 'checklist';
-export type NoteBlock = { id: string; type: NoteBlockType; text: string; done?: boolean; bold?: boolean };
+export type NoteBlock = { id: string; type: NoteBlockType; text: string; done?: boolean; bold?: boolean; /** Computer: the line was turned into this task (Ctrl Enter). */ taskId?: string };
 
 export type Note = {
   id: string;
