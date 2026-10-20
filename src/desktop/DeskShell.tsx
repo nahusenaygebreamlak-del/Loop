@@ -14,6 +14,7 @@ import { DetailPanel } from './Panels';
 import { Sidebar } from './Sidebar';
 import { openQuickAdd, useDeskState } from './state';
 import { useDeskKeys } from './useDeskKeys';
+import { useBrowserCheckins } from './browserNotify';
 
 /**
  * The computer layout: sidebar (264), main column, detail panel (400, 16 px from the edges).
@@ -26,6 +27,7 @@ export function DeskShell({ children }: { children: ReactNode }) {
   const selected = useDeskState((s) => s.selected);
   const panelOn = useLocal((l) => l.deskPanel !== false);
   useDeskKeys();
+  useBrowserCheckins();
 
   const path = usePathname();
   // Notes use the right side for the editor, Calendar for its own column, Settings for two columns.

@@ -19,9 +19,16 @@ import { useStore } from '@/store/store';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors, radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { useDesk } from '@/desktop/layout';
+import { SettingsDesk } from '@/desktop/views/SettingsDesk';
 
 /** NSettings2 */
-export default function Settings() {
+export default function Route() {
+  const { desk } = useDesk();
+  return desk ? <SettingsDesk /> : <SettingsPhone />;
+}
+
+function SettingsPhone() {
   const { c, preference } = useTheme();
   const insets = useSafeAreaInsets();
   const sheets = useSheets();

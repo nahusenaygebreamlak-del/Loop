@@ -19,6 +19,8 @@ type Local = {
   deskWelcomed?: boolean;
   /** Computer: the check-in card's "Not now" for this day. */
   checkinCardDismissed?: string;
+  /** Computer: Settings › Browser notifications (on once allowed). */
+  browserNotify?: boolean;
 };
 
 export const useLocal = create<Local>()(
