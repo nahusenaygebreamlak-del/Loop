@@ -45,3 +45,9 @@ Loop reads your calendar through a small Supabase server function, because Googl
 4. **Supabase → Edge Functions → Secrets:** add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (the same values as in Authentication → Providers → Google). You type the secret; Claude never does.
 5. **Deploy the function:** Claude runs `npx supabase login` (you click Allow in the browser), then `npx supabase functions deploy google-calendar --project-ref hjyfivfgasdpkpgctmcd`.
 6. In Loop: **Calendar → Connect Google**.
+
+## 6. Loop on the computer (web address)
+
+- Live at https://nahu0024-loop.expo.app (Expo web hosting, project nahu0024/loop).
+- Supabase → Authentication → URL Configuration → Redirect URLs: add `https://nahu0024-loop.expo.app/**` so Google sign-in returns there.
+- To publish a new version: `npx expo export -p web`, then `npx eas-cli@latest deploy --prod`.
