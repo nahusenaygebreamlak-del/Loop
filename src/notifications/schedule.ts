@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import LoopAlarm from '../../modules/loop-alarm';
 import { planCheckins, type PlannedNotification } from '@/lib/checkins';
 import { todayKey } from '@/lib/dates';
+import { answeredDays } from '@/lib/debrief';
 import { planTaskReminders } from '@/lib/reminders';
 import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
@@ -27,10 +28,10 @@ const NATIVE_KEY = 'loop.nativeAlerts.v1';
 export async function rescheduleCheckins(): Promise<void> {
   if (Platform.OS === 'web' || !(await notificationsAllowed())) return;
   await ensureNotificationSetup();
-  const { tasks, lists, inbox } = useStore.getState();
+  const { tasks, lists, inbox, debriefs } = useStore.getState();
   const s = useSettings.getState();
   const now = new Date();
-  const plan = planCheckins({ tasks, lists, inbox }, s, now, todayKey(now));
+  const plan = planCheckins({ tasks, lists, inbox }, s, now, todayKey(now), 3, answeredDays(debriefs));
   const native = !!LoopAlarm;
 
   const fullScreen = s.fullScreen && !!LoopAlarm?.canUseFullScreenIntent();

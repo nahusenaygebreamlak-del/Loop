@@ -392,6 +392,7 @@ const SHORTCUTS: { cap: string; rows: [string, string[]][] }[] = [
       ['Search', ['/']],
       ['Show shortcuts', ['?']],
       ['Go to Today / Inbox / Calendar', ['G', 'then', 'T', 'I', 'C']],
+      ['Open the morning debrief', ['D']],
       ['Undo', [modKey, 'Z']],
     ],
   },
@@ -418,10 +419,12 @@ const SHORTCUTS: { cap: string; rows: [string, string[]][] }[] = [
     ],
   },
   {
-    cap: 'Check-in card on Today',
+    cap: 'In the debrief',
     rows: [
-      ['Today / Tomorrow / Pick day', ['1', '2', '3']],
-      ['Move all to today', ['A']],
+      ['Move up / down', ['↑', '↓']],
+      ['Accept the focused suggestion', ['A']],
+      ['Accept all', ['⇧', 'A']],
+      ['Back to Today', ['Esc']],
     ],
   },
 ];

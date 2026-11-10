@@ -122,6 +122,8 @@ export function useDeskKeys() {
           if (desk.selected) run(() => useDeskState.setState({ selected: null }));
           return;
       }
+      // D: the debrief (docs/13 §8). With a task selected, D is still its date.
+      if (key === 'd' && !sel) return run(() => goMain('/debrief'));
       if (!sel) return;
       switch (key) {
         case 'Enter':

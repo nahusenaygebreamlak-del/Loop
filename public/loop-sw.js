@@ -2,7 +2,7 @@
 // 1. Offline start (docs/13 §9): keeps the app shell so the installed app opens without a connection.
 //    Your tasks already live on the device; this only covers the page and its files.
 // 2. Browser notifications (WBrowserNotif): the buttons are passed to the open Loop window.
-const CACHE = 'loop-shell-v1';
+const CACHE = 'loop-shell-v2';
 const SHELL = '/';
 
 self.addEventListener('install', (event) => {
@@ -69,14 +69,16 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const action = event.action === 'all' ? 'checkin-all' : 'checkin-open';
+  // The morning notification opens the debrief; others open Today. Safari ignores the buttons and only clicks.
+  const open = (event.notification.data && event.notification.data.open) || '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       const tab = list[0];
       if (tab) {
-        tab.postMessage({ type: action });
+        tab.postMessage({ type: action, open });
         return tab.focus();
       }
-      return self.clients.openWindow('/');
+      return self.clients.openWindow(action === 'checkin-all' ? '/' : open);
     }),
   );
 });

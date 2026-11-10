@@ -494,15 +494,22 @@ export const useStore = create<Store>()(
 
         setPlan: (day, plan, countRun) => {
           const ts = now();
-          const mine = get().debriefs.find((d) => d.day === day);
-          const keep = (d: Debrief | undefined): PlanState => ({ accepted: (d?.planState.accepted ?? []).filter((id) => plan.suggestions.some((x) => x.taskId === id)) });
+          // Two devices can each have a row for the day: keep the plan on the row that already holds one.
+          const rows = get().debriefs.filter((d) => d.day === day);
+          const mine = rows.find((d) => d.plan) ?? rows[0];
+          const keep = (d: Debrief | undefined): PlanState => {
+            const accepted = (d?.planState.accepted ?? []).filter((id) => plan.suggestions.some((x) => x.taskId === id));
+            const edited = Object.fromEntries(Object.entries(d?.planState.edited ?? {}).filter(([id]) => accepted.includes(id)));
+            return { accepted, ...(Object.keys(edited).length ? { edited } : null) };
+          };
           if (mine) set((s) => ({ debriefs: s.debriefs.map((d) => (d.id === mine.id ? { ...d, plan, planRuns: d.planRuns + (countRun ? 1 : 0), planState: keep(d), updatedAt: ts } : d)) }));
           else set((s) => ({ debriefs: [...s.debriefs, { id: randomUUID(), day, openedAt: ts, answeredAt: null, leftoversAction: null, plan, planRuns: countRun ? 1 : 0, planState: {}, createdAt: ts, updatedAt: ts }] }));
         },
 
         setPlanState: (day, patch) => {
           const ts = now();
-          const mine = get().debriefs.find((d) => d.day === day);
+          const rows = get().debriefs.filter((d) => d.day === day);
+          const mine = rows.find((d) => d.plan) ?? rows[0];
           if (!mine) return;
           set((s) => ({ debriefs: s.debriefs.map((d) => (d.id === mine.id ? { ...d, planState: { ...d.planState, ...patch }, updatedAt: ts } : d)) }));
         },

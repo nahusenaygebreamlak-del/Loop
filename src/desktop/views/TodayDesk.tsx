@@ -8,13 +8,14 @@ import { useSnackbar } from '@/components/Snackbar';
 import { refreshEvents, setEventHidden, useCalendar } from '@/calendar/google';
 import { goMain } from '@/features/nav';
 import { useTaskActions } from '@/features/useTaskActions';
-import { applyChoices, leftovers, type Choice } from '@/lib/checkins';
-import { addDays, daysBetween, uses12h, fromKey, longDate, timeRange, weekdayLong, weekdayShort, weekOf, type DateKey } from '@/lib/dates';
+import { leftovers } from '@/lib/checkins';
+import { planRow, useFromPlan } from '@/features/coach/useDayPlan';
+import { cardLine, isAnswered, yesterdayRange, yesterdaySummary } from '@/lib/debrief';
+import { addDays, uses12h, fromKey, longDate, timeRange, toKey, weekdayLong, weekdayShort, weekOf, type DateKey } from '@/lib/dates';
 import { eventEnd, eventsOn, eventStart, type GEvent } from '@/lib/events';
 import { inboxOpen } from '@/lib/inboxViews';
 import { isLive, movedLabel, todayView, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
-import { useLocal } from '@/store/local';
 import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import type { List, Task } from '@/store/types';
@@ -26,7 +27,6 @@ import { KeyHints } from '../Kbd';
 import { useOpenTaskMenu } from '../Menu';
 import { openQuickAdd, selectTask, useDeskState } from '../state';
 import { Banner, DeskCard, DeskEmpty, DeskHeader, DeskPage, GroupLab, KeyButton, SoftButton, TaskRowDesk, useRows } from '../ui';
-import { useViewKeys } from '../useDeskKeys';
 
 // 52 px fits "10:00"; 12-hour times ("10:00 AM") need more.
 const timeCol = () => (uses12h() ? 70 : 52);
@@ -50,6 +50,7 @@ export function TodayDesk() {
   const connected = cal.status === 'connected' || cal.status === 'failed';
   const events = connected ? eventsOn(cal.events, day, cal.hidden).filter((e) => !e.allDay) : [];
   const inboxCount = inboxOpen(inbox).length;
+  const fromPlan = useFromPlan(today);
 
   useEffect(() => {
     void refreshEvents();
@@ -82,7 +83,7 @@ export function TodayDesk() {
           }
         />
       ) : null}
-      {isToday ? <CheckinCard today={today} tasks={allTasks} lists={lists} /> : null}
+      {isToday ? <DebriefCard today={today} tasks={allTasks} lists={lists} /> : null}
 
       {allDone && isToday ? (
         <>
@@ -126,7 +127,7 @@ export function TodayDesk() {
           {schedule.length || events.length ? (
             <>
               <GroupLab first>Schedule</GroupLab>
-              <Schedule tasks={schedule} events={events} currentId={currentId} lists={lists} />
+              <Schedule tasks={schedule} events={events} currentId={currentId} lists={lists} fromPlan={isToday ? fromPlan : undefined} />
             </>
           ) : null}
           {anyAll.length ? (
@@ -141,11 +142,14 @@ export function TodayDesk() {
                     sub={t.carriedAt === day && t.carriedOverCount >= 2 ? `From yesterday · ${movedLabel(t.carriedOverCount)}` : undefined}
                     subTone="warn"
                     right={
-                      lists.find((l) => l.id === t.listId) ? (
-                        <AppText tone="secondary" style={{ fontSize: 13 }}>
-                          {lists.find((l) => l.id === t.listId)?.name}
-                        </AppText>
-                      ) : null
+                      <>
+                        {isToday && fromPlan.has(t.id) ? <PlanChip /> : null}
+                        {lists.find((l) => l.id === t.listId) ? (
+                          <AppText tone="secondary" style={{ fontSize: 13 }}>
+                            {lists.find((l) => l.id === t.listId)?.name}
+                          </AppText>
+                        ) : null}
+                      </>
                     }
                   />
                 ))}
@@ -197,16 +201,16 @@ function WeekStripDesk({ today, day, weekStart, tasks, onPick }: { today: DateKe
 }
 
 /** Schedule rows: time on the left, the current task filled blue, Google events in grey. */
-function Schedule({ tasks, events, currentId, lists }: { tasks: Task[]; events: GEvent[]; currentId: string | null; lists: List[] }) {
+function Schedule({ tasks, events, currentId, lists, fromPlan }: { tasks: Task[]; events: GEvent[]; currentId: string | null; lists: List[]; fromPlan?: Set<string> }) {
   const entries = [...tasks.map((t) => ({ at: t.startTime ?? '', t, e: null as GEvent | null })), ...events.map((e) => ({ at: eventStart(e) ?? '', t: null as Task | null, e }))].sort((a, b) => a.at.localeCompare(b.at));
   return (
     <View style={{ gap: 8 }}>
-      {entries.map((x) => (x.t ? <ScheduleTask key={x.t.id} task={x.t} now={x.t.id === currentId} lists={lists} /> : <EventRow key={x.e!.id} e={x.e!} />))}
+      {entries.map((x) => (x.t ? <ScheduleTask key={x.t.id} task={x.t} now={x.t.id === currentId} lists={lists} planned={!!fromPlan?.has(x.t.id)} /> : <EventRow key={x.e!.id} e={x.e!} />))}
     </View>
   );
 }
 
-function ScheduleTask({ task, now, lists }: { task: Task; now: boolean; lists: List[] }) {
+function ScheduleTask({ task, now, lists, planned }: { task: Task; now: boolean; lists: List[]; planned: boolean }) {
   const { c } = useTheme();
   const actions = useTaskActions();
   const openMenu = useOpenTaskMenu();
@@ -247,6 +251,7 @@ function ScheduleTask({ task, now, lists }: { task: Task; now: boolean; lists: L
             <AppText style={{ ...font(700), fontSize: 15.5, color: fg, textDecorationLine: done ? 'line-through' : 'none' }}>{task.title}</AppText>
             <AppText style={{ fontSize: 13.5, marginTop: 3, color: fg2 }}>{[timeRange(task.startTime, task.endTime), list, subs].filter(Boolean).join(' · ')}</AppText>
           </View>
+          {planned && !now ? <PlanChip /> : null}
           <Check done={done} priority={task.priority} onAccent={now} label={task.title} onToggle={() => actions.toggle(task.id)} />
         </Pressable>
       </View>
@@ -284,130 +289,52 @@ function EventRow({ e }: { e: GEvent }) {
   );
 }
 
-/** WTodayCheckin: the morning check-in as a quiet card, answered per task. */
-function CheckinCard({ today, tasks, lists }: { today: DateKey; tasks: Task[]; lists: List[] }) {
+/** WCDebriefCard: "Good morning", one summary line and Open debrief (D). Collapses once the debrief is answered. */
+function DebriefCard({ today, tasks, lists }: { today: DateKey; tasks: Task[]; lists: List[] }) {
   const { c } = useTheme();
-  const snack = useSnackbar();
-  const actions = useTaskActions();
-  const dismissed = useLocal((l) => l.checkinCardDismissed) === today;
-  const [answered, setAnswered] = useState<Record<string, string>>({});
-  const [all, setAll] = useState(false);
-  const [focus, setFocus] = useState(0);
-  const left = leftovers(tasks, lists, today);
-  // Rows already answered stay in the card with their choice until the card is closed.
-  const answeredTasks = Object.keys(answered)
-    .map((id) => tasks.find((t) => t.id === id))
-    .filter((t): t is Task => !!t && !left.includes(t));
-  const rows = [...left, ...answeredTasks];
-  const shown = all ? rows : rows.slice(0, 3);
-  const open = left.length;
+  const weekends = useSettings((s) => s.weekends);
+  const debriefs = useStore((s) => s.debriefs);
+  const planAdded = useStore((s) => (planRow(s.debriefs, today)?.planState.accepted?.length ?? 0) > 0);
+  const answered = isAnswered(debriefs, today);
+  const range = yesterdayRange(today, weekends);
+  const line = cardLine(leftovers(tasks, lists, today).length, yesterdaySummary(tasks, range, (iso) => toKey(new Date(iso))), range);
+  const open = () => goMain('/debrief');
 
-  const apply = (t: Task, choice: Choice, label: string) => {
-    const { next, prev } = applyChoices(useStore.getState().tasks, { [t.id]: choice }, today, new Date().toISOString());
-    useStore.getState().applyCheckin(next);
-    setAnswered((a) => ({ ...a, [t.id]: label }));
-    snack({ title: label === 'done' ? 'Task done' : `Moved to ${label === 'today' ? 'today' : 'tomorrow'}`, actions: [{ label: 'Undo', onPress: () => useStore.getState().applyCheckin(prev) }] });
-  };
-  const moveAll = () => {
-    const { next, prev } = applyChoices(useStore.getState().tasks, Object.fromEntries(left.map((t) => [t.id, 'today' as const])), today, new Date().toISOString());
-    useStore.getState().applyCheckin(next);
-    setAnswered((a) => ({ ...a, ...Object.fromEntries(left.map((t) => [t.id, 'today'])) }));
-    snack({ title: `Moved ${left.length} task${left.length === 1 ? '' : 's'} to today`, actions: [{ label: 'Undo', onPress: () => useStore.getState().applyCheckin(prev) }] });
-  };
-  const notNow = () => useLocal.setState({ checkinCardDismissed: today });
-  const pick = (t: Task) => actions.pickDate(t.id);
-
-  useViewKeys(
-    !dismissed && open
-      ? (k) => {
-          const t = shown.filter((x) => left.includes(x))[Math.min(focus, open - 1)] ?? left[0];
-          if (k === 'a') return moveAll(), true;
-          if (!t) return false;
-          if (k === '1') return apply(t, 'today', 'today'), true;
-          if (k === '2') return apply(t, { date: addDays(today, 1) }, 'tomorrow'), true;
-          if (k === '3') return pick(t), true;
-          return false;
-        }
-      : null,
-  );
-
-  if (dismissed || !open) return null;
-  const chip = (label: string, on: boolean, onPress: () => void, tone?: 'warn') => (
-    <PressScale
-      key={label}
-      accessibilityRole="button"
-      accessibilityState={{ selected: on }}
-      onPress={onPress}
-      style={{ minHeight: 34, paddingHorizontal: 12, borderRadius: 14, justifyContent: 'center', backgroundColor: on ? c.accent : tone === 'warn' ? c.warnTint : c.ground }}
-    >
-      <AppText style={{ ...font(700), fontSize: 13, color: on ? c.onAccent : tone === 'warn' ? c.warnText : c.text }}>{label}</AppText>
-    </PressScale>
-  );
-
+  if (answered) {
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, marginTop: 20, paddingLeft: 18, paddingRight: 10, borderRadius: 16, backgroundColor: c.tint }}>
+        <View aria-hidden style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="check" size={14} strokeWidth={3} color={c.onAccent} />
+        </View>
+        <AppText style={{ ...font(700), fontSize: 14.5, flex: 1 }}>{planAdded ? 'Debrief done · Plan added' : 'Debrief done'}</AppText>
+        <PressScale accessibilityRole="button" accessibilityLabel="Open the debrief" onPress={open} style={{ minHeight: 44, paddingHorizontal: 10, justifyContent: 'center' }}>
+          <AppText style={{ ...font(700), fontSize: 14, color: c.accentText }}>Open</AppText>
+        </PressScale>
+      </View>
+    );
+  }
   return (
-    <View accessibilityLabel="Morning check-in" style={{ marginTop: 20, backgroundColor: c.card, borderRadius: 20, paddingTop: 18, paddingRight: 18, paddingBottom: 14, paddingLeft: 20, borderWidth: 2, borderColor: c.tint }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View aria-hidden style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: c.tint, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="repeat" size={18} color={c.accentText} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <AppText style={{ ...font(800), fontSize: 16 }}>{`${open} task${open === 1 ? '' : 's'} left ${left.every((t) => daysBetween(t.dueDate!, today) === 1) ? 'from yesterday' : 'over'}`}</AppText>
-          <AppText tone="secondary" style={{ fontSize: 13.5, marginTop: 2 }}>
-            Morning check-in · decide here, or they stay where they are
-          </AppText>
-        </View>
-        <PressScale accessibilityRole="button" accessibilityHint="Shortcut A" onPress={moveAll} style={{ minHeight: 38, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accent, justifyContent: 'center' }}>
-          <AppText style={{ ...font(800), fontSize: 13.5, color: c.onAccent }}>Move all to today</AppText>
-        </PressScale>
-        <PressScale accessibilityRole="button" onPress={notNow} style={{ minHeight: 38, paddingHorizontal: 12, borderRadius: 12, justifyContent: 'center' }}>
-          <AppText tone="secondary" style={{ ...font(700), fontSize: 13.5 }}>
-            Not now
-          </AppText>
-        </PressScale>
+    <View accessibilityLabel="Morning debrief" style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 20, backgroundColor: c.card, borderRadius: 20, paddingVertical: 16, paddingRight: 16, paddingLeft: 20, borderWidth: 2, borderColor: c.tint }}>
+      <View aria-hidden style={{ width: 40, height: 40, borderRadius: 13, backgroundColor: c.tint, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name="sun" size={20} color={c.accentText} />
       </View>
-      <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: c.ground }}>
-        {shown.map((t, i) => {
-          const late = t.dueDate ? daysBetween(t.dueDate, today) : 0;
-          const list = lists.find((l) => l.id === t.listId)?.name;
-          const moved = t.carriedOverCount >= 2;
-          const choice = answered[t.id];
-          return (
-            <Pressable
-              key={t.id}
-              onHoverIn={() => setFocus(i)}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 50, paddingVertical: 6, borderBottomWidth: i < shown.length - 1 ? 1 : 0, borderBottomColor: c.ground }}
-            >
-              <View style={{ flex: 1 }}>
-                <AppText style={{ ...font(700), fontSize: 14.5 }}>{t.title}</AppText>
-                <AppText style={{ fontSize: 12.5, marginTop: 2, color: moved ? c.warnText : c.textSecondary }}>
-                  {[list, moved ? `moved ${t.carriedOverCount + (choice ? 0 : 1)} times` : late <= 1 ? 'yesterday' : `${late} days late`].filter(Boolean).join(' · ')}
-                </AppText>
-              </View>
-              {chip('Today', choice === 'today', () => apply(t, 'today', 'today'))}
-              {chip('Tomorrow', choice === 'tomorrow', () => apply(t, { date: addDays(today, 1) }, 'tomorrow'))}
-              {chip('Pick day', false, () => pick(t))}
-              {moved && !choice
-                ? chip(
-                    'Back to Inbox',
-                    false,
-                    () => {
-                      const undo = useStore.getState().taskBackToInbox(t.id);
-                      snack({ title: 'Back in Inbox', actions: [{ label: 'Undo', onPress: undo }] });
-                    },
-                    'warn',
-                  )
-                : null}
-              <Check done={choice === 'done' || !!t.doneAt} priority={t.priority} label={t.title} onToggle={() => apply(t, 'done', 'done')} />
-            </Pressable>
-          );
-        })}
-        {rows.length > 3 ? (
-          <PressScale accessibilityRole="button" onPress={() => setAll((v) => !v)} style={{ paddingTop: 8, paddingBottom: 2, alignSelf: 'flex-start' }}>
-            <AppText style={{ ...font(700), fontSize: 13, color: c.accentText }}>{all ? 'Show fewer' : `Show ${rows.length - 3} more`}</AppText>
-          </PressScale>
-        ) : null}
+      <View style={{ flex: 1 }}>
+        <AppText style={{ ...font(800), fontSize: 16 }}>Good morning</AppText>
+        <AppText tone="secondary" style={{ fontSize: 13.5, marginTop: 2 }}>
+          {line}
+        </AppText>
       </View>
+      <KeyButton small icon={null} label="Open debrief" k="D" onPress={open} />
     </View>
   );
 }
 
+/** "From the plan": tasks the coach's plan put on today keep this chip for the rest of the day. */
+function PlanChip() {
+  const { c } = useTheme();
+  return (
+    <View style={{ minHeight: 22, paddingHorizontal: 8, borderRadius: 11, backgroundColor: c.tint, justifyContent: 'center' }}>
+      <AppText style={{ ...font(700), fontSize: 12, color: c.accentText }}>From the plan</AppText>
+    </View>
+  );
+}

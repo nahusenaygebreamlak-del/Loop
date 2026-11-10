@@ -114,5 +114,7 @@ export type Debrief = {
 
 export type PlanSuggestion = { taskId: string; kind: 'schedule' | 'today' | 'later'; start?: TimeKey; end?: TimeKey; date?: DateKey; reason: string };
 export type DayPlan = { summary: string; suggestions: PlanSuggestion[] };
-/** Which suggestions were accepted, and whether "Not today" hid the plan. */
-export type PlanState = { accepted?: string[]; dismissed?: boolean };
+/** A time or day the person changed on a suggestion before accepting it. */
+export type PlanEdit = { start?: TimeKey; end?: TimeKey; date?: DateKey };
+/** Which suggestions were accepted, any times changed first, and whether "Not today" hid the plan. */
+export type PlanState = { accepted?: string[]; dismissed?: boolean; edited?: Record<string, PlanEdit> };

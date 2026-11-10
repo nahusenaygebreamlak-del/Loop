@@ -1,9 +1,9 @@
 // The coach's day plan (docs/13 §2.3): what is sent, checking what comes back, and applying a suggestion.
 // Pure; tested in tests/coachPlan.test.ts. The coach's answer is never trusted: every rule is checked here.
-import { addDays, timeToMinutes, weekdayLong, type DateKey, type TimeKey } from './dates.ts';
+import { addDays, daysBetween, formatTime, monthDay, timeRange, timeToMinutes, weekdayLong, weekdayShort, type DateKey, type TimeKey } from './dates.ts';
 import { eventEnd, eventStart, eventsOn, type GEvent } from './events.ts';
 import { tierOf } from './seasons.ts';
-import type { DayPlan, List, PlanSuggestion, Season, Task, Tier } from '../store/types.ts';
+import type { DayPlan, List, PlanEdit, PlanSuggestion, PlanState, Season, Task, Tier } from '../store/types.ts';
 
 export const MAX_SUGGESTIONS = 8;
 export const MAX_PLAN_RUNS = 5;
@@ -157,4 +157,72 @@ export function staleReason(task: Task | undefined): 'Deleted' | 'Already done' 
   if (!task || task.deletedAt) return 'Deleted';
   if (task.doneAt) return 'Already done';
   return null;
+}
+
+// ─── Showing and re-running the plan (docs/14 A5, A6) ───
+
+/** The suggestion with any time or day the person changed before accepting it. */
+export function withEdit(s: Suggestion, edit: PlanEdit | undefined): Suggestion {
+  if (!edit) return s;
+  if (s.kind === 'schedule' && edit.start && edit.end) return { ...s, start: edit.start, end: edit.end };
+  if (s.kind === 'later' && edit.date) return { ...s, date: edit.date };
+  return s;
+}
+
+/** "Thu", "tomorrow", or "Nov 20" further out. */
+export function dayWord(date: DateKey, today: DateKey): string {
+  const diff = daysBetween(today, date);
+  if (diff === 1) return 'tomorrow';
+  if (diff > 1 && diff < 7) return weekdayShort(date);
+  return monthDay(date);
+}
+
+/** Line 2 of a suggestion row, before the list name: "10:00 – 11:00", "Today, any time", "Move to Thu". */
+export function whenText(s: Suggestion, today: DateKey): string {
+  if (s.kind === 'schedule') return timeRange(s.start ?? null, s.end ?? null);
+  if (s.kind === 'today') return 'Today, any time';
+  const w = dayWord(s.date ?? addDays(today, 1), today);
+  return `Move to ${w === 'tomorrow' ? 'tomorrow' : w}`;
+}
+
+/** The snackbar after accepting one suggestion: "Added at 10:00", "Kept for today", "Moved to Thu". */
+export function acceptedText(s: Suggestion, today: DateKey): string {
+  if (s.kind === 'schedule') return `Added at ${formatTime(s.start ?? '09:00')}`;
+  if (s.kind === 'today') return 'Kept for today';
+  return `Moved to ${dayWord(s.date ?? addDays(today, 1), today)}`;
+}
+
+/** Screen-reader label of a row: "Write intro. Suggested 10:00 to 11:00, Work. Due today and it's high priority." */
+export function suggestionLabel(title: string, s: Suggestion, today: DateKey, list?: string): string {
+  const when = s.kind === 'schedule' ? `Suggested ${formatTime(s.start ?? '')} to ${formatTime(s.end ?? '')}` : s.kind === 'today' ? 'Suggested for today, any time' : `Suggested to ${whenText(s, today).toLowerCase()}`;
+  return [`${title}.`, `${when}${list ? `, ${list}` : ''}.`, s.reason].filter(Boolean).join(' ');
+}
+
+/**
+ * Plan again: suggestions already accepted stay as they were; the fresh plan fills in the rest
+ * (docs/14 A5, "replaces any rows not yet accepted"). At most 8 in all.
+ */
+export function mergeReplan(old: Plan | null, state: PlanState, fresh: Plan): Plan {
+  const accepted = new Set(state.accepted ?? []);
+  const kept = (old?.suggestions ?? []).filter((s) => accepted.has(s.taskId));
+  const added = fresh.suggestions.filter((s) => !accepted.has(s.taskId));
+  return { summary: fresh.summary, suggestions: [...kept, ...added].slice(0, MAX_SUGGESTIONS) };
+}
+
+/** Suggestions still waiting for a tap: not accepted, and their task is still open. */
+export function openSuggestions(plan: Plan | null, state: PlanState, tasks: Task[]): Suggestion[] {
+  const accepted = new Set(state.accepted ?? []);
+  return (plan?.suggestions ?? []).filter((s) => !accepted.has(s.taskId) && !staleReason(tasks.find((t) => t.id === s.taskId)));
+}
+
+export type Busy2 = { start: TimeKey; end: TimeKey; title: string };
+
+/** For "Change time…": does the slot fit inside the window and between the day's busy times? Returns the clash or null. */
+export function clashOf(start: TimeKey, end: TimeKey, busy: Busy2[], window: { start: TimeKey; end: TimeKey }): string | null {
+  const a = timeToMinutes(start);
+  const b = timeToMinutes(end);
+  if (b <= a) return 'The end has to be after the start.';
+  if (a < timeToMinutes(window.start) || b > timeToMinutes(window.end)) return `Outside ${timeRange(window.start, window.end)}.`;
+  const hit = busy.find((x) => a < timeToMinutes(x.end) && timeToMinutes(x.start) < b);
+  return hit ? `Clashes with ${hit.title}.` : null;
 }

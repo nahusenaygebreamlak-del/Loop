@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { pushSnack } from '@/components/Snackbar';
 import { goMain } from '@/features/nav';
-import { applyChoices, leftovers, nameList } from '@/lib/checkins';
+import { applyChoices, leftovers, morningContent, nameList } from '@/lib/checkins';
 import { todayKey } from '@/lib/dates';
 import { isOpen, visibleTasks } from '@/lib/taskViews';
 import { useLocal } from '@/store/local';
@@ -42,6 +42,8 @@ const moveAll = () => {
   if (!left.length) return;
   const { next, prev } = applyChoices(tasks, Object.fromEntries(left.map((t) => [t.id, 'today' as const])), today, new Date().toISOString());
   useStore.getState().applyCheckin(next);
+  // A notification button counts as answering the debrief (docs/13 §2.2).
+  useStore.getState().answerDebrief(today, 'notif_today');
   goMain('/');
   pushSnack({ title: `Moved ${left.length} task${left.length === 1 ? '' : 's'} to today`, actions: [{ label: 'Undo', onPress: () => useStore.getState().applyCheckin(prev) }] });
 };
@@ -54,7 +56,7 @@ export function useBrowserCheckins() {
     void registration().then((r) => (reg = r));
     const onMessage = (e: MessageEvent) => {
       if (e.data?.type === 'checkin-all') moveAll();
-      if (e.data?.type === 'checkin-open') goMain('/');
+      if (e.data?.type === 'checkin-open') goMain(e.data.open === '/debrief' ? '/debrief' : '/');
     };
     navigator.serviceWorker?.addEventListener('message', onMessage);
 
@@ -69,8 +71,9 @@ export function useBrowserCheckins() {
       const sent = (k: string) => localStorage.getItem(`loop.browserNotif.${k}`) === today;
       const mark = (k: string) => localStorage.setItem(`loop.browserNotif.${k}`, today);
       const { tasks, lists } = useStore.getState();
-      const show = (title: string, body: string, actions: { action: string; title: string }[]) => {
-        const opts = { body, icon: '/favicon.ico', tag: 'loop-checkin', actions } as NotificationOptions & { actions: { action: string; title: string }[] };
+      // `open` is where a click (or a button other than Move all) lands: the debrief for the morning, Today otherwise.
+      const show = (title: string, body: string, actions: { action: string; title: string }[], open: '/debrief' | '/' = '/') => {
+        const opts = { body, icon: '/icons/loop-icon-192.png', tag: 'loop-checkin', data: { open }, actions } as NotificationOptions & { actions: { action: string; title: string }[] };
         if (reg) void reg.showNotification(title, opts);
         else new Notification(title, { body });
       };
@@ -78,10 +81,20 @@ export function useBrowserCheckins() {
         mark('morning');
         const left = leftovers(tasks, lists, today);
         if (left.length)
-          show(`Morning check-in: ${left.length} task${left.length === 1 ? '' : 's'} left from yesterday`, nameList(left.map((t) => t.title)), [
-            { action: 'all', title: 'Move all to today' },
-            { action: 'decide', title: 'Decide in Loop' },
-          ]);
+          show(
+            `Morning check-in: ${left.length} task${left.length === 1 ? '' : 's'} left from yesterday`,
+            nameList(left.map((t) => t.title)),
+            [
+              { action: 'all', title: 'Move all to today' },
+              { action: 'decide', title: 'Decide in Loop' },
+            ],
+            '/debrief',
+          );
+        else {
+          // Quiet morning (docs/13 §7): the plain "today's plan" note, with Open debrief.
+          const m = morningContent(tasks, lists, today);
+          show(m.title, m.body, [{ action: 'decide', title: 'Open debrief' }], '/debrief');
+        }
       }
       if (s.afternoonTime && hm >= s.afternoonTime && !sent('afternoon')) {
         mark('afternoon');

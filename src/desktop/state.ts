@@ -7,7 +7,10 @@ export type DeskSelection =
   | { kind: 'task'; id: string }
   | { kind: 'event'; id: string }
   | { kind: 'trash'; entry: 'task' | 'inbox' | 'note'; id: string }
-  | { kind: 'sort'; id: string };
+  | { kind: 'sort'; id: string }
+  /** The debrief: a coach suggestion (by task id) or a leftover task. */
+  | { kind: 'suggestion'; id: string }
+  | { kind: 'leftover'; id: string };
 
 export type DeskOverlay = 'quick' | 'search' | 'shortcuts' | 'welcome' | null;
 

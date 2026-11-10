@@ -11,6 +11,8 @@ import { Spinner } from '@/components/Spinner';
 import { goMain } from '@/features/nav';
 import { ListEditSheet } from '@/features/sheets/ListEditSheet';
 import { addDays } from '@/lib/dates';
+// The Debrief item shows until the debrief is answered or until noon (docs/13 §2.2).
+import { isAnswered } from '@/lib/debrief';
 import { activeSeason, currentSeason, groupByTier, TIER_LABEL, TIERS, weekShort } from '@/lib/seasons';
 import { isOpen, liveLists, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
@@ -31,13 +33,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const sheets = useSheets();
   const snack = useSnackbar();
   const sync = useSyncLine();
-  const { today } = useToday();
+  const { today, now } = useToday();
   const allTasks = useStore((s) => s.tasks);
   const allLists = useStore((s) => s.lists);
   const tags = useStore((s) => s.tags);
   const inbox = useStore((s) => s.inbox);
   const notes = useStore((s) => s.notes);
   const seasons = useStore((s) => s.seasons);
+  const debriefs = useStore((s) => s.debriefs);
   const updateTask = useStore((s) => s.updateTask);
 
   const tasks = visibleTasks(allTasks, allLists);
@@ -97,6 +100,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 2, paddingBottom: 12 }} showsVerticalScrollIndicator={false}>
         <Item icon="sun" label="Today" count={counts.today} on={on('/')} onPress={() => go('/')} />
+        {(!isAnswered(debriefs, today) && now < '12:00') || on('/debrief') ? <Item icon="coach" label="Debrief" kbd="D" on={on('/debrief')} onPress={() => go('/debrief')} /> : null}
         <Item icon="next7" label="Next 7 Days" count={counts.next7} on={on('/next7')} onPress={() => go('/next7')} />
         <Item icon="inboxTray" label="Inbox" count={counts.inbox} on={on('/inbox')} onPress={() => go('/inbox')} />
         <Item icon="note" label="Notes" count={counts.notes} on={on('/notes') || on('/note')} onPress={() => go('/notes')} />
@@ -195,6 +199,7 @@ function Item({
   label,
   count,
   countText,
+  kbd,
   on,
   onPress,
   onDropTask,
@@ -205,6 +210,8 @@ function Item({
   label: string;
   count?: number;
   countText?: string;
+  /** A key hint instead of a count (Debrief: D). */
+  kbd?: string;
   on?: boolean;
   onPress: () => void;
   onDropTask?: (taskId: string) => void;
@@ -241,6 +248,7 @@ function Item({
           {label}
         </AppText>
         {count || countText ? <AppText style={{ ...font(600), fontSize: 13, color: on ? c.accentText : c.textSecondary }}>{count || countText}</AppText> : null}
+        {kbd ? <Kbd k={kbd} /> : null}
       </PressScale>
       </View>
     </View>

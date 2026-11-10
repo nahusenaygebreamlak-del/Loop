@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { applySuggestion, buildPlanInput, planCandidates, planInputsHash, staleReason, trimText, validatePlan, type PlanInput } from '../src/lib/coachPlan.ts';
+import { acceptedText, applySuggestion, buildPlanInput, clashOf, mergeReplan, openSuggestions, planCandidates, planInputsHash, staleReason, suggestionLabel, trimText, validatePlan, whenText, withEdit, type PlanInput } from '../src/lib/coachPlan.ts';
 import type { GEvent } from '../src/lib/events.ts';
 import type { List, Season, Task } from '../src/store/types.ts';
 
@@ -129,4 +129,53 @@ test('a suggestion goes stale when its task is done or deleted meanwhile', () =>
   assert.equal(staleReason(task({ doneAt: 'x' })), 'Already done');
   assert.equal(staleReason(task({ deletedAt: 'x' })), 'Deleted');
   assert.equal(staleReason(undefined), 'Deleted');
+});
+
+test('row wording: when, the snackbar after accepting, and the screen-reader label', () => {
+  const sch = { taskId: 'a', kind: 'schedule' as const, start: '10:00', end: '11:00', reason: 'Due today and it is high priority.' };
+  const tod = { taskId: 'b', kind: 'today' as const, reason: 'Short.' };
+  const thu = { taskId: 'c', kind: 'later' as const, date: '2026-11-12', reason: 'The day is full.' };
+  const tmw = { taskId: 'd', kind: 'later' as const, date: '2026-11-11', reason: '' };
+  assert.equal(whenText(sch, TODAY), '10:00 – 11:00');
+  assert.equal(whenText(tod, TODAY), 'Today, any time');
+  assert.equal(whenText(thu, TODAY), 'Move to Thu');
+  assert.equal(whenText(tmw, TODAY), 'Move to tomorrow');
+  assert.equal(acceptedText(sch, TODAY), 'Added at 10:00');
+  assert.equal(acceptedText(tod, TODAY), 'Kept for today');
+  assert.equal(acceptedText(thu, TODAY), 'Moved to Thu');
+  assert.equal(suggestionLabel('Write intro', sch, TODAY, 'Work'), 'Write intro. Suggested 10:00 to 11:00, Work. Due today and it is high priority.');
+});
+
+test('a changed time or day replaces the suggested one; other kinds ignore it', () => {
+  const sch = { taskId: 'a', kind: 'schedule' as const, start: '10:00', end: '11:00', reason: '' };
+  assert.deepEqual(withEdit(sch, { start: '14:00', end: '14:30' }), { ...sch, start: '14:00', end: '14:30' });
+  assert.deepEqual(withEdit(sch, { date: '2026-11-12' }), sch);
+  const later = { taskId: 'b', kind: 'later' as const, date: '2026-11-11', reason: '' };
+  assert.deepEqual(withEdit(later, { date: '2026-11-13' }), { ...later, date: '2026-11-13' });
+  assert.equal(withEdit(later, undefined), later);
+});
+
+test('plan again keeps accepted rows and fills the rest from the fresh plan, 8 at most', () => {
+  const old = { summary: 'old', suggestions: [{ taskId: 'a', kind: 'today' as const, reason: 'kept' }, { taskId: 'b', kind: 'today' as const, reason: 'replaced' }] };
+  const fresh = { summary: 'new', suggestions: [{ taskId: 'a', kind: 'schedule' as const, start: '09:00', end: '10:00', reason: 'dup' }, ...Array.from({ length: 8 }, (_, i) => ({ taskId: `n${i}`, kind: 'today' as const, reason: 'fresh' }))] };
+  const merged = mergeReplan(old, { accepted: ['a'] }, fresh);
+  assert.equal(merged.summary, 'new');
+  assert.equal(merged.suggestions.length, 8);
+  assert.deepEqual(merged.suggestions[0], old.suggestions[0]);
+  assert.ok(!merged.suggestions.some((s) => s.taskId === 'b'));
+});
+
+test('open suggestions leave out accepted ones and tasks done or deleted since', () => {
+  const plan = { summary: '', suggestions: ['a', 'b', 'c', 'd'].map((taskId) => ({ taskId, kind: 'today' as const, reason: '' })) };
+  const tasks = [task({ id: 'a' }), task({ id: 'b', doneAt: 'x' }), task({ id: 'c' })];
+  assert.deepEqual(openSuggestions(plan, { accepted: ['c'] }, tasks).map((s) => s.taskId), ['a']);
+});
+
+test('change time: must sit inside the window and miss the day\'s busy times', () => {
+  const win = { start: '09:00', end: '18:00' };
+  const busy = [{ start: '10:00', end: '11:00', title: 'Standup' }];
+  assert.equal(clashOf('11:00', '12:00', busy, win), null);
+  assert.equal(clashOf('10:30', '11:30', busy, win), 'Clashes with Standup.');
+  assert.equal(clashOf('08:00', '09:00', busy, win), 'Outside 09:00 – 18:00.');
+  assert.equal(clashOf('12:00', '12:00', busy, win), 'The end has to be after the start.');
 });

@@ -50,6 +50,8 @@ const ICONS = {
   place: [<Path key="a" d="M12 21s-6-5.3-6-11a6 6 0 0 1 12 0c0 5.7-6 11-6 11z" />, <Circle key="b" cx="12" cy="10" r="2" />],
   people: [<Circle key="a" cx="9" cy="8" r="3" />, <Path key="b" d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5a3 3 0 0 1 0 6M21 20c0-2.6-1.6-4.8-4-5.6" />],
   lines: [<Path key="a" d="M5 5h14M5 10h14M5 15h9" />],
+  // Coach mark (docs/14 A4): a loop with a small spark. Always paired with the label "Coach".
+  coach: [<Path key="a" d="M16.5 15.5a5.5 5.5 0 1 1 1-6" />, <Path key="b" d="M14 9.5h3.7V5.8" />, <Path key="c" d="M19.5 2.5v3M18 4h3" />],
   external: [<Path key="a" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />],
 } as const;
 

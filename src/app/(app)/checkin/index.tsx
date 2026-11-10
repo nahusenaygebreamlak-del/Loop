@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { Pop } from '@/components/Motion';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { goMain } from '@/features/nav';
+import { useDesk } from '@/desktop/layout';
 import { useSheets } from '@/components/Sheet';
 import { CarriedOverSheet } from '@/features/sheets/CarriedOverSheet';
 import { finishCheckin } from '@/features/checkin';
@@ -20,8 +21,14 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { radius, size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 
+/** On the computer the morning debrief replaces the check-in (docs/13 §4), so old links land there. */
+export default function CheckInRoute() {
+  const { desk } = useDesk();
+  return desk ? <Redirect href="/debrief" /> : <CheckIn />;
+}
+
 /** VCheckIn: the full-screen morning check-in. Also shown over the lock screen by the full-screen alert. */
-export default function CheckIn() {
+function CheckIn() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const sheets = useSheets();

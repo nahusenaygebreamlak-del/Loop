@@ -21,6 +21,10 @@ type Local = {
   checkinCardDismissed?: string;
   /** Computer: Settings › Browser notifications (on once allowed). */
   browserNotify?: boolean;
+  /** Debrief: seasons whose "Your season ended" card got Not now (docs/13 §2.1). */
+  seasonEndedDismissed?: string[];
+  /** Debrief: the one-time "Pick what matters" offer got Not now or was used. */
+  seasonOfferDone?: boolean;
 };
 
 export const useLocal = create<Local>()(

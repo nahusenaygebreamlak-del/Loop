@@ -393,3 +393,21 @@ What was built differs from the sections above in these ways:
 - **Migrations:** `20261110130000_coach.sql` (profile columns, `coach_usage`) and `20261110120000_debriefs.sql`.
 - **Not built yet:** anywhere the plan shows. That is the debrief's "Today's plan" section (slice 5).
 - **Slice 3 is paused part-way:** the debrief rules, storage and migration exist and are tested; no debrief screen exists yet.
+
+## 17. Computer debrief and plan my day as built (10 Nov 2026)
+
+Slices 3 and 5, computer only. The phone keeps the full-screen check-in until the phone debrief is built; `/debrief` on the phone goes to it.
+
+- **Debrief view** (`src/desktop/views/DebriefDesk.tsx`): Yesterday, Left over, Today's plan, the season line or the season-ended card, and the 7-day offer. Esc goes back to Today.
+- **Today card:** "Good morning", one summary line and **Open debrief** (`D`). Once answered it collapses to "Debrief done", plus "· Plan added" when a suggestion was accepted. The old check-in card is gone.
+- **Sidebar:** a **Debrief** item with the `D` hint, under Today, until the debrief is answered or until 12:00.
+- **Keys:** `D` opens the debrief when no task is selected. With a task selected, `D` is still its date.
+- **Plan:** runs once the first time the debrief opens each day, after the leftovers are handled. It is saved on the day's debrief and syncs. **Plan again** keeps accepted suggestions and replaces the rest; only Plan again counts toward the 5. There is no inputs hash: the plan simply waits for the leftovers, so the first run already sees them handled.
+- **Changing before accepting:** **Change time…** and **Change day…** open small dialogs, not anchored pop-overs. The change is stored on the plan and applied on Accept.
+- **Reschedule…** in Left over selects the first leftover; the panel then offers Today, Tomorrow, Pick day… and, for a task moved twice, Back to Inbox.
+- **Accepting a suggestion for an overdue task** counts as carrying it over, the same as the check-in.
+- **Season offer copy** uses the coach-off line for now, because Start a season opens the form until the chat exists (slice 6).
+- **Browser notification:** the morning one now also goes out on quiet mornings, with **Open debrief**. A click opens the debrief; Move all to today answers it.
+- **Phone:** "Remind until I act" stops once the day's debrief is answered on any device.
+- **Not tested yet:** a real plan from Gemini. Everything up to the call is checked; the first real run happens when the owner opens the debrief signed in with the coach on.
+
