@@ -7,6 +7,8 @@ import { SheetCard, useCloseSheet, useSheets } from '@/components/Sheet';
 import { useSnackbar } from '@/components/Snackbar';
 import { SwitchKnob } from '@/components/Switch';
 import { OptionGroup, SheetTitle } from '@/components/ui';
+import { activeSeason, TIER_LABEL, tierOf } from '@/lib/seasons';
+import { todayKey } from '@/lib/dates';
 import { useStore } from '@/store/store';
 import type { ListSort } from '@/store/types';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -15,6 +17,7 @@ import { font } from '@/theme/typography';
 import { goMain } from '../nav';
 import { ListEditSheet } from './ListEditSheet';
 import { OptionRow } from './parts';
+import { TierSheet } from './TierSheet';
 
 const SORT_LABEL: Record<ListSort, string> = { date: 'Date', priority: 'Priority', title: 'Title' };
 
@@ -28,6 +31,7 @@ export function ListMenuSheet({ listId }: { listId: string }) {
   const updateList = useStore((s) => s.updateList);
   const archiveList = useStore((s) => s.archiveList);
   const deleteList = useStore((s) => s.deleteList);
+  const season = useStore((s) => activeSeason(s.seasons, todayKey()));
   if (!list) return null;
 
   const mine = tasks.filter((t) => t.listId === listId && !t.deletedAt);
@@ -81,6 +85,17 @@ export function ListMenuSheet({ listId }: { listId: string }) {
             sheets.open(() => <ListEditSheet listId={listId} />);
           }}
         />
+        {season ? (
+          <Row
+            icon="flag"
+            label="Season tier"
+            value={TIER_LABEL[tierOf(season, listId)]}
+            onPress={() => {
+              close();
+              sheets.open(() => <TierSheet listName={list.name} value={tierOf(season, listId)} seasonId={season.id} listId={listId} />);
+            }}
+          />
+        ) : null}
         <Row
           icon="sort"
           label="Sort tasks by"

@@ -12,6 +12,9 @@ import { Card, Fab, GroupLabel, IconButton, Swatch } from '@/components/ui';
 import { QuickActionsSheet } from '@/features/sheets/QuickActionsSheet';
 import { QuickAddSheet } from '@/features/sheets/QuickAddSheet';
 import { ListMenuSheet } from '@/features/sheets/ListMenuSheet';
+import { TierSheet } from '@/features/sheets/TierSheet';
+import { TierChip } from '@/features/season/parts';
+import { activeSeason, tierOf } from '@/lib/seasons';
 import { useMenu } from '@/features/useMenu';
 import { useDesk } from '@/desktop/layout';
 import { ListDesk } from '@/desktop/views/ListDesk';
@@ -41,6 +44,7 @@ function ListScreen() {
   const list = useStore((s) => s.lists.find((l) => l.id === id));
   const tasks = useStore((s) => s.tasks);
   const tags = useStore((s) => s.tags);
+  const season = useStore((s) => activeSeason(s.seasons, today));
   // Ticked here stays visible (tinted, "Done just now") until you leave, as in NDoneUndo.
   const [justDone, setJustDone] = useState<Set<string>>(new Set());
 
@@ -75,9 +79,18 @@ function ListScreen() {
             </AppText>
           </View>
           <ContentIn>
-            <AppText variant="display" accessibilityRole="header" style={{ marginTop: 4 }}>
-              {list.name}
-            </AppText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 12, marginTop: 4 }}>
+              <AppText variant="display" accessibilityRole="header" style={{ flexShrink: 1 }}>
+                {list.name}
+              </AppText>
+              {season ? (
+                <TierChip
+                  tier={tierOf(season, list.id)}
+                  listName={list.name}
+                  onPress={() => sheets.open(() => <TierSheet listName={list.name} value={tierOf(season, list.id)} seasonId={season.id} listId={list.id} />)}
+                />
+              ) : null}
+            </View>
           </ContentIn>
         </View>
 

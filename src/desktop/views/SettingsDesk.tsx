@@ -5,7 +5,8 @@ import { AppText } from '@/components/AppText';
 import { useCloseSheet, useSheets } from '@/components/Sheet';
 import { SwitchKnob } from '@/components/Switch';
 import { useCalendar } from '@/calendar/google';
-import { formatTime, minutesToTime, timeToMinutes, type TimeKey } from '@/lib/dates';
+import { formatTime, minutesToTime, monthDay, timeToMinutes, todayKey, type TimeKey } from '@/lib/dates';
+import { activeSeason, currentSeason, groupByTier, TIER_LABEL, TIERS, weekLine } from '@/lib/seasons';
 import { useAuth } from '@/lib/auth';
 import { useLocal } from '@/store/local';
 import { useSettings, useTimeFormat } from '@/store/settings';
@@ -16,8 +17,11 @@ import type { ThemePreference } from '@/theme/tokens';
 import { listColors } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 import { askBrowserPermission, browserPermission } from '../browserNotify';
+import { CoachPrivacyDialog, PlanWindowDialog } from '../CoachDialogs';
 import { DeskConfirm } from '../Dialog';
+import { InstallDialog } from '../InstallDialog';
 import { Kbd } from '../Kbd';
+import { isMac, useInstallState } from '../platform';
 import { useDeskState } from '../state';
 
 type CheckinKind = 'morningTime' | 'afternoonTime' | 'sortTime';
@@ -40,6 +44,11 @@ export function SettingsDesk() {
   const panelOn = useLocal((l) => l.deskPanel !== false);
   const browserOn = useLocal((l) => l.browserNotify !== false);
   const [perm, setPerm] = useState(browserPermission());
+  const { installed } = useInstallState();
+  const seasons = useStore((st) => st.seasons);
+  const season = activeSeason(seasons, todayKey());
+  const upcoming = season ? null : currentSeason(seasons, todayKey());
+  const tiers = season ? groupByTier(lists, season) : null;
   const name = (session?.user.user_metadata?.full_name as string | undefined) ?? (preview ? 'Preview' : 'You');
   const email = session?.user.email ?? 'Not signed in';
   const live = lists.filter((l) => !l.deletedAt && !l.archivedAt).length;
@@ -90,7 +99,16 @@ export function SettingsDesk() {
               right={<AppText style={{ ...font(700), fontSize: 15, color: c.accentText }}>{cal.status === 'off' ? 'Connect' : 'Manage'}</AppText>}
               onPress={() => router.push('/settings/account')}
             />
-            <Row name="Sync" hint={sync.line} last />
+            <Row name="Sync" hint={sync.line} last={installed} />
+            {installed ? null : (
+              <Row
+                name="Use Loop as an app"
+                hint={isMac ? 'Its own icon in the Dock, and its own window' : 'Its own icon and window'}
+                right={<AppText style={{ ...font(800), fontSize: 15, color: c.accentText }}>›</AppText>}
+                last
+                onPress={() => sheets.open(() => <InstallDialog />, 'dialog')}
+              />
+            )}
           </Section>
 
           <Section cap="Daily check-ins">
@@ -135,6 +153,42 @@ export function SettingsDesk() {
             <Row name="Lists" hint="Order, colours, archived" value={`${live}${archived ? ` · ${archived} archived` : ''}`} plainValue last onPress={() => router.push('/settings/lists')} />
           </Section>
 
+          <Section cap="Coach">
+            <Row
+              name="Coach"
+              hint="Suggests a plan for your day. It never changes anything on its own."
+              toggle={s.coachEnabled}
+              last={!s.coachEnabled}
+              onPress={() => {
+                // The first time, the privacy text comes first. After that the switch just flips.
+                if (!s.coachEnabled && !s.coachConsentAt) sheets.open(() => <CoachPrivacyDialog />, 'dialog');
+                else s.set({ coachEnabled: !s.coachEnabled });
+              }}
+            />
+            {s.coachEnabled ? (
+              <>
+                <Row name="Plan my day between" value={`${formatTime(s.planStart)} – ${formatTime(s.planEnd)}`} onPress={() => sheets.open(() => <PlanWindowDialog />, 'dialog')} />
+                <Row name="What the coach sees" right={<AppText style={{ ...font(800), fontSize: 15, color: c.accentText }}>›</AppText>} last onPress={() => sheets.open(() => <CoachPrivacyDialog />, 'dialog')} />
+              </>
+            ) : null}
+          </Section>
+
+          <Section cap="Season">
+            <Row
+              name="Current season"
+              hint={season ? `Ends ${monthDay(season.endDate)}` : upcoming ? `Starts ${monthDay(upcoming.startDate)}` : 'Mark a few lists as core for 12 weeks'}
+              value={season ? weekLine(season, todayKey()) : upcoming ? 'Soon' : 'None'}
+              muted={!season}
+              last={!tiers}
+              onPress={() => router.push('/season')}
+            />
+            {tiers
+              ? TIERS.map((t, i) => (
+                  <Row key={t} name={TIER_LABEL[t]} value={tiers[t].map((l) => l.name).join(', ') || 'None'} plainValue last={i === TIERS.length - 1} />
+                ))
+              : null}
+          </Section>
+
           <Section cap="Look and time">
             <Row
               name="Theme"
@@ -144,7 +198,7 @@ export function SettingsDesk() {
                     const on = preference === p;
                     return (
                       <Pressable key={p} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setPreference(p)} style={{ minHeight: 30, paddingHorizontal: 10, borderRadius: 9, backgroundColor: on ? c.card : 'transparent', justifyContent: 'center' }}>
-                        <AppText style={{ ...font(on ? 700 : 600), fontSize: 13.5, color: on ? c.text : c.textSecondary }}>{p === 'system' ? 'System' : p[0].toUpperCase() + p.slice(1)}</AppText>
+                        <AppText style={{ ...font(on ? 700 : 600), fontSize: 13.5, color: on ? c.text : c.textSecondary }}>{p === 'system' ? (isMac ? 'Match Mac' : 'System') : p[0].toUpperCase() + p.slice(1)}</AppText>
                       </Pressable>
                     );
                   })}

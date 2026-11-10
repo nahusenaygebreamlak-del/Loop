@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="#FFFFFF">
+  <!-- Loop mark: four petals around a centre, with a plus-shaped gap. Redrawn from the brand board; replace with the original vector if you have it. -->
+  <ellipse cx="32" cy="32" rx="20" ry="13" transform="rotate(-40 32 32)"/>
+  <ellipse cx="68" cy="32" rx="20" ry="13" transform="rotate(40 68 32)"/>
+  <ellipse cx="32" cy="68" rx="20" ry="13" transform="rotate(40 32 68)"/>
+  <ellipse cx="68" cy="68" rx="20" ry="13" transform="rotate(-40 68 68)"/>
+</svg>

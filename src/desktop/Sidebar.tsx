@@ -11,6 +11,7 @@ import { Spinner } from '@/components/Spinner';
 import { goMain } from '@/features/nav';
 import { ListEditSheet } from '@/features/sheets/ListEditSheet';
 import { addDays } from '@/lib/dates';
+import { activeSeason, currentSeason, groupByTier, TIER_LABEL, TIERS, weekShort } from '@/lib/seasons';
 import { isOpen, liveLists, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
 import { useStore } from '@/store/store';
@@ -18,9 +19,10 @@ import { useSyncLine } from '@/sync/status';
 import { useTheme } from '@/theme/ThemeProvider';
 import { listColors } from '@/theme/tokens';
 import { font } from '@/theme/typography';
-import { useDropTarget } from './dom';
+import { useContextMenu, useDropTarget } from './dom';
 import { Kbd } from './Kbd';
 import { useDeskState } from './state';
+import { TierMenu } from './views/SeasonDesk';
 
 /** The computer sidebar (264 px): logo and sync line, search, views, lists, tags, then Completed / Trash / Settings / shortcuts. */
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -35,6 +37,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const tags = useStore((s) => s.tags);
   const inbox = useStore((s) => s.inbox);
   const notes = useStore((s) => s.notes);
+  const seasons = useStore((s) => s.seasons);
   const updateTask = useStore((s) => s.updateTask);
 
   const tasks = visibleTasks(allTasks, allLists);
@@ -47,6 +50,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     notes: notes.filter((n) => !n.deletedAt).length,
     all: tasks.filter(isOpen).length,
   };
+  // While a season is running, lists are grouped Core / Secondary / Support; empty tiers are hidden.
+  const season = activeSeason(seasons, today);
+  const soon = season ? null : currentSeason(seasons, today);
+  const tiered = season ? groupByTier(allLists, season) : null;
+  const listGroups = tiered ? TIERS.filter((t) => tiered[t].length).map((t) => ({ label: TIER_LABEL[t], lists: tiered[t] })) : [{ label: 'Lists', lists }];
   const usedTags = tags.filter((t) => tasks.some((x) => isOpen(x) && x.tagIds.includes(t.id)));
 
   const go = (href: Href) => {
@@ -93,24 +101,30 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Item icon="inboxTray" label="Inbox" count={counts.inbox} on={on('/inbox')} onPress={() => go('/inbox')} />
         <Item icon="note" label="Notes" count={counts.notes} on={on('/notes') || on('/note')} onPress={() => go('/notes')} />
         <Item icon="calendar" label="Calendar" on={on('/calendar')} onPress={() => go('/calendar')} />
+        <Item icon="flag" label="Season" countText={season ? weekShort(season, today) : soon ? 'Soon' : undefined} on={on('/season')} onPress={() => go('/season')} />
         <Item icon="allTasks" label="All tasks" count={counts.all} on={on('/all')} onPress={() => go('/all')} />
 
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, paddingHorizontal: 10, paddingBottom: 4 }}>
-          <AppText tone="secondary" accessibilityRole="header" style={{ ...font(700), fontSize: 12.5 }}>
-            Lists
-          </AppText>
-          <PressScale
-            accessibilityRole="button"
-            accessibilityLabel="New list"
-            onPress={() => sheets.open(() => <ListEditSheet onSaved={(id) => go({ pathname: '/list/[id]', params: { id } })} />)}
-            style={{ width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Icon name="plus" size={18} color={c.textSecondary} />
-          </PressScale>
-        </View>
-        {lists.map((l) => (
+        {listGroups.map((g, gi) => (
+          <View key={g.label} style={{ gap: 2 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 28, paddingTop: gi === 0 ? 16 : 10, paddingHorizontal: 10, paddingBottom: 4 }}>
+              <AppText tone="secondary" accessibilityRole="header" style={{ ...font(700), fontSize: 12.5 }}>
+                {g.label}
+              </AppText>
+              {gi === 0 ? (
+                <PressScale
+                  accessibilityRole="button"
+                  accessibilityLabel="New list"
+                  onPress={() => sheets.open(() => <ListEditSheet onSaved={(id) => go({ pathname: '/list/[id]', params: { id } })} />)}
+                  style={{ width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Icon name="plus" size={18} color={c.textSecondary} />
+                </PressScale>
+              ) : null}
+            </View>
+            {g.lists.map((l) => (
           <Item
             key={l.id}
+            onMenu={season ? (x, y) => sheets.open(() => <TierMenu seasonId={season.id} listId={l.id} />, 'menu', { x, y }) : undefined}
             lead={<View style={{ width: 11, height: 11, borderRadius: 3, marginHorizontal: 4, backgroundColor: listColors[l.color] }} />}
             label={l.name}
             count={tasks.filter((t) => isOpen(t) && t.listId === l.id).length}
@@ -122,6 +136,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               snack({ title: `Moved to ${l.name}`, actions: [{ label: 'Undo', onPress: () => updateTask(id, { listId: before }) }] });
             }}
           />
+            ))}
+          </View>
         ))}
 
         {usedTags.length ? (
@@ -178,28 +194,35 @@ function Item({
   lead,
   label,
   count,
+  countText,
   on,
   onPress,
   onDropTask,
+  onMenu,
 }: {
   icon?: IconName;
   lead?: ReactNode;
   label: string;
   count?: number;
+  countText?: string;
   on?: boolean;
   onPress: () => void;
   onDropTask?: (taskId: string) => void;
+  /** Right-click (a list's season tier). */
+  onMenu?: (x: number, y: number) => void;
 }) {
   const { c } = useTheme();
   const [dropRef, over] = useDropTarget<ViewInstance>((p) => onDropTask?.(p.id), !!onDropTask);
+  const menuRef = useContextMenu<ViewInstance>((x, y) => onMenu?.(x, y));
   const fg = on ? c.accentText : c.text;
   return (
     <View ref={dropRef}>
+      <View ref={menuRef}>
       <PressScale
         kind="row"
         accessibilityRole="menuitem"
         accessibilityState={{ selected: !!on }}
-        accessibilityLabel={count ? `${label}, ${count}` : label}
+        accessibilityLabel={count ? `${label}, ${count}` : countText ? `${label}, ${countText}` : label}
         onPress={onPress}
         style={{
           flexDirection: 'row',
@@ -217,8 +240,9 @@ function Item({
         <AppText numberOfLines={1} style={{ flex: 1, ...font(600), fontSize: 14.5, color: fg }}>
           {label}
         </AppText>
-        {count ? <AppText style={{ ...font(600), fontSize: 13, color: on ? c.accentText : c.textSecondary }}>{count}</AppText> : null}
+        {count || countText ? <AppText style={{ ...font(600), fontSize: 13, color: on ? c.accentText : c.textSecondary }}>{count || countText}</AppText> : null}
       </PressScale>
+      </View>
     </View>
   );
 }

@@ -51,3 +51,35 @@ Loop reads your calendar through a small Supabase server function, because Googl
 - Live at https://nahu0024-loop.expo.app (Expo web hosting, project nahu0024/loop).
 - Supabase → Authentication → URL Configuration → Redirect URLs: add `https://nahu0024-loop.expo.app/**` so Google sign-in returns there.
 - To publish a new version: `npx expo export -p web`, then `npx eas-cli@latest deploy --prod`.
+
+## 7. Loop on Cloudflare (10 Nov 2026)
+
+- Live at https://loop.nahusenaygebreamlak.workers.dev (Cloudflare Workers static assets, worker name `loop`, config in `wrangler.jsonc`). This is the address to install as the Mac app. The Expo address in section 6 still works.
+- Supabase → Authentication → URL Configuration → Redirect URLs: add `https://loop.nahusenaygebreamlak.workers.dev/**` so Google sign-in returns there.
+- To publish a new version: `npx expo export -p web`, then `npx wrangler@latest deploy`. The build needs the Supabase keys in `.env`.
+- Signing this computer in to Cloudflare is one time: `npx wrangler@latest login`, then click Allow in the browser.
+
+## 8. Gemini key for the coach (10 Nov 2026)
+
+- Done by the owner: a Gemini API key created in Google AI Studio (free tier) and saved in Supabase → Edge Functions → Secrets as `GEMINI_API_KEY`.
+- Not done yet: the `coach` function itself (build slice 4). Full steps and the build notes are in `16-gemini-setup.md`.
+
+## 9. Seasons (build slice 2, 10 Nov 2026)
+
+- Done by the owner on 10 Nov 2026: `supabase/migrations/20261110000000_seasons.sql` run in the Supabase SQL editor. New setups paste it the same way; it's safe to run twice.
+- If the table is ever missing, seasons still work on each device but don't sync between them. Everything else keeps syncing, and the seasons catch up once the table exists.
+
+## 10. The coach (build slice 4, 10 Nov 2026)
+
+Done on 10 Nov 2026:
+
+- The owner ran `supabase/migrations/20261110130000_coach.sql` and `supabase/migrations/20261110120000_debriefs.sql` in the Supabase SQL editor.
+- The `GEMINI_API_KEY` secret is set (section 8).
+- The `coach` function is deployed to the `loop` project. It answers, and refuses calls without a signed-in user.
+
+To deploy a new version of the function:
+
+1. The Supabase command-line tool must be signed in to the account that owns `loop` (not the one with the Kash projects). Sign-in only works in a real terminal: `npx supabase login --no-browser`, open the printed link in a browser signed in to that account, and type the code back into the terminal.
+2. `npx supabase functions deploy coach --remote=hjyfivfgasdpkpgctmcd --use-api --yes`
+
+Not tested yet: a real plan from Gemini. No screen calls the coach until the debrief's "Today's plan" section is built.

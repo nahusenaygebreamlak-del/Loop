@@ -8,6 +8,7 @@ import { useDesk, isDeskNow } from '@/desktop/layout';
 import { Kbd } from '@/desktop/Kbd';
 import { AppText } from './AppText';
 import { PressScale } from './PressScale';
+import { modKey } from '@/desktop/platform';
 
 // Dark snackbar above the + button with light-blue actions (NDoneUndo, NDeleteUndo, NAdded).
 
@@ -132,7 +133,7 @@ function SnackbarView({ snack, onDone }: { snack: Snack; onDone: () => void }) {
             </AppText>
             {desk && a.label === 'Undo' ? (
               <View style={{ flexDirection: 'row', gap: 4 }}>
-                <Kbd k="Ctrl" onDark />
+                <Kbd k={modKey} onDark />
                 <Kbd k="Z" onDark />
               </View>
             ) : null}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- macOS rounded square: 824 px body on a 1024 canvas, 100 px clear margin -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#2F6BE3"/>
+  <g transform="translate(512 512) scale(5.6) translate(-50 -50)" fill="#FFFFFF">
+  <ellipse cx="32" cy="32" rx="20" ry="13" transform="rotate(-40 32 32)"/>
+  <ellipse cx="68" cy="32" rx="20" ry="13" transform="rotate(40 68 32)"/>
+  <ellipse cx="32" cy="68" rx="20" ry="13" transform="rotate(40 32 68)"/>
+  <ellipse cx="68" cy="68" rx="20" ry="13" transform="rotate(-40 68 68)"/>
+  </g>
+</svg>

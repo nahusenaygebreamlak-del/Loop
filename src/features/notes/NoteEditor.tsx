@@ -21,6 +21,7 @@ import type { NoteBlock, NoteBlockType } from '@/store/types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { size } from '@/theme/tokens';
 import { font } from '@/theme/typography';
+import { modKey } from '@/desktop/platform';
 
 export const block = (type: NoteBlockType = 'text', text = ''): NoteBlock => ({ id: randomUUID(), type, text, ...(type === 'checklist' ? { done: false } : {}) });
 
@@ -207,7 +208,7 @@ export function NoteEditor({ id, desk, deskActions }: { id: string; desk?: boole
           <AppText tone="secondary" style={{ fontSize: 12.5 }}>
             Select a line and press
           </AppText>
-          <DeskKey k="Ctrl" />
+          <DeskKey k={modKey} />
           <DeskKey k="Enter" />
           <AppText tone="secondary" style={{ fontSize: 12.5 }}>
             to make it a task. Checkboxes in notes stay in the note.

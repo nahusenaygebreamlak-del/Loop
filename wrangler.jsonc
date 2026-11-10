@@ -1,0 +1,10 @@
+{
+  // Loop's web version on Cloudflare (Workers static assets). Build first: npx expo export -p web
+  "name": "loop",
+  "compatibility_date": "2026-11-10",
+  "assets": {
+    "directory": "./dist/",
+    // Loop is a single page: every address (/settings, /auth/callback…) serves index.html.
+    "not_found_handling": "single-page-application"
+  }
+}

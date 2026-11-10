@@ -8,6 +8,7 @@ import { PressScale } from '@/components/PressScale';
 import { useCloseSheet, useSheets } from '@/components/Sheet';
 import { IconButton } from '@/components/ui';
 import { addDays } from '@/lib/dates';
+import { activeSeason, currentSeason, groupByTier, TIER_LABEL, TIERS, weekShort } from '@/lib/seasons';
 import { isOpen, liveLists, openCount, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
 import { useStore } from '@/store/store';
@@ -34,6 +35,7 @@ export function SideMenu() {
   const tags = useStore((s) => s.tags);
   const inbox = useStore((s) => s.inbox);
   const notes = useStore((s) => s.notes);
+  const seasons = useStore((s) => s.seasons);
 
   const tasks = visibleTasks(allTasks, allLists);
   const lists = liveLists(allLists);
@@ -45,6 +47,11 @@ export function SideMenu() {
     notes: notes.filter((n) => !n.deletedAt).length,
     all: tasks.filter(isOpen).length,
   };
+  // While a season is running, lists are grouped Core / Secondary / Support; empty tiers are hidden.
+  const season = activeSeason(seasons, today);
+  const shownSeason = season ?? currentSeason(seasons, today);
+  const tiered = season ? groupByTier(allLists, season) : null;
+  const listGroups = tiered ? TIERS.filter((t) => tiered[t].length).map((t) => ({ label: TIER_LABEL[t], lists: tiered[t] })) : [{ label: 'Lists', lists }];
   const usedTags = tags.filter((t) => tasks.some((x) => isOpen(x) && x.tagIds.includes(t.id)));
 
   const go = (href: Href) => {
@@ -90,34 +97,41 @@ export function SideMenu() {
           <Item icon="inboxTray" label="Inbox" count={counts.inbox} on={path.startsWith('/inbox')} onPress={() => go('/inbox')} />
           <Item icon="note" label="Notes" count={counts.notes} on={path === '/notes'} onPress={() => go('/notes')} />
           <Item icon="calendar" label="Calendar" on={path === '/calendar'} onPress={() => go('/calendar')} />
+          <Item icon="flag" label="Season" countText={season ? weekShort(season, today) : shownSeason ? 'Soon' : undefined} on={path.startsWith('/season')} onPress={() => go('/season')} />
           <Item icon="allTasks" label="All tasks" count={counts.all} on={path === '/all'} onPress={() => go('/all')} />
         </View>
 
-        <View style={styles.lab}>
-          <AppText tone="secondary" style={styles.labText} accessibilityRole="header">
-            Lists
-          </AppText>
-          <PressScale
-            accessibilityRole="button"
-            accessibilityLabel="Add list"
-            onPress={() => sheets.open(() => <ListEditSheet onSaved={(id) => go({ pathname: '/list/[id]', params: { id } })} />)}
-            style={{ width: 44, height: 44, marginRight: -4, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Icon name="plus" color={c.textSecondary} />
-          </PressScale>
-        </View>
-        <View style={{ gap: 2 }}>
-          {lists.map((l) => (
-            <Item
-              key={l.id}
-              lead={<View style={{ width: 12, height: 12, borderRadius: 4, marginHorizontal: 5, backgroundColor: listColors[l.color] }} />}
-              label={l.name}
-              count={openCount(tasks, l.id)}
-              on={path === `/list/${l.id}`}
-              onPress={() => go({ pathname: '/list/[id]', params: { id: l.id } })}
-            />
-          ))}
-        </View>
+        {listGroups.map((g, gi) => (
+          <View key={g.label}>
+            <View style={styles.lab}>
+              <AppText tone="secondary" style={styles.labText} accessibilityRole="header">
+                {g.label}
+              </AppText>
+              {gi === 0 ? (
+                <PressScale
+                  accessibilityRole="button"
+                  accessibilityLabel="Add list"
+                  onPress={() => sheets.open(() => <ListEditSheet onSaved={(id) => go({ pathname: '/list/[id]', params: { id } })} />)}
+                  style={{ width: 44, height: 44, marginRight: -4, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Icon name="plus" color={c.textSecondary} />
+                </PressScale>
+              ) : null}
+            </View>
+            <View style={{ gap: 2 }}>
+              {g.lists.map((l) => (
+                <Item
+                  key={l.id}
+                  lead={<View style={{ width: 12, height: 12, borderRadius: 4, marginHorizontal: 5, backgroundColor: listColors[l.color] }} />}
+                  label={l.name}
+                  count={openCount(tasks, l.id)}
+                  on={path === `/list/${l.id}`}
+                  onPress={() => go({ pathname: '/list/[id]', params: { id: l.id } })}
+                />
+              ))}
+            </View>
+          </View>
+        ))}
 
         {usedTags.length ? (
           <>
@@ -154,7 +168,7 @@ export function SideMenu() {
   );
 }
 
-function Item({ icon, lead, label, count, on, onPress }: { icon?: IconName; lead?: ReactNode; label: string; count?: number; on?: boolean; onPress: () => void }) {
+function Item({ icon, lead, label, count, countText, on, onPress }: { icon?: IconName; lead?: ReactNode; label: string; count?: number; countText?: string; on?: boolean; onPress: () => void }) {
   const { c } = useTheme();
   const color = on ? c.accentText : c.textSecondary;
   return (
@@ -162,13 +176,13 @@ function Item({ icon, lead, label, count, on, onPress }: { icon?: IconName; lead
       kind="row"
       accessibilityRole="menuitem"
       accessibilityState={{ selected: !!on }}
-      accessibilityLabel={count != null ? `${label}, ${count}` : label}
+      accessibilityLabel={count != null ? `${label}, ${count}` : countText ? `${label}, ${countText}` : label}
       onPress={onPress}
       style={[styles.item, on && { backgroundColor: c.tint }]}
     >
       {icon ? <Icon name={icon} color={color} /> : lead}
       <AppText style={{ ...font(600), fontSize: 15.5, color: on ? c.accentText : c.text }}>{label}</AppText>
-      {count != null ? <AppText style={{ marginLeft: 'auto', ...font(600), fontSize: 13.5, color, fontVariant: ['tabular-nums'] }}>{count}</AppText> : null}
+      {count != null || countText ? <AppText style={{ marginLeft: 'auto', ...font(600), fontSize: 13.5, color, fontVariant: ['tabular-nums'] }}>{count ?? countText}</AppText> : null}
     </PressScale>
   );
 }

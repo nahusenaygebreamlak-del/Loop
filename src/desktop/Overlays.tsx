@@ -18,6 +18,7 @@ import { listColors } from '@/theme/tokens';
 import { font } from '@/theme/typography';
 import { Kbd } from './Kbd';
 import { closeOverlay, selectTask, useDeskState } from './state';
+import { modKey } from './platform';
 
 const webInput = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
 
@@ -391,7 +392,7 @@ const SHORTCUTS: { cap: string; rows: [string, string[]][] }[] = [
       ['Search', ['/']],
       ['Show shortcuts', ['?']],
       ['Go to Today / Inbox / Calendar', ['G', 'then', 'T', 'I', 'C']],
-      ['Undo', ['Ctrl', 'Z']],
+      ['Undo', [modKey, 'Z']],
     ],
   },
   {

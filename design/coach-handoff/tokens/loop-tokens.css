@@ -1,0 +1,141 @@
+/* Loop colour and type tokens, light and dark.
+   Light values are the ones already used in Batch 2. Dark values are new (drafted 10 Nov 2026).
+   Use the names, never raw hex, so "Match Mac" theme switching is one place. */
+
+:root {
+  /* Surfaces */
+  --loop-ground: #F2F4F9;        /* app background behind cards */
+  --loop-surface: #FFFFFF;       /* cards, main column, panels */
+  --loop-surface-inset: #F7F8FB; /* cards inside a white panel (computer) */
+  --loop-line: #EEF0F5;          /* row dividers */
+  --loop-line-strong: #DDE1EA;   /* secondary button and field borders */
+
+  /* Text */
+  --loop-ink: #141A2E;           /* titles, body */
+  --loop-ink-2: #3B4257;         /* secondary body */
+  --loop-ink-secondary: #636B80; /* labels, meta lines */
+  --loop-ink-muted: #8A91A3;     /* chevrons, done items */
+
+  /* Accent */
+  --loop-accent: #2F6BE3;        /* filled buttons and checks. For text links use --loop-accent-text */
+  --loop-on-accent: #FFFFFF;
+  --loop-accent-text: #1F55C4;   /* all accent-coloured text: links, text buttons, text on a tint */
+  --loop-tint: #DCE6FB;          /* selected nav, avatar */
+  --loop-tint-2: #EEF3FD;        /* chips, selected rows, coach boxes */
+
+  /* Controls */
+  --loop-check-border: #C9D2E3;
+  --loop-track: #E4E8F0;         /* progress bar track */
+
+  /* Status */
+  --loop-danger: #B3261E;        /* End season, Delete */
+  --loop-priority-high: #C7372F;
+  --loop-priority-medium: #9E5410;
+  --loop-success: #1E7A50;
+  --loop-success-tint: #E3F4EC;  /* "New" chip */
+  --loop-warn-text: #6B3E0E;
+  --loop-warn-tint: #FDF3E7;     /* "nothing done last week" note */
+
+  /* Overlays */
+  --loop-scrim: rgba(20, 26, 46, 0.40);
+  --loop-snackbar: #141A2E;
+  --loop-on-snackbar: #FFFFFF;
+  --loop-snackbar-action: #9DBBF5;
+  --loop-material: rgba(250, 251, 253, 0.86); /* menus and notifications, with backdrop-filter */
+
+  /* List colours (unchanged across themes) */
+  --loop-list-work: #2F6BE3;
+  --loop-list-personal: #D9822B;
+  --loop-list-learning: #2E9E6A;
+  --loop-list-fitness: #8A4FD0;
+  --loop-list-roadmap: #1B8A9A;
+
+  /* Type */
+  --loop-font: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --loop-title-tracking: -0.02em; /* 28 px and up */
+
+  /* Shape */
+  --loop-radius-panel: 22px;
+  --loop-radius-card: 20px;   /* phone cards */
+  --loop-radius-card-computer: 16px;
+  --loop-radius-button: 14px;
+  --loop-radius-chip: 12px;
+
+  /* Motion */
+  --loop-press-scale: 0.97;
+  --loop-press-duration: 100ms;
+  --loop-sheet-curve: cubic-bezier(0.32, 0.72, 0, 1); /* sheets and drawers, ~320 ms */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --loop-ground: #0F1320;
+    --loop-surface: #181E30;
+    --loop-surface-inset: #20273C;
+    --loop-line: #283049;
+    --loop-line-strong: #343D58;
+
+    --loop-ink: #EEF1F7;
+    --loop-ink-2: #C9CFDC;
+    --loop-ink-secondary: #9AA3B8;
+    --loop-ink-muted: #7A8399;
+
+    --loop-accent: #3466D4;
+    --loop-on-accent: #FFFFFF;
+    --loop-accent-text: #9DBBF5;
+    --loop-tint: #23345C;
+    --loop-tint-2: #1D2A4A;
+
+    --loop-check-border: #4A5370;
+    --loop-track: #2C3550;
+
+    --loop-danger: #F0776E;
+    --loop-priority-high: #F0776E;
+    --loop-priority-medium: #F0B26A;
+    --loop-success: #5CC495;
+    --loop-success-tint: #17352A;
+    --loop-warn-text: #F0C995;
+    --loop-warn-tint: #3A2A16;
+
+    --loop-scrim: rgba(0, 0, 0, 0.55);
+    --loop-snackbar: #EEF1F7;
+    --loop-on-snackbar: #141A2E;
+    --loop-snackbar-action: #1F55C4;
+    --loop-material: rgba(30, 36, 54, 0.86);
+  }
+}
+
+:root[data-theme="dark"] {
+  --loop-ground: #0F1320;
+  --loop-surface: #181E30;
+  --loop-surface-inset: #20273C;
+  --loop-line: #283049;
+  --loop-line-strong: #343D58;
+  --loop-ink: #EEF1F7;
+  --loop-ink-2: #C9CFDC;
+  --loop-ink-secondary: #9AA3B8;
+  --loop-ink-muted: #7A8399;
+  --loop-accent: #3466D4;
+  --loop-on-accent: #FFFFFF;
+  --loop-accent-text: #9DBBF5;
+  --loop-tint: #23345C;
+  --loop-tint-2: #1D2A4A;
+  --loop-check-border: #4A5370;
+  --loop-track: #2C3550;
+  --loop-danger: #F0776E;
+  --loop-priority-high: #F0776E;
+  --loop-priority-medium: #F0B26A;
+  --loop-success: #5CC495;
+  --loop-success-tint: #17352A;
+  --loop-warn-text: #F0C995;
+  --loop-warn-tint: #3A2A16;
+  --loop-scrim: rgba(0, 0, 0, 0.55);
+  --loop-snackbar: #EEF1F7;
+  --loop-on-snackbar: #141A2E;
+  --loop-snackbar-action: #1F55C4;
+  --loop-material: rgba(30, 36, 54, 0.86);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root { --loop-material: var(--loop-surface); }
+}

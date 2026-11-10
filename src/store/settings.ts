@@ -21,6 +21,13 @@ export type Settings = {
   /** False until the clock is picked in Week and time; until then Loop follows the phone's 12/24-hour setting. */
   timeFormatChosen?: boolean;
   recentSearches: string[];
+  /** The coach (docs/13 §5): off until turned on in Settings, after the privacy sheet. */
+  coachEnabled: boolean;
+  /** When the privacy sheet was accepted. */
+  coachConsentAt: string | null;
+  /** "Plan my day between": the coach only suggests times inside this window. */
+  planStart: TimeKey;
+  planEnd: TimeKey;
 };
 
 type Actions = {
@@ -42,6 +49,10 @@ export const useSettings = create<Settings & Actions>()(
       weekStart: 0,
       timeFormat: '24h',
       recentSearches: [],
+      coachEnabled: false,
+      coachConsentAt: null,
+      planStart: '09:00',
+      planEnd: '18:00',
       set: (patch) => set(patch),
       addRecentSearch: (q) =>
         set((s) => {

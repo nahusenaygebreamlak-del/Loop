@@ -9,7 +9,8 @@ import { useSheets } from '@/components/Sheet';
 import { Card, GroupLabel, IconButton } from '@/components/ui';
 import { goBack } from '@/features/nav';
 import { CheckinTimeSheet, THEME_LABEL, ThemeSheet, WeekTimeSheet } from '@/features/sheets/SettingsSheets';
-import { formatTime } from '@/lib/dates';
+import { formatTime, monthDay, todayKey } from '@/lib/dates';
+import { activeSeason, currentSeason, weekLine } from '@/lib/seasons';
 import { useCalendar } from '@/calendar/google';
 import { useAuth } from '@/lib/auth';
 import { useNotificationsAllowed } from '@/notifications/useAllowed';
@@ -37,6 +38,9 @@ function SettingsPhone() {
   const timeFormat = useTimeFormat();
   const calStatus = useCalendar((st) => st.status);
   const lists = useStore((st) => st.lists);
+  const seasons = useStore((st) => st.seasons);
+  const season = activeSeason(seasons, todayKey());
+  const upcoming = season ? null : currentSeason(seasons, todayKey());
   const live = lists.filter((l) => !l.deletedAt && !l.archivedAt).length;
   const archived = lists.filter((l) => !l.deletedAt && l.archivedAt).length;
 
@@ -142,6 +146,18 @@ function SettingsPhone() {
         <GroupLabel style={{ paddingTop: 16, paddingBottom: 8 }}>Inbox</GroupLabel>
         <Card>
           <SetRow name="Sort reminder" hint="Only when there are notes" value={time(s.sortTime)} valueMuted={!s.sortTime} last onPress={() => sheets.open(() => <CheckinTimeSheet kind="sortTime" />)} />
+        </Card>
+
+        <GroupLabel style={{ paddingTop: 16, paddingBottom: 8 }}>Season</GroupLabel>
+        <Card>
+          <SetRow
+            name="Current season"
+            hint={season ? `Ends ${monthDay(season.endDate)}` : upcoming ? `Starts ${monthDay(upcoming.startDate)}` : 'Mark a few lists as core for 12 weeks'}
+            value={season ? weekLine(season, todayKey()) : upcoming ? 'Soon' : 'None'}
+            valueMuted={!season}
+            last
+            onPress={() => router.push('/season')}
+          />
         </Card>
 
         <GroupLabel style={{ paddingTop: 16, paddingBottom: 8 }}>Lists and look</GroupLabel>

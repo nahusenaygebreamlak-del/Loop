@@ -1,20 +1,23 @@
 // App objects ⇄ Supabase rows (camelCase ⇄ snake_case). Pure; tested in tests/sync.test.ts.
-import type { InboxItem, List, Note, Tag, Task } from '../store/types.ts';
+import type { Debrief, InboxItem, List, Note, Season, Tag, Task } from '../store/types.ts';
 
-export type Table = 'lists' | 'tasks' | 'tags' | 'inbox_items' | 'notes';
+export type Table = 'lists' | 'tasks' | 'tags' | 'inbox_items' | 'notes' | 'seasons' | 'debriefs';
 export type Row = Record<string, unknown>;
 
 /** Push order respects foreign keys (tasks point at lists). Deletes go the other way. */
-export const PUSH_ORDER: Table[] = ['lists', 'tags', 'tasks', 'inbox_items', 'notes'];
-export const DELETE_ORDER: Table[] = ['tasks', 'inbox_items', 'notes', 'tags', 'lists'];
+export const PUSH_ORDER: Table[] = ['lists', 'tags', 'tasks', 'inbox_items', 'notes', 'seasons', 'debriefs'];
+export const DELETE_ORDER: Table[] = ['debriefs', 'seasons', 'tasks', 'inbox_items', 'notes', 'tags', 'lists'];
+
+/** Tables added after the first release. Until their migration has been run, sync carries on without them. */
+export const OPTIONAL_TABLES: Table[] = ['seasons', 'debriefs'];
 
 /** Store collection name for each table. */
-export const COLLECTION = { lists: 'lists', tasks: 'tasks', tags: 'tags', inbox_items: 'inbox', notes: 'notes' } as const;
+export const COLLECTION = { lists: 'lists', tasks: 'tasks', tags: 'tags', inbox_items: 'inbox', notes: 'notes', seasons: 'seasons', debriefs: 'debriefs' } as const;
 
 const iso = (v: unknown) => (v == null ? null : new Date(String(v)).toISOString());
 const hhmm = (v: unknown) => (v == null ? null : String(v).slice(0, 5));
 
-export function toRow(table: Table, x: List | Task | Tag | InboxItem | Note, userId: string): Row {
+export function toRow(table: Table, x: List | Task | Tag | InboxItem | Note | Season | Debrief, userId: string): Row {
   switch (table) {
     case 'lists': {
       const l = x as List;
@@ -56,10 +59,18 @@ export function toRow(table: Table, x: List | Task | Tag | InboxItem | Note, use
       const n = x as Note;
       return { id: n.id, user_id: userId, title: n.title, body: n.body, pinned: n.pinned, from_inbox: n.fromInbox, deleted_at: n.deletedAt, created_at: n.createdAt };
     }
+    case 'seasons': {
+      const s = x as Season;
+      return { id: s.id, user_id: userId, name: s.name, start_date: s.startDate, end_date: s.endDate, ended_at: s.endedAt, tiers: s.tiers, created_at: s.createdAt };
+    }
+    case 'debriefs': {
+      const d = x as Debrief;
+      return { id: d.id, user_id: userId, day: d.day, opened_at: d.openedAt, answered_at: d.answeredAt, leftovers_action: d.leftoversAction, plan: d.plan, plan_runs: d.planRuns, plan_state: d.planState, created_at: d.createdAt };
+    }
   }
 }
 
-export function fromRow(table: Table, r: Row): List | Task | Tag | InboxItem | Note {
+export function fromRow(table: Table, r: Row): List | Task | Tag | InboxItem | Note | Season | Debrief {
   const updatedAt = iso(r.updated_at) ?? new Date().toISOString();
   const createdAt = iso(r.created_at) ?? updatedAt;
   switch (table) {
@@ -122,6 +133,30 @@ export function fromRow(table: Table, r: Row): List | Task | Tag | InboxItem | N
         createdAt,
         updatedAt,
       };
+    case 'seasons':
+      return {
+        id: String(r.id),
+        name: (r.name as string) ?? null,
+        startDate: String(r.start_date).slice(0, 10),
+        endDate: String(r.end_date).slice(0, 10),
+        endedAt: iso(r.ended_at),
+        tiers: (r.tiers as Season['tiers']) ?? {},
+        createdAt,
+        updatedAt,
+      };
+    case 'debriefs':
+      return {
+        id: String(r.id),
+        day: String(r.day).slice(0, 10),
+        openedAt: iso(r.opened_at),
+        answeredAt: iso(r.answered_at),
+        leftoversAction: (r.leftovers_action as Debrief['leftoversAction']) ?? null,
+        plan: (r.plan as Debrief['plan']) ?? null,
+        planRuns: Number(r.plan_runs ?? 0),
+        planState: (r.plan_state as Debrief['planState']) ?? {},
+        createdAt,
+        updatedAt,
+      };
   }
 }
 
@@ -162,7 +197,14 @@ export type ProfileSettings = {
   fullScreen: boolean;
   weekends: boolean;
   remindUntilAct: boolean;
+  coachEnabled: boolean;
+  coachConsentAt: string | null;
+  planStart: string;
+  planEnd: string;
 };
+
+/** Profile columns added with the coach. Until that migration has been run, sync carries on without them. */
+export const COACH_COLUMNS = ['coach_enabled', 'coach_consent_at', 'plan_window_start', 'plan_window_end'];
 
 export function settingsToProfile(s: ProfileSettings): Row {
   return {
@@ -175,10 +217,16 @@ export function settingsToProfile(s: ProfileSettings): Row {
     full_screen_enabled: s.fullScreen,
     weekends_enabled: s.weekends,
     remind_until_act: s.remindUntilAct,
+    coach_enabled: s.coachEnabled,
+    coach_consent_at: s.coachConsentAt,
+    plan_window_start: s.planStart,
+    plan_window_end: s.planEnd,
   };
 }
 
-export function profileToSettings(r: Row): ProfileSettings {
+/** `local` fills in the coach settings when the server's profile doesn't have those columns yet. */
+export function profileToSettings(r: Row, local?: Pick<ProfileSettings, 'coachEnabled' | 'coachConsentAt' | 'planStart' | 'planEnd'>): ProfileSettings {
+  const hasCoach = 'coach_enabled' in r;
   return {
     theme: (r.theme as ProfileSettings['theme']) ?? 'system',
     weekStart: Number(r.week_start ?? 0) === 1 ? 1 : 0,
@@ -189,5 +237,9 @@ export function profileToSettings(r: Row): ProfileSettings {
     fullScreen: !!r.full_screen_enabled,
     weekends: !!r.weekends_enabled,
     remindUntilAct: !!r.remind_until_act,
+    coachEnabled: hasCoach ? !!r.coach_enabled : (local?.coachEnabled ?? false),
+    coachConsentAt: hasCoach ? iso(r.coach_consent_at) : (local?.coachConsentAt ?? null),
+    planStart: hasCoach ? (hhmm(r.plan_window_start) ?? '09:00') : (local?.planStart ?? '09:00'),
+    planEnd: hasCoach ? (hhmm(r.plan_window_end) ?? '18:00') : (local?.planEnd ?? '18:00'),
   };
 }

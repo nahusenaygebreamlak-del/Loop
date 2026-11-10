@@ -15,6 +15,7 @@ import { MenuItem, MenuSeparator } from '../Menu';
 import { selectTask } from '../state';
 import { DeskEmpty, DeskHeader, GroupLab, KeyButton, SoftButton } from '../ui';
 import { useViewKeys } from '../useDeskKeys';
+import { modKey } from '../platform';
 
 const noteText = (n: Note) => [n.title, ...n.body.map((b) => (b.type === 'checklist' ? `${b.done ? '☑' : '☐'} ${b.text}` : b.type === 'bullet' ? `• ${b.text}` : b.text))].filter(Boolean).join('\n');
 
@@ -122,7 +123,7 @@ function NoteMenu({ note, flush }: { note: Note; flush: () => void }) {
       <MenuItem
         icon="completed"
         label="Turn into task"
-        keys={['Ctrl', 'Enter']}
+        keys={[modKey, 'Enter']}
         onPress={run(() => {
           const id = useStore.getState().noteToTask(note.id);
           if (id) {

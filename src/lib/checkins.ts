@@ -103,6 +103,8 @@ export function planCheckins(
   now: Date,
   todayKey: DateKey,
   days = 3,
+  /** Days whose morning debrief is already answered: no more repeats for them. */
+  answered: Set<DateKey> = new Set(),
 ): PlannedNotification[] {
   const out: PlannedNotification[] = [];
   for (let i = 0; i < days; i++) {
@@ -117,7 +119,7 @@ export function planCheckins(
     const morning = morningContent(data.tasks, data.lists, day);
     push('morning', s.morningTime, morning);
     // Remind until I act: repeat an unanswered leftovers check-in every 15 minutes, up to an hour.
-    if (s.remindUntilAct && s.morningTime && morning.category === 'leftovers') {
+    if (s.remindUntilAct && s.morningTime && morning.category === 'leftovers' && !answered.has(day)) {
       for (let r = 1; r <= 4; r++) {
         const at = new Date(atTime(day, s.morningTime).getTime() + r * 15 * 60_000);
         if (at > now) out.push({ id: `morning-${day}-r${r}`, kind: 'morning', day, at, ...morning });

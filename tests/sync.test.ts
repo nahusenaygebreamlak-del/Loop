@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { diff, fromRow, matchListsByName, profileToSettings, settingsToProfile, toRow } from '../src/sync/mapping.ts';
+import { COACH_COLUMNS, diff, fromRow, matchListsByName, profileToSettings, settingsToProfile, toRow } from '../src/sync/mapping.ts';
 import type { List, Task } from '../src/store/types.ts';
 
 const task: Task = {
@@ -39,6 +39,31 @@ test('first sign-in folds local default lists into the account lists', () => {
 });
 
 test('settings ⇄ profile, with check-ins turned off', () => {
-  const s = { theme: 'dark' as const, weekStart: 1 as const, timeFormat: '12h' as const, morningTime: null, afternoonTime: '14:00', sortTime: '18:00', fullScreen: true, weekends: false, remindUntilAct: true };
-  assert.deepEqual(profileToSettings({ ...settingsToProfile(s), afternoon_time: '14:00:00', sort_time: '18:00:00' }), s);
+  const s = { theme: 'dark' as const, weekStart: 1 as const, timeFormat: '12h' as const, morningTime: null, afternoonTime: '14:00', sortTime: '18:00', fullScreen: true, weekends: false, remindUntilAct: true, coachEnabled: true, coachConsentAt: '2026-11-10T09:00:00.000Z', planStart: '08:00', planEnd: '17:30' };
+  assert.deepEqual(profileToSettings({ ...settingsToProfile(s), afternoon_time: '14:00:00', sort_time: '18:00:00', plan_window_start: '08:00:00', plan_window_end: '17:30:00', coach_consent_at: '2026-11-10 09:00:00+00' }), s);
+});
+
+test('a profile without the coach columns keeps this device\'s coach settings', () => {
+  const s = { theme: 'dark' as const, weekStart: 1 as const, timeFormat: '12h' as const, morningTime: null, afternoonTime: null, sortTime: null, fullScreen: false, weekends: false, remindUntilAct: false, coachEnabled: true, coachConsentAt: '2026-11-10T09:00:00.000Z', planStart: '08:00', planEnd: '17:30' };
+  const old = Object.fromEntries(Object.entries(settingsToProfile(s)).filter(([k]) => !COACH_COLUMNS.includes(k)));
+  assert.deepEqual(profileToSettings(old, s), s);
+  assert.equal(profileToSettings(old).coachEnabled, false);
+});
+
+test('season row round trip (Postgres date format, tiers as an object)', () => {
+  const season = { id: 's1', name: null, startDate: '2026-10-27', endDate: '2027-01-18', endedAt: null, tiers: { l1: 'core' as const }, createdAt: '2026-10-27T08:00:00.000Z', updatedAt: '2026-10-27T08:00:00.000Z' };
+  const row = toRow('seasons', season, 'u1');
+  assert.equal(row.start_date, '2026-10-27');
+  assert.ok(!('updated_at' in row), 'the server sets updated_at');
+  const back = fromRow('seasons', { ...row, end_date: '2027-01-18', created_at: '2026-10-27 08:00:00+00', updated_at: '2026-10-27T08:00:00+00:00' });
+  assert.deepEqual(back, season);
+  assert.deepEqual((fromRow('seasons', { ...row, tiers: null }) as typeof season).tiers, {});
+});
+
+test('debrief row round trip', () => {
+  const d = { id: 'd1', day: '2026-11-10', openedAt: '2026-11-10T08:31:00.000Z', answeredAt: null, leftoversAction: null, plan: { summary: 'A light day.', suggestions: [{ taskId: 't1', kind: 'today' as const, reason: 'Due today.' }] }, planRuns: 1, planState: { accepted: ['t1'] }, createdAt: '2026-11-10T08:31:00.000Z', updatedAt: '2026-11-10T08:31:00.000Z' };
+  const row = toRow('debriefs', d, 'u1');
+  assert.equal(row.day, '2026-11-10');
+  assert.deepEqual(fromRow('debriefs', { ...row, opened_at: '2026-11-10 08:31:00+00', created_at: '2026-11-10 08:31:00+00', updated_at: '2026-11-10T08:31:00+00:00' }), d);
+  assert.deepEqual(fromRow('debriefs', { ...row, plan: null, plan_runs: null, plan_state: null, created_at: d.createdAt, updated_at: d.updatedAt }), { ...d, plan: null, planRuns: 0, planState: {} });
 });

@@ -6,6 +6,8 @@ import { useSnackbar } from '@/components/Snackbar';
 import { SwitchKnob } from '@/components/Switch';
 import { goMain } from '@/features/nav';
 import { ListEditSheet } from '@/features/sheets/ListEditSheet';
+import { todayKey } from '@/lib/dates';
+import { activeSeason, TIER_LABEL, tierOf } from '@/lib/seasons';
 import { listGroups, listRowSub, openCount, sortTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
 import { useStore } from '@/store/store';
@@ -17,6 +19,7 @@ import { Kbd } from '../Kbd';
 import { MenuItem, MenuSeparator } from '../Menu';
 import { openQuickAdd } from '../state';
 import { DeskCard, DeskEmpty, DeskHeader, DeskPage, GroupLab, IconButton2, KeyButton, TaskRowDesk, useRows } from '../ui';
+import { TierMenu } from './SeasonDesk';
 
 const COLORS: ListColor[] = ['work', 'personal', 'learning', 'purple', 'pink', 'slate'];
 const SORT_LABEL: Record<ListSort, string> = { date: 'Date', priority: 'Priority', title: 'Title' };
@@ -89,9 +92,20 @@ function ListMenu({ listId }: { listId: string }) {
   const list = useStore((s) => s.lists.find((l) => l.id === listId));
   const updateList = useStore((s) => s.updateList);
   const [sortOpen, setSortOpen] = useState(false);
+  const season = useStore((s) => activeSeason(s.seasons, todayKey()));
   if (!list) return null;
   return (
     <View accessibilityRole="menu" accessibilityLabel="List options" style={{ width: 270, backgroundColor: c.card, borderWidth: 1, borderColor: c.desk.border, borderRadius: 16, padding: 6 }}>
+      {season ? (
+        <MenuItem
+          label="Season tier"
+          value={`${TIER_LABEL[tierOf(season, listId)]} ›`}
+          onPress={() => {
+            close();
+            setTimeout(() => sheets.open(() => <TierMenu seasonId={season.id} listId={listId} />, 'dialog'), 0);
+          }}
+        />
+      ) : null}
       <MenuItem
         label="Rename"
         onPress={() => {

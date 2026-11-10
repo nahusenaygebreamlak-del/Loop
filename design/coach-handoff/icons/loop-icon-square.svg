@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Full-bleed square for maskable 512, 192, 180 and the favicon. Mark sits inside the 66% safe zone. -->
+  <rect width="1024" height="1024" fill="#2F6BE3"/>
+  <g transform="translate(512 512) scale(6.0) translate(-50 -50)" fill="#FFFFFF">
+  <ellipse cx="32" cy="32" rx="20" ry="13" transform="rotate(-40 32 32)"/>
+  <ellipse cx="68" cy="32" rx="20" ry="13" transform="rotate(40 68 32)"/>
+  <ellipse cx="32" cy="68" rx="20" ry="13" transform="rotate(40 32 68)"/>
+  <ellipse cx="68" cy="68" rx="20" ry="13" transform="rotate(-40 68 68)"/>
+  </g>
+</svg>

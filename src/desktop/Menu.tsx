@@ -11,6 +11,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { font } from '@/theme/typography';
 import { Kbd } from './Kbd';
 import { selectTask } from './state';
+import { modKey } from './platform';
 
 /** A floating menu card (.menu): 270 px, 1 px border, opens at the pointer or a button. */
 export function MenuCard({ children, width = 270, label }: { children: ReactNode; width?: number; label: string }) {
@@ -93,7 +94,7 @@ export function TaskMenu({ taskId }: { taskId: string }) {
         <MenuItem label="Tags" keys={['T']} onPress={then(() => actions.pickTags(taskId))} />
         <MenuItem
           label="Duplicate"
-          keys={['Ctrl', 'D']}
+          keys={[modKey, 'D']}
           onPress={() => {
             const id = useStore.getState().duplicateTask(taskId);
             close();

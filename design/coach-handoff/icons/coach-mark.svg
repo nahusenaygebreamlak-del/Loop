@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Coach mark: a loop with a small spark. Draw at 16 px in accent text colour. Always pair with the label "Coach" for screen readers. -->
+  <path d="M16.5 15.5a5.5 5.5 0 1 1 1-6"/>
+  <path d="M14 9.5h3.7V5.8"/>
+  <path d="M19.5 2.5v3M18 4h3"/>
+</svg>

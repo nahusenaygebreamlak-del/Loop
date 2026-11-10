@@ -5,13 +5,15 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
 import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
-import type { InboxItem, List, Note, Tag, Task } from '@/store/types';
+import type { Debrief, InboxItem, List, Note, Season, Tag, Task } from '@/store/types';
 import {
+  COACH_COLUMNS,
   COLLECTION,
   DELETE_ORDER,
   diff,
   fromRow,
   matchListsByName,
+  OPTIONAL_TABLES,
   profileToSettings,
   PUSH_ORDER,
   settingsToProfile,
@@ -26,7 +28,7 @@ import {
 // persisted outbox ("table:id" → sequence number); a sync pulls what changed on the server
 // since the last cursor, then pushes the outbox. Local edits that haven't been pushed win.
 
-type Entity = List | Task | Tag | InboxItem | Note;
+type Entity = List | Task | Tag | InboxItem | Note | Season | Debrief;
 type Meta = {
   userId: string | null;
   cursor: string | null;
@@ -58,6 +60,10 @@ const parseKey = (k: string) => {
 const pendingCount = () => Object.keys(useMeta.getState().dirty).length + Object.keys(useMeta.getState().deleted).length + (useMeta.getState().profileDirty ? 1 : 0);
 const refreshPending = () => useSyncStatus.setState({ pending: pendingCount() });
 
+/** Optional tables the server doesn't have yet (their migration hasn't been run). Their changes wait in the outbox. */
+const missing = new Set<Table>();
+const isMissingTable = (e: { code?: string; message?: string } | null) => !!e && (e.code === '42P01' || e.code === 'PGRST205' || /could not find the table|does not exist/i.test(e.message ?? ''));
+
 let applyingRemote = false;
 let userId: string | null = null;
 let adopting = false;
@@ -66,8 +72,8 @@ let again = false;
 const cleanups: (() => void)[] = [];
 
 function profileOf(s: ProfileSettings): ProfileSettings {
-  const { theme, weekStart, timeFormat, morningTime, afternoonTime, sortTime, fullScreen, weekends, remindUntilAct } = s;
-  return { theme, weekStart, timeFormat, morningTime, afternoonTime, sortTime, fullScreen, weekends, remindUntilAct };
+  const { theme, weekStart, timeFormat, morningTime, afternoonTime, sortTime, fullScreen, weekends, remindUntilAct, coachEnabled, coachConsentAt, planStart, planEnd } = s;
+  return { theme, weekStart, timeFormat, morningTime, afternoonTime, sortTime, fullScreen, weekends, remindUntilAct, coachEnabled, coachConsentAt, planStart, planEnd };
 }
 
 function waitHydrated(store: { persist: { hasHydrated: () => boolean; onFinishHydration: (fn: () => void) => () => void } }) {
@@ -185,7 +191,7 @@ export async function signOutSync() {
 
 function clearLocalData() {
   applyingRemote = true;
-  useStore.setState({ lists: [], tasks: [], tags: [], inbox: [], notes: [] });
+  useStore.setState({ lists: [], tasks: [], tags: [], inbox: [], notes: [], seasons: [], debriefs: [] });
   applyingRemote = false;
 }
 
@@ -241,6 +247,13 @@ async function fetchAll(table: string, since: string | null, column = 'updated_a
     let q = supabase.from(table).select('*').order(column).range(from, from + 999);
     if (since) q = q.gt(column, since);
     const { data, error } = await q;
+    if (OPTIONAL_TABLES.includes(table as Table)) {
+      if (isMissingTable(error)) {
+        missing.add(table as Table);
+        return [];
+      }
+      if (!error) missing.delete(table as Table);
+    }
     fail(error, `pull ${table}`);
     out.push(...((data ?? []) as Row[]));
     if (!data || data.length < 1000) return out;
@@ -271,7 +284,7 @@ async function pull() {
   applyingRemote = true;
   try {
     useStore.setState((s) => {
-      const next = { lists: s.lists, tasks: s.tasks, tags: s.tags, inbox: s.inbox, notes: s.notes } as Record<string, Entity[]>;
+      const next = { lists: s.lists, tasks: s.tasks, tags: s.tags, inbox: s.inbox, notes: s.notes, seasons: s.seasons, debriefs: s.debriefs } as Record<string, Entity[]>;
 
       // First sign-in here: fold local lists into the account's lists with the same name.
       if (adopting) {
@@ -304,7 +317,7 @@ async function pull() {
       return next as unknown as Partial<typeof s>;
     });
     if (profile && !meta.profileDirty) {
-      const remote = profileToSettings(profile as Row);
+      const remote = profileToSettings(profile as Row, useSettings.getState());
       if (JSON.stringify(remote) !== JSON.stringify(profileOf(useSettings.getState()))) useSettings.getState().set(remote);
     }
   } finally {
@@ -350,6 +363,7 @@ async function push() {
   const sent: Record<string, number> = {};
 
   for (const table of PUSH_ORDER) {
+    if (missing.has(table)) continue; // stays in the outbox until the table exists
     const col = COLLECTION[table];
     const byId = new Map((s[col] as Entity[]).map((x) => [x.id, x]));
     const rows: Row[] = [];
@@ -365,6 +379,7 @@ async function push() {
 
   const deletedSent: Record<string, number> = {};
   for (const table of DELETE_ORDER) {
+    if (missing.has(table)) continue;
     const ids = Object.entries(m.deleted)
       .filter(([k]) => parseKey(k).table === table)
       .map(([k, n]) => {
@@ -381,7 +396,13 @@ async function push() {
   let profileSent = 0;
   if (m.profileDirty) {
     profileSent = m.profileDirty;
-    const { error } = await supabase.from('profiles').update(settingsToProfile(profileOf(useSettings.getState()))).eq('id', userId!);
+    const row = settingsToProfile(profileOf(useSettings.getState()));
+    let { error } = await supabase.from('profiles').update(row).eq('id', userId!);
+    if (error && (error.code === 'PGRST204' || error.code === '42703' || /column/i.test(error.message))) {
+      // The coach columns aren't on the server yet: send the rest, and try the coach settings again next time.
+      const rest = Object.fromEntries(Object.entries(row).filter(([k]) => !COACH_COLUMNS.includes(k)));
+      ({ error } = await supabase.from('profiles').update(rest).eq('id', userId!));
+    }
     fail(error, 'push profile');
   }
 

@@ -36,7 +36,7 @@ export function DeskShell({ children }: { children: ReactNode }) {
 
   const path = usePathname();
   // Notes use the right side for the editor, Calendar for its own column, Settings for two columns.
-  const ownRight = /^\/(notes|note|settings|calendar)/.test(path);
+  const ownRight = /^\/(notes|note|settings|calendar|season)/.test(path);
   const showPanel = !ownRight && panelOn && (panelInline || !!selected);
 
   return (

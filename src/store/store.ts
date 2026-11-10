@@ -5,7 +5,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { nextOccurrence } from '@/lib/repeat';
 import { useLocal } from './local';
-import type { InboxItem, List, ListColor, Note, Subtask, Tag, Task } from './types';
+import { cleanTiers } from '@/lib/seasons';
+import type { DayPlan, Debrief, InboxItem, LeftoversAction, PlanState, List, ListColor, Note, Season, Subtask, Tag, Task, Tier } from './types';
 
 export type TrashKind = 'task' | 'inbox' | 'note';
 const TRASH_DAYS = 30;
@@ -18,6 +19,8 @@ type Data = {
   tags: Tag[];
   inbox: InboxItem[];
   notes: Note[];
+  seasons: Season[];
+  debriefs: Debrief[];
 };
 
 export type NewTask = Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>> & { title: string };
@@ -78,6 +81,24 @@ type Actions = {
   /** Sends the list's tasks to Trash. Returns an undo function. */
   deleteList: (id: string) => () => void;
 
+  /** Saves a new season (docs/13 §2.1). Returns its id and an undo function. */
+  addSeason: (s: { name: string | null; startDate: string; endDate: string; tiers: Record<string, Tier> }) => { id: string; undo: () => void };
+  /** Name or dates. Returns an undo function. */
+  updateSeason: (id: string, patch: Partial<Pick<Season, 'name' | 'startDate' | 'endDate'>>) => () => void;
+  /** Marks a list Core, Secondary or Support for that season. Returns an undo function. */
+  setTier: (seasonId: string, listId: string, tier: Tier) => () => void;
+  /** Ends the season now: it stays as history and tiers stop showing. Returns an undo function. */
+  endSeason: (id: string) => () => void;
+
+  /** The debrief page was opened for that day (docs/13 §2.2). */
+  openDebrief: (day: string) => void;
+  /** The day's debrief is answered: reminders stop and the menu item goes, on every device. */
+  answerDebrief: (day: string, action?: LeftoversAction) => void;
+  /** Saves the coach's plan for the day (a fresh run clears what was accepted or dismissed, keeping accepted ones that are still in it). */
+  setPlan: (day: string, plan: DayPlan, countRun: boolean) => void;
+  /** Marks suggestions accepted, or the plan dismissed / shown again. */
+  setPlanState: (day: string, patch: PlanState) => void;
+
   /** Restores a Trash item (a task also brings back its deleted list). */
   restore: (kind: TrashKind, id: string) => void;
   /** Deletes a Trash item for good. */
@@ -112,6 +133,8 @@ export const useStore = create<Store>()(
         tags: [],
         inbox: [],
         notes: [],
+        seasons: [],
+        debriefs: [],
 
         seedDefaults: () => {
           if (get().lists.length) return;
@@ -423,6 +446,67 @@ export const useStore = create<Store>()(
           return () => set({ tasks: prevTasks, lists: prevLists });
         },
 
+        addSeason: ({ name, startDate, endDate, tiers }) => {
+          const ts = now();
+          const season: Season = { id: randomUUID(), name: name?.trim() || null, startDate, endDate, endedAt: null, tiers: cleanTiers(tiers, get().lists), createdAt: ts, updatedAt: ts };
+          set((s) => ({ seasons: [...s.seasons, season] }));
+          return { id: season.id, undo: () => set((s) => ({ seasons: s.seasons.filter((x) => x.id !== season.id) })) };
+        },
+
+        updateSeason: (id, patch) => {
+          const before = get().seasons.find((x) => x.id === id);
+          const put = (p: Partial<Season>) => set((s) => ({ seasons: s.seasons.map((x) => (x.id === id ? { ...x, ...p, updatedAt: now() } : x)) }));
+          put({ ...patch, ...(patch.name !== undefined ? { name: patch.name?.trim() || null } : null) });
+          return () => before && put({ name: before.name, startDate: before.startDate, endDate: before.endDate });
+        },
+
+        setTier: (seasonId, listId, tier) => {
+          const before = get().seasons.find((x) => x.id === seasonId)?.tiers;
+          const put = (tiers: Record<string, Tier>) => set((s) => ({ seasons: s.seasons.map((x) => (x.id === seasonId ? { ...x, tiers, updatedAt: now() } : x)) }));
+          if (!before) return () => {};
+          put(cleanTiers({ ...before, [listId]: tier }, get().lists));
+          return () => put(before);
+        },
+
+        endSeason: (id) => {
+          const put = (endedAt: string | null) => set((s) => ({ seasons: s.seasons.map((x) => (x.id === id ? { ...x, endedAt, updatedAt: now() } : x)) }));
+          put(now());
+          return () => put(null);
+        },
+
+        openDebrief: (day) => {
+          const ts = now();
+          const mine = get().debriefs.find((d) => d.day === day);
+          if (mine?.openedAt) return;
+          if (mine) set((s) => ({ debriefs: s.debriefs.map((d) => (d.id === mine.id ? { ...d, openedAt: ts, updatedAt: ts } : d)) }));
+          else set((s) => ({ debriefs: [...s.debriefs, { id: randomUUID(), day, openedAt: ts, answeredAt: null, leftoversAction: null, plan: null, planRuns: 0, planState: {}, createdAt: ts, updatedAt: ts }] }));
+        },
+
+        answerDebrief: (day, action) => {
+          const ts = now();
+          const rows = get().debriefs.filter((d) => d.day === day);
+          const mine = rows[0];
+          // Already answered: only remember what was done with the leftovers, if that's new.
+          if (rows.some((d) => d.answeredAt) && (!action || rows.some((d) => d.leftoversAction === action))) return;
+          if (mine) set((s) => ({ debriefs: s.debriefs.map((d) => (d.id === mine.id ? { ...d, answeredAt: d.answeredAt ?? ts, leftoversAction: action ?? d.leftoversAction, updatedAt: ts } : d)) }));
+          else set((s) => ({ debriefs: [...s.debriefs, { id: randomUUID(), day, openedAt: null, answeredAt: ts, leftoversAction: action ?? null, plan: null, planRuns: 0, planState: {}, createdAt: ts, updatedAt: ts }] }));
+        },
+
+        setPlan: (day, plan, countRun) => {
+          const ts = now();
+          const mine = get().debriefs.find((d) => d.day === day);
+          const keep = (d: Debrief | undefined): PlanState => ({ accepted: (d?.planState.accepted ?? []).filter((id) => plan.suggestions.some((x) => x.taskId === id)) });
+          if (mine) set((s) => ({ debriefs: s.debriefs.map((d) => (d.id === mine.id ? { ...d, plan, planRuns: d.planRuns + (countRun ? 1 : 0), planState: keep(d), updatedAt: ts } : d)) }));
+          else set((s) => ({ debriefs: [...s.debriefs, { id: randomUUID(), day, openedAt: ts, answeredAt: null, leftoversAction: null, plan, planRuns: countRun ? 1 : 0, planState: {}, createdAt: ts, updatedAt: ts }] }));
+        },
+
+        setPlanState: (day, patch) => {
+          const ts = now();
+          const mine = get().debriefs.find((d) => d.day === day);
+          if (!mine) return;
+          set((s) => ({ debriefs: s.debriefs.map((d) => (d.id === mine.id ? { ...d, planState: { ...d.planState, ...patch }, updatedAt: ts } : d)) }));
+        },
+
         restore: (kind, id) => {
           const ts = now();
           if (kind === 'task') {
@@ -461,17 +545,23 @@ export const useStore = create<Store>()(
     },
     {
       name: 'loop.data.v1',
-      version: 3,
+      version: 6,
       migrate: (state, version) => {
         const s = state as Data;
         // v1 lists had no sort/show-done settings.
         if (version < 2) s.lists = s.lists.map((l) => ({ ...l, sortBy: l.sortBy ?? 'date', showDone: l.showDone ?? false }));
         // v3 note blocks carry ids.
         if (version < 3) s.notes = s.notes.map((n) => ({ ...n, body: n.body.map((b) => ({ ...b, id: b.id ?? randomUUID() })) }));
+        // v4 adds seasons.
+        if (version < 4) s.seasons = s.seasons ?? [];
+        // v5 adds debriefs.
+        if (version < 5) s.debriefs = s.debriefs ?? [];
+        // v6 debriefs carry the coach's plan.
+        if (version < 6) s.debriefs = s.debriefs.map((d) => ({ ...d, plan: d.plan ?? null, planRuns: d.planRuns ?? 0, planState: d.planState ?? {} }));
         return s;
       },
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: ({ lists, tasks, tags, inbox, notes }) => ({ lists, tasks, tags, inbox, notes }),
+      partialize: ({ lists, tasks, tags, inbox, notes, seasons, debriefs }) => ({ lists, tasks, tags, inbox, notes, seasons, debriefs }),
       onRehydrateStorage: () => (state) => {
         state?.seedDefaults();
         state?.purgeExpired();
