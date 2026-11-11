@@ -13,6 +13,7 @@ import {
   keepTalking,
   makePlan,
   pick,
+  resumeSetup,
   retry,
   saveProblem,
   saveSetup,
@@ -77,6 +78,7 @@ export function SeasonSetupDesk() {
   const [resumed] = useState(() => !!useLocal.getState().seasonSetup);
   useEffect(() => {
     startSetup();
+    resumeSetup();
   }, []);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/season'));
 

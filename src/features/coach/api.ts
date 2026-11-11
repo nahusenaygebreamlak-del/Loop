@@ -30,11 +30,21 @@ export const COACH_FAILURE_COPY: Record<CoachFailure, string> = {
   nothing: 'Nothing on for today. Enjoy the space.',
 };
 
+/** The function gives up on Gemini at 25 s; the app stops waiting a little after that, whatever happens. */
+const APP_TIMEOUT_MS = 40_000;
+
 export async function coachCall<T>(action: CoachAction, body: object): Promise<CoachResult<T>> {
   if (!isSupabaseConfigured) return { ok: false, reason: 'signed_out' };
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return { ok: false, reason: 'offline' };
+  const stop = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    stop.abort();
+  }, APP_TIMEOUT_MS);
   try {
-    const { data, error } = await supabase.functions.invoke('coach', { body: { action, ...body } });
+    const { data, error } = await supabase.functions.invoke('coach', { body: { action, ...body }, signal: stop.signal });
+    if (timedOut) return { ok: false, reason: 'timeout' };
     if (!error) return { ok: true, data: data as T };
     const ctx = (error as { context?: Response }).context;
     const detail = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) : null;
@@ -42,6 +52,8 @@ export async function coachCall<T>(action: CoachAction, body: object): Promise<C
     // No answer from the server at all: the request never got there.
     return { ok: false, reason: /fetch|network|failed to send/i.test(error.message) ? 'offline' : 'busy' };
   } catch {
-    return { ok: false, reason: 'offline' };
+    return { ok: false, reason: timedOut ? 'timeout' : 'offline' };
+  } finally {
+    clearTimeout(timer);
   }
 }

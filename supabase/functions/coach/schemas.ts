@@ -27,18 +27,30 @@ export const PLAN_SCHEMA = {
   required: ['summary', 'suggestions'],
 };
 
-export const SEASON_SCHEMA = {
+// Gemini leaves out fields that aren't required, so each step has its own schema with every field required
+// (a single shared one lost the answers to pick from, 11 Nov 2026).
+
+/** season_turn: the next question with 4 answers, or ready = true when the coach knows enough. */
+export const QUESTION_SCHEMA = {
   type: 'object',
   properties: {
-    type: { type: 'string', enum: ['question', 'proposal'] },
+    ready: { type: 'boolean' },
     text: { type: 'string' },
     options: { type: 'array', maxItems: 4, items: { type: 'string' } },
-    brief: { type: 'string' },
-    goals: { type: 'array', maxItems: 12, items: { type: 'object', properties: { listRef: { type: 'string' }, goal: { type: 'string' } }, required: ['listRef', 'goal'] } },
+  },
+  required: ['ready', 'text', 'options'],
+};
+
+/** season_proposal: tiers, new lists, goal lines, first tasks, the brief and the intro. */
+export const PROPOSAL_SCHEMA = {
+  type: 'object',
+  properties: {
     intro: { type: 'string' },
     tiers: { type: 'array', items: { type: 'object', properties: { listId: { type: 'string' }, tier }, required: ['listId', 'tier'] } },
     newLists: { type: 'array', maxItems: 5, items: { type: 'object', properties: { tempId: { type: 'string' }, name: { type: 'string' }, tier }, required: ['tempId', 'name', 'tier'] } },
+    goals: { type: 'array', maxItems: 12, items: { type: 'object', properties: { listRef: { type: 'string' }, goal: { type: 'string' } }, required: ['listRef', 'goal'] } },
     tasks: { type: 'array', maxItems: 15, items: { type: 'object', properties: { listRef: { type: 'string' }, title: { type: 'string' }, date: { type: 'string' } }, required: ['listRef', 'title'] } },
+    brief: { type: 'string' },
   },
-  required: ['type'],
+  required: ['intro', 'tiers', 'newLists', 'goals', 'tasks', 'brief'],
 };

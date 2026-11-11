@@ -9,7 +9,7 @@
 // and logs only the action, duration, status and token counts.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { COACH_PROMPT_VERSION, PLAN_DAY_PROMPT, SEASON_PROMPT } from './prompts.ts';
-import { PLAN_SCHEMA, SEASON_SCHEMA } from './schemas.ts';
+import { PLAN_SCHEMA, PROPOSAL_SCHEMA, QUESTION_SCHEMA } from './schemas.ts';
 
 const COACH_MODEL = 'gemini-3.8-flash';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
@@ -103,7 +103,10 @@ function cleanPlan(raw: unknown) {
 function cleanSeason(raw: unknown, mode: 'turn' | 'proposal') {
   const o = raw as Obj;
   if (!o || typeof o !== 'object') return null;
-  if (mode === 'turn' && o.type === 'question' && typeof o.text === 'string' && o.text.trim()) {
+  if (mode === 'turn') {
+    // The coach knows enough: the app asks for the proposal next.
+    if (o.ready === true) return { type: 'ready' };
+    if (typeof o.text !== 'string' || !o.text.trim()) return null;
     const options = (Array.isArray(o.options) ? o.options : []).filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, 4).map((x) => trim(x, 90));
     return { type: 'question', text: trim(o.text, 300), options };
   }
@@ -137,7 +140,16 @@ function outputText(d: Obj): string {
   return parts.join('');
 }
 
-async function askGemini(key: string, system: string, input: unknown, schema: unknown): Promise<Outcome> {
+/** Gives up at 25 s however the call is stuck (the request, or reading the answer). */
+function askGemini(key: string, system: string, input: unknown, schema: unknown): Promise<Outcome> {
+  let timer: number | undefined;
+  const late = new Promise<Outcome>((done) => {
+    timer = setTimeout(() => done({ ok: false, status: 504, error: 'timeout' }), TIMEOUT_MS + 500);
+  });
+  return Promise.race([askGeminiOnce(key, system, input, schema), late]).finally(() => clearTimeout(timer));
+}
+
+async function askGeminiOnce(key: string, system: string, input: unknown, schema: unknown): Promise<Outcome> {
   let res: Response;
   try {
     res = await fetch(GEMINI_URL, {
@@ -215,7 +227,7 @@ Deno.serve(async (req) => {
     if (out.ok) clean = cleanPlan(out.data);
   } else {
     const mode = action === 'season_turn' ? 'turn' : 'proposal';
-    out = await askGemini(key, SEASON_PROMPT, cleanSeasonInput(body, mode), SEASON_SCHEMA);
+    out = await askGemini(key, SEASON_PROMPT, cleanSeasonInput(body, mode), mode === 'turn' ? QUESTION_SCHEMA : PROPOSAL_SCHEMA);
     if (out.ok) clean = cleanSeason(out.data, mode);
   }
 

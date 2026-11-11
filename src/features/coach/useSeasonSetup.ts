@@ -58,9 +58,15 @@ export async function askNext(): Promise<void> {
   const { lists } = useStore.getState();
   const res = await coachCall<unknown>('season_turn', setupInput(d, lists, startTiers(), todayKey()));
   // The person may have gone back or discarded while waiting.
+  // Gone back, discarded or saved meanwhile: this answer is out of date.
   const now = getDraft();
-  if (!now || now.steps !== d.steps || now.proposal) return useSetupRun.setState({ status: 'idle', reason: null });
+  if (!now || JSON.stringify(now.steps) !== JSON.stringify(d.steps) || now.proposal) return useSetupRun.setState({ status: 'idle', reason: null });
   if (!res.ok) return useSetupRun.setState({ status: 'failed', reason: res.reason });
+  // The coach knows enough before the 6th question: on to the proposal.
+  if ((res.data as { type?: unknown } | null)?.type === 'ready') {
+    useSetupRun.setState({ status: 'idle', reason: null });
+    return makePlan();
+  }
   const q = readQuestion(res.data);
   if (q) {
     putDraft({ steps: [...d.steps, { question: q.question, options: q.options, answer: null }] });
@@ -118,6 +124,17 @@ export function keepTalking() {
   if (!d) return;
   putDraft({ proposal: null });
   if (answeredCount(d.steps) < MAX_QUESTIONS) void askNext();
+}
+
+/**
+ * Reopening a setup that was waiting for the coach (Loop closed or reloaded mid-question):
+ * carry on with that request instead of sitting on the answered question.
+ */
+export function resumeSetup() {
+  const d = getDraft();
+  if (!d || d.proposal || useSetupRun.getState().status !== 'idle') return;
+  const last = d.steps[d.steps.length - 1];
+  if (last && last.answer !== null) void askNext();
 }
 
 /** Try again after a failure: whichever request failed. */
