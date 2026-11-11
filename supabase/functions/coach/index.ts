@@ -108,6 +108,8 @@ function cleanSeason(raw: unknown, mode: 'turn' | 'proposal') {
     if (o.ready === true) return { type: 'ready' };
     if (typeof o.text !== 'string' || !o.text.trim()) return null;
     const options = (Array.isArray(o.options) ? o.options : []).filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, 4).map((x) => trim(x, 90));
+    // A question needs answers to pick from; without them it counts as incomplete (the app asks again).
+    if (options.length < 2) return null;
     return { type: 'question', text: trim(o.text, 300), options };
   }
   if (!Array.isArray(o.tiers)) return null;
@@ -202,7 +204,8 @@ Deno.serve(async (req) => {
   const log = (status: number, extra: Obj = {}) => console.log(JSON.stringify({ fn: 'coach', action, status, ms: Date.now() - started, prompt: COACH_PROMPT_VERSION, ...extra }));
   const stop = (error: string, status: number, extra: Obj = {}) => {
     log(status, { error, ...extra });
-    return json({ error }, status);
+    // The note says why, in one word (quota, key, gemini_400…). Never any content.
+    return json({ error, ...(typeof extra.note === 'string' ? { note: extra.note } : null) }, status);
   };
 
   // The coach must be turned on (after the privacy sheet) before anything is sent anywhere.

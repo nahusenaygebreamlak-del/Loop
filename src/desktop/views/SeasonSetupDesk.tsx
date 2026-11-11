@@ -6,7 +6,7 @@ import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { useCloseSheet, useSheets } from '@/components/Sheet';
 import { Spinner } from '@/components/Spinner';
-import { COACH_FAILURE_COPY } from '@/features/coach/api';
+import { COACH_FAILURE_COPY, COACH_WHY, type CoachFailure } from '@/features/coach/api';
 import {
   back,
   discardSetup,
@@ -421,7 +421,7 @@ function Failure({ reason }: { reason: string }) {
           ? 'The coach is off. Turn it on in Settings, or set the season up yourself.'
           : reason === 'signed_out'
             ? COACH_FAILURE_COPY.signed_out
-            : 'That didn’t go through.';
+            : `That didn’t go through. ${COACH_WHY[reason as CoachFailure] ?? ''}`.trim();
   const again = reason !== 'limit' && reason !== 'off' && reason !== 'signed_out';
   return (
     <View accessibilityLiveRegion="polite" style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10, minHeight: 44, paddingHorizontal: 14, borderRadius: 14, backgroundColor: c.ground }}>

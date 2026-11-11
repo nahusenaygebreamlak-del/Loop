@@ -3,7 +3,7 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 // Calls the coach function (docs/13 §6, docs/16 B6). Every failure comes back as a reason the screens can show.
 
 export type CoachAction = 'plan_day' | 'season_turn' | 'season_proposal';
-export type CoachFailure = 'limit' | 'busy' | 'timeout' | 'bad_answer' | 'off' | 'offline' | 'signed_out' | 'not_configured' | 'nothing';
+export type CoachFailure = 'limit' | 'busy' | 'quota' | 'timeout' | 'bad_answer' | 'off' | 'offline' | 'signed_out' | 'not_configured' | 'nothing';
 export type CoachResult<T> = { ok: true; data: T } | { ok: false; reason: CoachFailure };
 
 const REASON: Record<string, CoachFailure> = {
@@ -21,6 +21,7 @@ const REASON: Record<string, CoachFailure> = {
 export const COACH_FAILURE_COPY: Record<CoachFailure, string> = {
   limit: 'The coach has done enough for today.',
   busy: 'Couldn’t plan right now.',
+  quota: 'Couldn’t plan right now.',
   timeout: 'Couldn’t plan right now.',
   bad_answer: 'Couldn’t plan right now.',
   not_configured: 'Couldn’t plan right now.',
@@ -33,7 +34,29 @@ export const COACH_FAILURE_COPY: Record<CoachFailure, string> = {
 /** The function gives up on Gemini at 25 s; the app stops waiting a little after that, whatever happens. */
 const APP_TIMEOUT_MS = 40_000;
 
+/** Why a setup request failed, in plain words (shown under "That didn't go through."). */
+export const COACH_WHY: Partial<Record<CoachFailure, string>> = {
+  timeout: 'The coach took too long to answer.',
+  quota: 'Google’s free plan asked for a short pause. Try again in a minute.',
+  bad_answer: 'The coach’s answer came back incomplete.',
+  busy: 'The coach couldn’t reach Gemini.',
+  not_configured: 'The coach isn’t set up on the server yet.',
+};
+
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Calls the coach. A busy, incomplete or rate-limited answer is retried once by itself after a short pause,
+ * so a passing hiccup never needs Try again. A timeout isn't retried: that would mean another long wait.
+ */
 export async function coachCall<T>(action: CoachAction, body: object): Promise<CoachResult<T>> {
+  const first = await coachCallOnce<T>(action, body);
+  if (first.ok || !['busy', 'bad_answer', 'quota'].includes(first.reason)) return first;
+  await wait(first.reason === 'quota' ? 8000 : 2500);
+  return coachCallOnce<T>(action, body);
+}
+
+async function coachCallOnce<T>(action: CoachAction, body: object): Promise<CoachResult<T>> {
   if (!isSupabaseConfigured) return { ok: false, reason: 'signed_out' };
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return { ok: false, reason: 'offline' };
   const stop = new AbortController();
@@ -48,6 +71,7 @@ export async function coachCall<T>(action: CoachAction, body: object): Promise<C
     if (!error) return { ok: true, data: data as T };
     const ctx = (error as { context?: Response }).context;
     const detail = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) : null;
+    if (detail?.error === 'busy' && detail?.note === 'quota') return { ok: false, reason: 'quota' };
     if (detail?.error) return { ok: false, reason: REASON[detail.error] ?? 'busy' };
     // No answer from the server at all: the request never got there.
     return { ok: false, reason: /fetch|network|failed to send/i.test(error.message) ? 'offline' : 'busy' };
