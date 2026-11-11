@@ -5,6 +5,7 @@ import { addDays, todayKey } from '@/lib/dates';
 import { answer, answeredCount, MAX_QUESTIONS, readProposal, readQuestion, saveInput, setupInput, stepBack, countLine, type ProposalDraft, type SetupDraft } from '@/lib/seasonSetup';
 import { currentSeason, dateProblem, endFor, pastSeasons } from '@/lib/seasons';
 import { useLocal } from '@/store/local';
+import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import type { Tier } from '@/store/types';
 import { coachCall, type CoachFailure } from './api';
@@ -27,6 +28,9 @@ function startTiers(): Record<string, Tier> {
   const today = todayKey();
   return (currentSeason(seasons, today) ?? pastSeasons(seasons, today)[0])?.tiers ?? {};
 }
+
+/** Start a season: with the coach when it's on (docs/13 §2.4), the form when it's off. */
+export const seasonStartHref = () => (useSettings.getState().coachEnabled ? ('/season/setup' as const) : ('/season/manual' as const));
 
 /** A fresh draft: starts today, or the day after the current season ends; 12 weeks. */
 export function startSetup(): SetupDraft {

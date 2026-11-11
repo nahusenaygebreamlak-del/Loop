@@ -12,6 +12,7 @@ import { useCalendar } from '@/calendar/google';
 import { COACH_FAILURE_COPY } from '@/features/coach/api';
 import { acceptSuggestions, dismissPlan, editSuggestion, planRow, retryPlan, runPlan, useAutoPlan, useDayPlan, usePlanRun, type PlanRowView } from '@/features/coach/useDayPlan';
 import { SeasonLine } from '@/features/season/parts';
+import { seasonStartHref } from '@/features/coach/useSeasonSetup';
 import { goMain } from '@/features/nav';
 import { useTaskActions } from '@/features/useTaskActions';
 import { applyChoices, leftovers, type Choice } from '@/lib/checkins';
@@ -78,6 +79,7 @@ export function DebriefDesk() {
   const weekends = useSettings((s) => s.weekends);
   const selected = useDeskState((s) => s.selected);
   const local = useLocal();
+  const coachOn = useSettings((s) => s.coachEnabled);
   const [handled, setHandled] = useState<Handled | null>(null);
 
   const left = leftovers(tasks, lists, today);
@@ -214,7 +216,7 @@ export function DebriefDesk() {
               <AppText tone="secondary" style={{ fontSize: 14 }}>{`Core was ${groupByTier(lists, ended).core.map((l) => l.name).join(', ')}.`}</AppText>
             ) : null}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 }}>
-              <KeyButton small icon={null} label="Start a new season" onPress={() => router.push('/season/manual')} />
+              <KeyButton small icon={null} label="Start a new season" onPress={() => router.push(seasonStartHref())} />
               <TextLink label="Not now" tone="secondary" onPress={() => useLocal.setState({ seasonEndedDismissed: [...(local.seasonEndedDismissed ?? []), ended.id] })} />
             </View>
           </View>
@@ -233,9 +235,8 @@ export function DebriefDesk() {
           </View>
           <View style={{ flex: 1 }}>
             <AppText style={{ ...font(800), fontSize: 15.5 }}>Pick what matters for the next 12 weeks?</AppText>
-            {/* The coach chat comes later; until then Start a season opens the form, so the copy says so. */}
             <AppText tone="secondary" style={{ fontSize: 14, marginTop: 2 }}>
-              Mark a few core lists. Everything else stays as it is.
+              {coachOn ? 'The coach helps you choose a few core lists. Everything else stays as it is.' : 'Mark a few core lists. Everything else stays as it is.'}
             </AppText>
           </View>
           <KeyButton
@@ -244,7 +245,7 @@ export function DebriefDesk() {
             label="Start a season"
             onPress={() => {
               useLocal.setState({ seasonOfferDone: true });
-              router.push('/season/manual');
+              router.push(seasonStartHref());
             }}
           />
           <TextLink label="Not now" tone="secondary" onPress={() => useLocal.setState({ seasonOfferDone: true })} />

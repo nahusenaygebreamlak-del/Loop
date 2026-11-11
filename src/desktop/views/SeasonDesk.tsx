@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, TextInput, View, type ViewInstance } from 'react-native';
 import { AppText } from '@/components/AppText';
@@ -12,6 +13,8 @@ import { shortDate } from '@/lib/dates';
 import { currentSeason, dateRange, endFor, groupByTier, isOver, LENGTH_CHOICES, pastSeasons, seasonName, TIER_HINT, TIER_LABEL, TIERS, tierOf } from '@/lib/seasons';
 import { openCount, visibleTasks } from '@/lib/taskViews';
 import { useToday } from '@/lib/useToday';
+import { useLocal } from '@/store/local';
+import { useSettings } from '@/store/settings';
 import { useStore } from '@/store/store';
 import type { List, Season, Tier } from '@/store/types';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -23,7 +26,9 @@ import { DeskCard, DeskEmpty, DeskHeader, DeskPage, GroupLab, KeyButton, SoftBut
 
 /** Season tier ›: Core, Secondary, Support, the current one ticked. Opens from a list's right-click or its tier chip. */
 export function TierMenu({ seasonId, listId }: { seasonId: string; listId: string }) {
+  const { c } = useTheme();
   const close = useCloseSheet();
+  const sheets = useSheets();
   const setTier = useSetTier();
   const season = useStore((s) => s.seasons.find((x) => x.id === seasonId));
   const list = useStore((s) => s.lists.find((l) => l.id === listId));
@@ -45,7 +50,70 @@ export function TierMenu({ seasonId, listId }: { seasonId: string; listId: strin
           }}
         />
       ))}
+      <View style={{ height: 1, marginVertical: 4, backgroundColor: c.ground }} />
+      <MenuItem
+        label={season.goals[listId] ? 'Edit goal…' : 'Add a goal…'}
+        onPress={() => {
+          close();
+          setTimeout(
+            () =>
+              sheets.open(
+                () => (
+                  <TextDialog
+                    title={`Goal for ${list.name}`}
+                    hint="What this list is working toward by the end of the season."
+                    value={season.goals[listId] ?? ''}
+                    max={80}
+                    onSave={(g) => {
+                      const goals = { ...useStore.getState().seasons.find((x) => x.id === seasonId)!.goals };
+                      if (g.trim()) goals[listId] = g.trim();
+                      else delete goals[listId];
+                      useStore.getState().updateSeason(seasonId, { goals });
+                    }}
+                  />
+                ),
+                'dialog',
+              ),
+            0,
+          );
+        }}
+      />
     </MenuCard>
+  );
+}
+
+/** A small dialog with one text field: a list's goal line, or the season brief. Empty clears it. */
+function TextDialog({ title, hint, value, max, multiline, onSave }: { title: string; hint: string; value: string; max: number; multiline?: boolean; onSave: (v: string) => void }) {
+  const { c } = useTheme();
+  const close = useCloseSheet();
+  const [text, setText] = useState(value);
+  const save = () => {
+    onSave(text);
+    close();
+  };
+  return (
+    <View accessibilityRole="alert" style={{ width: 480, maxWidth: '100%', backgroundColor: c.card, borderRadius: 22, borderWidth: 1, borderColor: c.desk.border, padding: 26, gap: 14 }}>
+      <AppText accessibilityRole="header" style={{ ...font(800), fontSize: 21 }}>
+        {title}
+      </AppText>
+      <AppText tone="secondary" style={{ fontSize: 14, lineHeight: 20 }}>
+        {hint}
+      </AppText>
+      <TextInput
+        autoFocus
+        multiline={multiline}
+        value={text}
+        onChangeText={setText}
+        onSubmitEditing={multiline ? undefined : save}
+        maxLength={max}
+        accessibilityLabel={title}
+        style={[{ minHeight: multiline ? 120 : 50, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 14, borderWidth: 2, borderColor: c.line, fontSize: 15.5, lineHeight: 22, color: c.text, textAlignVertical: 'top' }, { outlineStyle: 'none' } as object]}
+      />
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+        <SoftButton onCard label="Cancel" k="Esc" onPress={close} />
+        <KeyButton label="Save" icon={null} onPress={save} />
+      </View>
+    </View>
   );
 }
 
@@ -60,6 +128,8 @@ export function SeasonDesk() {
   const allTasks = useStore((s) => s.tasks);
   const updateSeason = useStore((s) => s.updateSeason);
   const endIt = useEndSeason();
+  const coachOn = useSettings((s) => s.coachEnabled);
+  const draft = useLocal((l) => !!l.seasonSetup);
   const season = id ? (seasons.find((s) => s.id === id) ?? null) : currentSeason(seasons, today);
   const past = pastSeasons(seasons, today);
 
@@ -68,7 +138,14 @@ export function SeasonDesk() {
       <DeskPage>
         <DeskHeader pre="No season yet" title="Season" />
         <DeskEmpty icon="flag" title="Pick what matters most" text="Choose a few lists that matter most for the next 12 weeks. Everything else stays as it is.">
-          <KeyButton label="Start a season" icon={null} onPress={() => router.push('/season/manual')} />
+          {coachOn ? (
+            <>
+              <KeyButton label={draft ? 'Pick up where you left off' : 'Start with the coach'} icon={null} onPress={() => router.push('/season/setup')} />
+              <SoftButton onCard label="Set it up myself" onPress={() => router.push('/season/manual')} />
+            </>
+          ) : (
+            <KeyButton label="Start a season" icon={null} onPress={() => router.push('/season/manual')} />
+          )}
         </DeskEmpty>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 20 }}>
           {TIERS.map((t) => (
@@ -109,6 +186,33 @@ export function SeasonDesk() {
       <View style={{ marginTop: 22, maxWidth: 1060 }}>
         <SeasonLine season={season} today={today} />
       </View>
+      {season.brief || (!readOnly && coachOn) ? (
+        <View style={{ marginTop: 14, maxWidth: 1060, backgroundColor: c.card, borderRadius: 20, paddingVertical: 16, paddingHorizontal: 20, gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <AppText accessibilityRole="header" style={{ ...font(700), fontSize: 15, flex: 1 }}>
+              Season brief
+            </AppText>
+            {readOnly ? null : (
+              <PressScale
+                accessibilityRole="button"
+                accessibilityLabel="Edit the season brief"
+                onPress={() =>
+                  sheets.open(
+                    () => <TextDialog title="Season brief" hint="The daily plan reads this. What comes first, hours a week, what you’re saying no to." value={season.brief ?? ''} max={600} multiline onSave={(brief) => updateSeason(season.id, { brief: brief.trim() || null })} />,
+                    'dialog',
+                  )
+                }
+                style={{ minHeight: 36, paddingHorizontal: 8, justifyContent: 'center' }}
+              >
+                <AppText style={{ ...font(700), fontSize: 14, color: c.accentText }}>Edit</AppText>
+              </PressScale>
+            )}
+          </View>
+          <AppText tone={season.brief ? undefined : 'secondary'} style={{ fontSize: 14.5, lineHeight: 21 }}>
+            {season.brief ?? 'Nothing yet. The coach writes one when you set up a season with it, or add your own.'}
+          </AppText>
+        </View>
+      ) : null}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 6, maxWidth: 1060 }}>
         {TIERS.map((tier) => (
@@ -165,6 +269,11 @@ function ListCard({ list, tier, season, open, readOnly }: { list: List; tier: Ti
           <AppText numberOfLines={1} style={{ ...font(700), fontSize: 15 }}>
             {list.name}
           </AppText>
+          {season.goals[list.id] ? (
+            <AppText numberOfLines={2} style={{ fontSize: 13.5, marginTop: 2, lineHeight: 19 }}>
+              {season.goals[list.id]}
+            </AppText>
+          ) : null}
           <AppText tone="secondary" style={{ fontSize: 13, marginTop: 1 }}>{`${open} open`}</AppText>
         </View>
       </PressScale>

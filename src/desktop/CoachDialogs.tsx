@@ -14,7 +14,8 @@ export const COACH_SENT = [
   'Task titles, dates, times, priority and how often a task was carried over',
   'List names and their season tier',
   'Google Calendar event times and titles for today',
-  'What you type in the season setup chat',
+  'What you write and pick while setting up a season with the coach',
+  'Your season brief and goal lines, with each daily plan',
 ];
 export const COACH_NEVER_SENT = ['Task notes', 'The Notes section and the Inbox', 'Tags', 'Your name or email'];
 export const COACH_DATA_LINE = 'Sent to Google Gemini on its free plan. Google may use it to improve its products, and people at Google may review it.';

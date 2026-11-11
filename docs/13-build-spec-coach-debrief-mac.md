@@ -411,3 +411,29 @@ Slices 3 and 5, computer only. The phone keeps the full-screen check-in until th
 - **Phone:** "Remind until I act" stops once the day's debrief is answered on any device.
 - **Not tested yet:** a real plan from Gemini. Everything up to the call is checked; the first real run happens when the owner opens the debrief signed in with the coach on.
 
+## 18. Season setup with the coach as built (11 Nov 2026)
+
+Slice 6, computer only. The owner chose a Superfocus-style setup over the chat in §2.4: one question per screen, with answers to pick from. On the phone, `/season/setup` goes to the manual form for now.
+
+**Decisions made with the owner (11 Nov):**
+- At most **6** follow-up questions (not 4).
+- A goal is **a list plus a goal line**: the outcome that list is working toward by the end date, for example "Live on the Play Store by Feb 2". There is still no separate Goal object.
+- A **season brief** is kept: a short summary of what comes first, hours a week, the order of work, what they're saying no to, and the main risk. It is saved with the season, synced, editable, and sent with each daily plan.
+- **First tasks** stay: up to 3 for each core goal, each with a tick to keep it.
+
+**The flow** (`src/desktop/views/SeasonSetupDesk.tsx`, rules in `src/lib/seasonSetup.ts`):
+1. **Opening question:** "Imagine it's February 2, 2027. What do you want to have happened, at work and in life?", with the season's real end date. It needs at least 100 characters before Continue (⌘↩) turns on.
+2. **Questions:** one per screen, with Back, a progress bar and "Question N of 6 at most". Each question has 4 answers written by the coach, keys 1–4, and "Something else…" for your own. **Make the plan** (⌘↩) is available from the first answer on. The coach may also stop early with the proposal.
+3. **Proposal:** "Your season", with the coach's intro, then Season goals, Support and the Season brief.
+   - Each goal shows its goal line, its list (existing, or a new list whose name can be edited), Core or Secondary, and its first tasks with keep-ticks. Remove sends an existing list back to Support, or drops a new list.
+   - **Add goal** picks a support list or adds a new list.
+   - **Keep talking** asks one more question when there's room. **Save season** (⌘S) creates the new lists, the season and the tasks in one step, with one Undo.
+- **Dates:** "Change dates…" at the top, at any step. A setup that would overlap another season can't be saved until the dates change.
+- **Draft:** kept on this computer only (`useLocal.seasonSetup`) until saved or discarded. Leaving and coming back shows "Picking up where you left off". **Discard…** asks first.
+- **Failures:** offline, limit reached, coach off and "That didn't go through" with Try again. Answers already given are kept.
+- **Entry points:** the Season page offers **Start with the coach** and **Set it up myself** when the coach is on. The debrief's season-ended card and 7-day offer go to the coach setup when the coach is on, with the coach wording.
+- **Goal lines afterwards:** shown on the Season page list cards and in the list header. They can be edited from a list's right-click menu (**Add a goal…** or **Edit goal…**). The brief is on the Season page with **Edit**.
+- **Server:** prompt v2. Questions come back with `options`; the proposal adds `goals` and `brief`; `plan_day` reads `brief`. Migration `20261111000000_season_goals.sql` adds `goals` and `brief` to `seasons`. Until it runs, sync sends seasons without those two fields and they stay on the device.
+- **Privacy note:** now says that what you write and pick during setup is sent, and that the brief and goal lines go with each daily plan.
+- **Not tested yet:** real questions and a real proposal from Gemini.
+

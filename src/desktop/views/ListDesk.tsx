@@ -32,16 +32,20 @@ export function ListDesk({ id }: { id: string }) {
   const list = useStore((s) => s.lists.find((l) => l.id === id));
   const tasks = useStore((s) => s.tasks);
   const tags = useStore((s) => s.tags);
+  const seasons = useStore((s) => s.seasons);
+  const season = activeSeason(seasons, today);
   const groups = list ? listGroups(tasks, list.id, today, new Set()).map((g) => (list.sortBy === 'date' ? g : { ...g, tasks: sortTasks(g.tasks, list.sortBy) })) : [];
   const done = list?.showDone ? tasks.filter((t) => t.listId === id && t.doneAt && !t.deletedAt).sort((a, b) => b.doneAt!.localeCompare(a.doneAt!)) : [];
   useRows(groups.flatMap((g) => g.tasks.map((t) => t.id)));
   if (!list || list.deletedAt) return <DeskPage>{null}</DeskPage>;
   const open = openCount(tasks, list.id);
+  // This season's goal line for the list (docs/13 §18), in place of the word "List".
+  const goal = season?.goals[list.id];
 
   return (
     <DeskPage>
       <DeskHeader
-        pre={`List · ${open} open task${open === 1 ? '' : 's'}`}
+        pre={[goal ?? 'List', `${open} open task${open === 1 ? '' : 's'}`].join(' · ')}
         preLead={<View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: listColors[list.color] }} />}
         title={list.name}
         actions={

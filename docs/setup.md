@@ -83,3 +83,11 @@ To deploy a new version of the function:
 2. `npx supabase functions deploy coach --remote=hjyfivfgasdpkpgctmcd --use-api --yes`
 
 Not tested yet: a real plan from Gemini. No screen calls the coach until the debrief's "Today's plan" section is built.
+
+## 11. Season setup with the coach (11 Nov 2026)
+
+Done by the owner on 11 Nov 2026:
+
+- Ran `supabase/migrations/20261111000000_season_goals.sql` in the SQL editor. It adds the goal lines and the season brief.
+- Redeployed the `coach` function (section 10, step 2), so it asks questions with answers to pick from.
+
