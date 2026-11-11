@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import type { SetupDraft } from '@/lib/seasonSetup';
 
 // Per-device UI memory that doesn't sync.
 type Local = {
@@ -25,6 +26,8 @@ type Local = {
   seasonEndedDismissed?: string[];
   /** Debrief: the one-time "Pick what matters" offer got Not now or was used. */
   seasonOfferDone?: boolean;
+  /** Season setup with the coach, in progress. Stays on this device only until saved or discarded (docs/13 §2.4). */
+  seasonSetup?: SetupDraft | null;
 };
 
 export const useLocal = create<Local>()(

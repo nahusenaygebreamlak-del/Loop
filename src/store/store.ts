@@ -83,8 +83,23 @@ type Actions = {
 
   /** Saves a new season (docs/13 §2.1). Returns its id and an undo function. */
   addSeason: (s: { name: string | null; startDate: string; endDate: string; tiers: Record<string, Tier> }) => { id: string; undo: () => void };
-  /** Name or dates. Returns an undo function. */
-  updateSeason: (id: string, patch: Partial<Pick<Season, 'name' | 'startDate' | 'endDate'>>) => () => void;
+  /** Name, dates, goal lines or brief. Returns an undo function. */
+  updateSeason: (id: string, patch: Partial<Pick<Season, 'name' | 'startDate' | 'endDate' | 'goals' | 'brief'>>) => () => void;
+  /**
+   * Saves what the coach proposed, as edited (docs/13 §2.4): new lists, the season with its tiers,
+   * goal lines and brief, and the first tasks. One Undo takes all of it back.
+   */
+  addSeasonFromProposal: (p: {
+    name: string | null;
+    startDate: string;
+    endDate: string;
+    brief: string | null;
+    newLists: { tempId: string; name: string; color: ListColor }[];
+    /** Keyed by list id or a new list's tempId. */
+    tiers: Record<string, Tier>;
+    goals: Record<string, string>;
+    tasks: { listRef: string; title: string; date: string | null }[];
+  }) => { id: string; undo: () => void };
   /** Marks a list Core, Secondary or Support for that season. Returns an undo function. */
   setTier: (seasonId: string, listId: string, tier: Tier) => () => void;
   /** Ends the season now: it stays as history and tiers stop showing. Returns an undo function. */
@@ -448,7 +463,7 @@ export const useStore = create<Store>()(
 
         addSeason: ({ name, startDate, endDate, tiers }) => {
           const ts = now();
-          const season: Season = { id: randomUUID(), name: name?.trim() || null, startDate, endDate, endedAt: null, tiers: cleanTiers(tiers, get().lists), createdAt: ts, updatedAt: ts };
+          const season: Season = { id: randomUUID(), name: name?.trim() || null, startDate, endDate, endedAt: null, tiers: cleanTiers(tiers, get().lists), goals: {}, brief: null, createdAt: ts, updatedAt: ts };
           set((s) => ({ seasons: [...s.seasons, season] }));
           return { id: season.id, undo: () => set((s) => ({ seasons: s.seasons.filter((x) => x.id !== season.id) })) };
         },
@@ -457,7 +472,64 @@ export const useStore = create<Store>()(
           const before = get().seasons.find((x) => x.id === id);
           const put = (p: Partial<Season>) => set((s) => ({ seasons: s.seasons.map((x) => (x.id === id ? { ...x, ...p, updatedAt: now() } : x)) }));
           put({ ...patch, ...(patch.name !== undefined ? { name: patch.name?.trim() || null } : null) });
-          return () => before && put({ name: before.name, startDate: before.startDate, endDate: before.endDate });
+          return () => before && put({ name: before.name, startDate: before.startDate, endDate: before.endDate, goals: before.goals, brief: before.brief });
+        },
+
+        addSeasonFromProposal: (p) => {
+          const ts = now();
+          const ids = new Map<string, string>();
+          let order = Math.max(-1, ...get().lists.map((l) => l.sortOrder));
+          const lists: List[] = p.newLists.map((n) => {
+            const id = randomUUID();
+            ids.set(n.tempId, id);
+            return { id, name: n.name.trim(), color: n.color, sortOrder: ++order, sortBy: 'date', showDone: false, archivedAt: null, deletedAt: null, createdAt: ts, updatedAt: ts };
+          });
+          const ref = (r: string) => ids.get(r) ?? r;
+          const allLists = [...get().lists, ...lists];
+          const tiers = cleanTiers(Object.fromEntries(Object.entries(p.tiers).map(([k, t]) => [ref(k), t])), allLists);
+          const live = new Set(allLists.filter((l) => !l.deletedAt).map((l) => l.id));
+          const goals = Object.fromEntries(
+            Object.entries(p.goals)
+              .map(([k, g]) => [ref(k), g.trim()] as const)
+              .filter(([k, g]) => live.has(k) && g),
+          );
+          const season: Season = { id: randomUUID(), name: p.name?.trim() || null, startDate: p.startDate, endDate: p.endDate, endedAt: null, tiers, goals, brief: p.brief?.trim() || null, createdAt: ts, updatedAt: ts };
+          let sort = get().tasks.length;
+          const tasks: Task[] = p.tasks
+            .filter((t) => t.title.trim() && live.has(ref(t.listRef)))
+            .map((t) => ({
+              id: randomUUID(),
+              listId: ref(t.listRef),
+              title: t.title.trim(),
+              notes: '',
+              dueDate: t.date,
+              startTime: null,
+              endTime: null,
+              priority: 0,
+              reminderMinutes: null,
+              repeatRule: null,
+              carriedOverCount: 0,
+              carriedAt: null,
+              sortOrder: sort++,
+              tagIds: [],
+              subtasks: [],
+              doneAt: null,
+              deletedAt: null,
+              createdAt: ts,
+              updatedAt: ts,
+            }));
+          set((s) => ({ lists: [...s.lists, ...lists], seasons: [...s.seasons, season], tasks: [...s.tasks, ...tasks] }));
+          const made = { lists: new Set(lists.map((l) => l.id)), tasks: new Set(tasks.map((t) => t.id)) };
+          return {
+            id: season.id,
+            undo: () =>
+              set((s) => ({
+                seasons: s.seasons.filter((x) => x.id !== season.id),
+                tasks: s.tasks.filter((t) => !made.tasks.has(t.id)),
+                // A new list that got other tasks since stays, so nothing is lost.
+                lists: s.lists.filter((l) => !made.lists.has(l.id) || s.tasks.some((t) => t.listId === l.id && !made.tasks.has(t.id))),
+              })),
+          };
         },
 
         setTier: (seasonId, listId, tier) => {
@@ -552,7 +624,7 @@ export const useStore = create<Store>()(
     },
     {
       name: 'loop.data.v1',
-      version: 6,
+      version: 7,
       migrate: (state, version) => {
         const s = state as Data;
         // v1 lists had no sort/show-done settings.
@@ -565,6 +637,8 @@ export const useStore = create<Store>()(
         if (version < 5) s.debriefs = s.debriefs ?? [];
         // v6 debriefs carry the coach's plan.
         if (version < 6) s.debriefs = s.debriefs.map((d) => ({ ...d, plan: d.plan ?? null, planRuns: d.planRuns ?? 0, planState: d.planState ?? {} }));
+        // v7 seasons carry goal lines and the coach's brief.
+        if (version < 7) s.seasons = s.seasons.map((x) => ({ ...x, goals: x.goals ?? {}, brief: x.brief ?? null }));
         return s;
       },
       storage: createJSONStorage(() => AsyncStorage),

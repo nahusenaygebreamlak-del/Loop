@@ -11,6 +11,9 @@ export const DELETE_ORDER: Table[] = ['debriefs', 'seasons', 'tasks', 'inbox_ite
 /** Tables added after the first release. Until their migration has been run, sync carries on without them. */
 export const OPTIONAL_TABLES: Table[] = ['seasons', 'debriefs'];
 
+/** Columns added to a table later. Until their migration has been run, rows are sent without them. */
+export const OPTIONAL_COLUMNS: Partial<Record<Table, string[]>> = { seasons: ['goals', 'brief'] };
+
 /** Store collection name for each table. */
 export const COLLECTION = { lists: 'lists', tasks: 'tasks', tags: 'tags', inbox_items: 'inbox', notes: 'notes', seasons: 'seasons', debriefs: 'debriefs' } as const;
 
@@ -61,7 +64,7 @@ export function toRow(table: Table, x: List | Task | Tag | InboxItem | Note | Se
     }
     case 'seasons': {
       const s = x as Season;
-      return { id: s.id, user_id: userId, name: s.name, start_date: s.startDate, end_date: s.endDate, ended_at: s.endedAt, tiers: s.tiers, created_at: s.createdAt };
+      return { id: s.id, user_id: userId, name: s.name, start_date: s.startDate, end_date: s.endDate, ended_at: s.endedAt, tiers: s.tiers, goals: s.goals, brief: s.brief, created_at: s.createdAt };
     }
     case 'debriefs': {
       const d = x as Debrief;
@@ -141,6 +144,8 @@ export function fromRow(table: Table, r: Row): List | Task | Tag | InboxItem | N
         endDate: String(r.end_date).slice(0, 10),
         endedAt: iso(r.ended_at),
         tiers: (r.tiers as Season['tiers']) ?? {},
+        goals: (r.goals as Season['goals']) ?? {},
+        brief: (r.brief as string) ?? null,
         createdAt,
         updatedAt,
       };

@@ -44,7 +44,7 @@ export function useNewSeasonDraft() {
   // Last season's tiers are offered as the starting point (docs/13 §2.1).
   const [tiers, setTiers] = useState<Record<string, Tier>>(() => (currentSeason(seasons, today) ?? pastSeasons(seasons, today)[0])?.tiers ?? {});
   const problem = dateProblem(seasons, dates.startDate, dates.endDate, today);
-  const preview: Season = { id: 'new', name: null, ...dates, endedAt: null, tiers, createdAt: '9999', updatedAt: '' };
+  const preview: Season = { id: 'new', name: null, ...dates, endedAt: null, tiers, goals: {}, brief: null, createdAt: '9999', updatedAt: '' };
   const save = () => {
     if (problem) return;
     const { undo } = addSeason({ name, ...dates, tiers });

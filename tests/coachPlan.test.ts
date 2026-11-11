@@ -8,7 +8,7 @@ const TODAY = '2026-11-10';
 let n = 0;
 const task = (p: Partial<Task>): Task => ({ id: `t${n++}`, listId: 'work', title: 'x', notes: 'private notes', dueDate: null, startTime: null, endTime: null, priority: 0, reminderMinutes: null, repeatRule: null, carriedOverCount: 0, carriedAt: null, sortOrder: n, tagIds: ['tag'], subtasks: [], doneAt: null, deletedAt: null, createdAt: '', updatedAt: '', ...p });
 const list = (id: string, extra: Partial<List> = {}): List => ({ id, name: id[0].toUpperCase() + id.slice(1), color: 'work', sortOrder: 0, sortBy: 'date', showDone: false, archivedAt: null, deletedAt: null, createdAt: '', updatedAt: '', ...extra });
-const season: Season = { id: 's', name: null, startDate: '2026-10-27', endDate: '2027-01-18', endedAt: null, tiers: { work: 'core' }, createdAt: '', updatedAt: '' };
+const season: Season = { id: 's', name: null, startDate: '2026-10-27', endDate: '2027-01-18', endedAt: null, tiers: { work: 'core' }, goals: {}, brief: null, createdAt: '', updatedAt: '' };
 const lists = [list('work'), list('home'), list('old', { archivedAt: 'x' })];
 const at = (h: number, m = 0) => new Date(2026, 10, 10, h, m).toISOString();
 const event = (title: string, start: string, end: string, allDay = false): GEvent => ({ id: title, calendarId: 'c', calendarName: 'Cal', title, start, end, allDay, location: 'Room 4', description: 'agenda', attendees: ['Sam'], link: null });

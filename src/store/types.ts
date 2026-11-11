@@ -86,6 +86,10 @@ export type Season = {
   endedAt: string | null;
   /** List id → tier. Lists that aren't here are Support. */
   tiers: Record<string, Tier>;
+  /** List id → the outcome that list is working toward this season ("Live on the Play Store by Feb 3"). */
+  goals: Record<string, string>;
+  /** What the person told the coach at setup, in a short summary the daily plan reads. Null when set up by hand. */
+  brief: string | null;
   createdAt: string;
   updatedAt: string;
 };

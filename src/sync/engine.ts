@@ -13,6 +13,7 @@ import {
   diff,
   fromRow,
   matchListsByName,
+  OPTIONAL_COLUMNS,
   OPTIONAL_TABLES,
   profileToSettings,
   PUSH_ORDER,
@@ -340,7 +341,12 @@ function markEverythingDirty() {
 async function upsertRows(table: Table, rows: Row[]) {
   for (let i = 0; i < rows.length; i += 500) {
     const chunk = rows.slice(i, i + 500);
-    const { error } = await supabase.from(table).upsert(chunk);
+    let { error } = await supabase.from(table).upsert(chunk);
+    // Newer columns whose migration hasn't been run yet: send the rest, and the new fields wait until it is.
+    const extra = OPTIONAL_COLUMNS[table];
+    if (error && extra && (error.code === 'PGRST204' || error.code === '42703' || /column/i.test(error.message))) {
+      ({ error } = await supabase.from(table).upsert(chunk.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !extra.includes(k))))));
+    }
     if (!error) continue;
     // A task pointing at a list that no longer exists: keep the task, drop the link.
     if (error.code === '23503' && table === 'tasks') {

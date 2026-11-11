@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { activeSeason, cleanTiers, coreNote, currentSeason, dateProblem, daysLeft, endFor, groupByTier, pastSeasons, seasonName, tierOf, totalWeeks, weekLine, weekNumber, weekShort } from '../src/lib/seasons.ts';
 import type { List, Season, Task } from '../src/store/types.ts';
 
-const season = (p: Partial<Season> = {}): Season => ({ id: 's1', name: null, startDate: '2026-10-27', endDate: '2027-01-18', endedAt: null, tiers: {}, createdAt: '2026-10-27T08:00:00.000Z', updatedAt: '', ...p });
+const season = (p: Partial<Season> = {}): Season => ({ id: 's1', name: null, startDate: '2026-10-27', endDate: '2027-01-18', endedAt: null, tiers: {}, goals: {}, brief: null, createdAt: '2026-10-27T08:00:00.000Z', updatedAt: '', ...p });
 const list = (id: string, extra: Partial<List> = {}): List => ({ id, name: id, color: 'work', sortOrder: 0, sortBy: 'date', showDone: false, archivedAt: null, deletedAt: null, createdAt: '', updatedAt: '', ...extra });
 const done = (listId: string, day: string): Task => ({ id: `${listId}-${day}`, listId, title: 'x', notes: '', dueDate: null, startTime: null, endTime: null, priority: 0, reminderMinutes: null, repeatRule: null, carriedOverCount: 0, carriedAt: null, sortOrder: 0, tagIds: [], subtasks: [], doneAt: `${day}T10:00:00.000Z`, deletedAt: null, createdAt: '', updatedAt: '' });
 const key = (iso: string) => iso.slice(0, 10);

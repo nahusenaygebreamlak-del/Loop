@@ -8,7 +8,7 @@ const key = (iso: string) => iso.slice(0, 10);
 let n = 0;
 const task = (p: Partial<Task>): Task => ({ id: `t${n++}`, listId: null, title: 'x', notes: '', dueDate: null, startTime: null, endTime: null, priority: 0, reminderMinutes: null, repeatRule: null, carriedOverCount: 0, carriedAt: null, sortOrder: n, tagIds: [], subtasks: [], doneAt: null, deletedAt: null, createdAt: '', updatedAt: '', ...p });
 const debrief = (day: string, p: Partial<Debrief> = {}): Debrief => ({ id: `d${n++}`, day, openedAt: null, answeredAt: null, leftoversAction: null, plan: null, planRuns: 0, planState: {}, createdAt: '', updatedAt: '', ...p });
-const season = (p: Partial<Season>): Season => ({ id: 's', name: null, startDate: '2026-08-01', endDate: '2026-10-23', endedAt: null, tiers: {}, createdAt: '', updatedAt: '', ...p });
+const season = (p: Partial<Season>): Season => ({ id: 's', name: null, startDate: '2026-08-01', endDate: '2026-10-23', endedAt: null, tiers: {}, goals: {}, brief: null, createdAt: '', updatedAt: '', ...p });
 
 test('yesterday is one day, or the whole weekend back to Friday when weekends are off', () => {
   // 2026-11-10 is a Tuesday, 2026-11-09 a Monday, 2026-11-08 a Sunday.

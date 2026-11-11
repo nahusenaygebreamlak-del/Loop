@@ -32,6 +32,9 @@ export const SEASON_SCHEMA = {
   properties: {
     type: { type: 'string', enum: ['question', 'proposal'] },
     text: { type: 'string' },
+    options: { type: 'array', maxItems: 4, items: { type: 'string' } },
+    brief: { type: 'string' },
+    goals: { type: 'array', maxItems: 12, items: { type: 'object', properties: { listRef: { type: 'string' }, goal: { type: 'string' } }, required: ['listRef', 'goal'] } },
     intro: { type: 'string' },
     tiers: { type: 'array', items: { type: 'object', properties: { listId: { type: 'string' }, tier }, required: ['listId', 'tier'] } },
     newLists: { type: 'array', maxItems: 5, items: { type: 'object', properties: { tempId: { type: 'string' }, name: { type: 'string' }, tier }, required: ['tempId', 'name', 'tier'] } },

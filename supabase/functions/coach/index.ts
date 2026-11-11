@@ -41,6 +41,8 @@ function cleanPlanInput(b: Obj) {
     weekday: str(b.weekday, 12),
     window: { start: str((b.window as Obj)?.start, 5), end: str((b.window as Obj)?.end, 5) },
     events: arr(b.events, 40).map((e) => ({ title: str(e.title, 120), start: str(e.start, 5), end: str(e.end, 5) })),
+    // What the person said matters this season (saved at setup). Optional.
+    brief: optStr(b.brief, 600),
     tasks: arr(b.tasks, 60).map((t) => ({
       id: str(t.id, 64),
       title: str(t.title, 200),
@@ -59,10 +61,13 @@ function cleanPlanInput(b: Obj) {
 function cleanSeasonInput(b: Obj, mode: 'turn' | 'proposal') {
   return {
     mode,
+    today: str(b.today, 10),
+    endDate: str(b.endDate, 10),
     weeks: num(b.weeks, 1, 52),
     lists: arr(b.lists, 40).map((l) => ({ id: str(l.id, 64), name: str(l.name, 60), tier: tierOf(l.tier) })),
-    // The conversation so far: the coach's questions and what the person typed. At most 4 rounds.
-    chat: arr(b.chat, 10).map((m) => ({ from: m.from === 'coach' ? 'coach' : 'you', text: str(m.text, 2000) })),
+    // The setup so far: what they wrote first, then each question and their answer. At most 6 questions.
+    asked: num(b.asked, 0, 6),
+    chat: arr(b.chat, 13).map((m) => ({ from: m.from === 'coach' ? 'coach' : 'you', text: str(m.text, 2000) })),
   };
 }
 
@@ -98,14 +103,19 @@ function cleanPlan(raw: unknown) {
 function cleanSeason(raw: unknown, mode: 'turn' | 'proposal') {
   const o = raw as Obj;
   if (!o || typeof o !== 'object') return null;
-  if (mode === 'turn' && o.type === 'question' && typeof o.text === 'string' && o.text.trim()) return { type: 'question', text: trim(o.text, 240) };
+  if (mode === 'turn' && o.type === 'question' && typeof o.text === 'string' && o.text.trim()) {
+    const options = (Array.isArray(o.options) ? o.options : []).filter((x): x is string => typeof x === 'string' && !!x.trim()).slice(0, 4).map((x) => trim(x, 90));
+    return { type: 'question', text: trim(o.text, 300), options };
+  }
   if (!Array.isArray(o.tiers)) return null;
   return {
     type: 'proposal',
     intro: trim(o.intro, 200),
     tiers: arr(o.tiers, 60).filter((t) => typeof t.listId === 'string').map((t) => ({ listId: t.listId as string, tier: tierOf(t.tier) })),
     newLists: arr(o.newLists, 5).filter((l) => typeof l.tempId === 'string' && typeof l.name === 'string' && (l.name as string).trim()).map((l) => ({ tempId: l.tempId as string, name: trim(l.name, 40), tier: tierOf(l.tier) })),
+    goals: arr(o.goals, 12).filter((g) => typeof g.listRef === 'string' && typeof g.goal === 'string' && (g.goal as string).trim()).map((g) => ({ listRef: g.listRef as string, goal: trim(g.goal, 80) })),
     tasks: arr(o.tasks, 15).filter((t) => typeof t.listRef === 'string' && typeof t.title === 'string' && (t.title as string).trim()).map((t) => ({ listRef: t.listRef as string, title: trim(t.title, 120), ...(DATE.test(String(t.date)) ? { date: String(t.date) } : null) })),
+    brief: trim(o.brief, 600),
   };
 }
 

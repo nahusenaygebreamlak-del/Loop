@@ -17,6 +17,8 @@ export type PlanInput = {
   weekday: string;
   window: { start: TimeKey; end: TimeKey };
   events: { title: string; start: TimeKey; end: TimeKey }[];
+  /** What the person said matters this season, from the setup (docs/13 §18). */
+  brief?: string;
   tasks: { id: string; title: string; list?: string; tier: Tier; priority: number; due?: DateKey; start?: TimeKey; end?: TimeKey; carriedOver: number; subtasks: number }[];
 };
 
@@ -47,6 +49,7 @@ export function buildPlanInput(d: { tasks: Task[]; lists: List[]; season: Season
       .filter((e) => !e.allDay)
       .map((e) => ({ title: e.title, start: eventStart(e)!, end: eventEnd(e)! }))
       .sort((a, b) => a.start.localeCompare(b.start)),
+    ...(d.season?.brief ? { brief: d.season.brief } : null),
     tasks: candidates.map((t) => ({
       id: t.id,
       title: t.title,

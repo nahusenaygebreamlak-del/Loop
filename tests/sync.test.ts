@@ -51,13 +51,20 @@ test('a profile without the coach columns keeps this device\'s coach settings', 
 });
 
 test('season row round trip (Postgres date format, tiers as an object)', () => {
-  const season = { id: 's1', name: null, startDate: '2026-10-27', endDate: '2027-01-18', endedAt: null, tiers: { l1: 'core' as const }, createdAt: '2026-10-27T08:00:00.000Z', updatedAt: '2026-10-27T08:00:00.000Z' };
+  const season = { id: 's1', name: null, startDate: '2026-10-27', endDate: '2027-01-18', endedAt: null, tiers: { l1: 'core' as const }, goals: { l1: 'Live on the Play Store by Feb 3' }, brief: 'Kash first, about 10 hours a week.', createdAt: '2026-10-27T08:00:00.000Z', updatedAt: '2026-10-27T08:00:00.000Z' };
   const row = toRow('seasons', season, 'u1');
   assert.equal(row.start_date, '2026-10-27');
   assert.ok(!('updated_at' in row), 'the server sets updated_at');
   const back = fromRow('seasons', { ...row, end_date: '2027-01-18', created_at: '2026-10-27 08:00:00+00', updated_at: '2026-10-27T08:00:00+00:00' });
   assert.deepEqual(back, season);
   assert.deepEqual((fromRow('seasons', { ...row, tiers: null }) as typeof season).tiers, {});
+  // A server without the goals / brief columns yet: both come back empty.
+  const { goals: _g, brief: _b, ...older } = row;
+  void _g;
+  void _b;
+  const fromOlder = fromRow('seasons', older) as typeof season;
+  assert.deepEqual(fromOlder.goals, {});
+  assert.equal(fromOlder.brief, null);
 });
 
 test('debrief row round trip', () => {
